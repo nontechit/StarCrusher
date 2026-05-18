@@ -1,0 +1,9 @@
+[package]
+name = "star-crusher"
+version = "1.0.0"
+edition = "2021"
+description = "A Space Invaders game with K-5 educational math progression"
+
+[dependencies]
+macroquad = "0.4"
+rand = "0.8"
