@@ -169,6 +169,7 @@ pub fn draw_title_screen() {
         "Press ENTER or SPACE to Start Math Invaders",
         "Press P for Math Pong",
         "Press R for Reading Snake",
+        "Press L to type a spelling list",
     ];
 
     set_color(WHITE);
@@ -198,6 +199,89 @@ pub fn draw_title_screen() {
     }
 
     set_default_color();
+}
+
+/// Draws the weekly spelling-list entry screen for Reading Snake.
+pub fn draw_spelling_list_screen(input: &str) {
+    for i in 0..80 {
+        let x = ((17 + i * 11) % 800) as f32;
+        let y = ((31 + i * 19) % 560) as f32;
+        assets::draw_star(x, y, (i % 3) as f32 * 0.4 + 0.5);
+    }
+
+    centered_text(
+        "WEEKLY SPELLING LIST",
+        110.0,
+        36,
+        Color::new(0.4, 1.0, 0.65, 1.0),
+    );
+    centered_text(
+        "Type words separated by spaces or commas.",
+        155.0,
+        20,
+        WHITE,
+    );
+    centered_text("Press ENTER to play Reading Snake.", 185.0, 20, WHITE);
+
+    set_color(Color::new(0.05, 0.12, 0.08, 0.95));
+    draw_rectangle(100.0, 230.0, 600.0, 120.0);
+    set_color(Color::new(0.25, 0.75, 0.4, 1.0));
+    draw_rectangle_lines(100.0, 230.0, 600.0, 120.0);
+
+    let shown_input = if input.is_empty() {
+        "cat, dog, sun"
+    } else {
+        input
+    };
+    let color = if input.is_empty() { GRAY } else { WHITE };
+    draw_wrapped_text(shown_input, 125.0, 270.0, 550.0, 24, color);
+
+    let blink = if (get_time() as f32 * 3.0).fract() > 0.5 {
+        1.0
+    } else {
+        0.0
+    };
+    set_color(Color::new(0.3, 1.0, 0.5, blink));
+    draw_rectangle(126.0, 315.0, 16.0, 3.0);
+
+    centered_text(
+        "Leave it blank to use the default words.",
+        410.0,
+        18,
+        YELLOW,
+    );
+    centered_text("Backspace deletes   ESC returns to title", 450.0, 18, GRAY);
+    set_default_color();
+}
+
+fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
+    let tm = measure_text(text, None, font_size, 1.0);
+    draw_text(text, 400.0 - tm.w / 2.0, y, font_size as f32, color);
+}
+
+fn draw_wrapped_text(text: &str, x: f32, y: f32, max_width: f32, font_size: u16, color: Color) {
+    let mut line = String::new();
+    let mut line_y = y;
+
+    for word in text.split_whitespace() {
+        let next = if line.is_empty() {
+            word.to_string()
+        } else {
+            format!("{} {}", line, word)
+        };
+
+        if measure_text(&next, None, font_size, 1.0).w > max_width && !line.is_empty() {
+            draw_text(&line, x, line_y, font_size as f32, color);
+            line = word.to_string();
+            line_y += font_size as f32 + 8.0;
+        } else {
+            line = next;
+        }
+    }
+
+    if !line.is_empty() {
+        draw_text(&line, x, line_y, font_size as f32, color);
+    }
 }
 
 /// Draws the question gate screen between waves.

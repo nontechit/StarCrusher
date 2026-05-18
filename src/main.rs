@@ -13,7 +13,7 @@ use macroquad::prelude::*;
 use math_pong::{MathPong, MathPongAction};
 use player::{Bullet, EnemyBullet, Player};
 use question::{generate_question, Question};
-use reading_snake::{ReadingSnake, ReadingSnakeAction};
+use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
 
 const SCREEN_W: f32 = 800.0;
 const SCREEN_H: f32 = 600.0;
@@ -37,6 +37,7 @@ enum GameMode {
     GameOver,
     Victory,
     ReadingSnake,
+    SpellingList,
     MathPong,
 }
 
@@ -55,6 +56,7 @@ struct Game {
     gate_question: Question,
     gate_answer: String,
     gate_feedback: Option<(bool, f64)>,
+    spelling_input: String,
     gates_remaining: usize,
     last_enemy_fire: f64,
     reading_snake: ReadingSnake,
@@ -82,6 +84,7 @@ impl Game {
             gate_question: generate_question(grade),
             gate_answer: String::new(),
             gate_feedback: None,
+            spelling_input: String::new(),
             gates_remaining: grade.config().question_gate_count,
             last_enemy_fire: 0.0,
             reading_snake: ReadingSnake::new(),
@@ -134,6 +137,9 @@ impl Game {
                 } else if is_key_pressed(KeyCode::R) {
                     self.reading_snake = ReadingSnake::new();
                     self.mode = GameMode::ReadingSnake;
+                } else if is_key_pressed(KeyCode::L) {
+                    self.spelling_input.clear();
+                    self.mode = GameMode::SpellingList;
                 } else if is_key_pressed(KeyCode::P) {
                     self.math_pong = MathPong::new();
                     self.mode = GameMode::MathPong;
@@ -156,6 +162,7 @@ impl Game {
                     self.mode = GameMode::Title;
                 }
             }
+            GameMode::SpellingList => self.update_spelling_list(),
             GameMode::MathPong => {
                 if self.math_pong.update() == MathPongAction::ExitToTitle {
                     self.mode = GameMode::Title;
@@ -280,6 +287,35 @@ impl Game {
         }
     }
 
+    fn update_spelling_list(&mut self) {
+        if is_key_pressed(KeyCode::Escape) {
+            self.mode = GameMode::Title;
+            return;
+        }
+
+        while let Some(ch) = get_char_pressed() {
+            if ch.is_ascii_alphabetic()
+                || ch == ' '
+                || ch == ','
+                || ch == '-'
+                || ch == '\n'
+                || ch == '\r'
+            {
+                self.spelling_input.push(ch);
+            }
+        }
+
+        if is_key_pressed(KeyCode::Backspace) {
+            self.spelling_input.pop();
+        }
+
+        if is_key_pressed(KeyCode::Enter) {
+            let custom_words = custom_words_from_input(&self.spelling_input);
+            self.reading_snake = ReadingSnake::new_with_words(custom_words);
+            self.mode = GameMode::ReadingSnake;
+        }
+    }
+
     fn advance_grade_or_finish(&mut self) {
         if let Some(next_grade) = self.grade.next() {
             self.grade = next_grade;
@@ -308,6 +344,7 @@ impl Game {
             }
             GameMode::Victory => ui::draw_victory_screen(self.score),
             GameMode::ReadingSnake => self.reading_snake.draw(),
+            GameMode::SpellingList => ui::draw_spelling_list_screen(&self.spelling_input),
             GameMode::MathPong => self.math_pong.draw(),
         }
     }

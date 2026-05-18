@@ -14,6 +14,8 @@ const WORDS: &[&str] = &[
     "GALAXY",
 ];
 
+const MAX_CUSTOM_WORD_LEN: usize = 12;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct CellPos {
     x: i32,
@@ -39,6 +41,7 @@ pub struct ReadingSnake {
     target: LetterTile,
     decoys: Vec<LetterTile>,
     word: String,
+    custom_words: Vec<String>,
     letter_index: usize,
     score: u32,
     lives: u8,
@@ -55,6 +58,10 @@ struct LetterTile {
 
 impl ReadingSnake {
     pub fn new() -> Self {
+        Self::new_with_words(Vec::new())
+    }
+
+    pub fn new_with_words(custom_words: Vec<String>) -> Self {
         let mut game = Self {
             snake: Vec::new(),
             dir: CellPos::new(1, 0),
@@ -65,6 +72,7 @@ impl ReadingSnake {
             },
             decoys: Vec::new(),
             word: String::new(),
+            custom_words,
             letter_index: 0,
             score: 0,
             lives: 3,
@@ -83,7 +91,7 @@ impl ReadingSnake {
 
         if self.game_over {
             if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
-                *self = Self::new();
+                *self = Self::new_with_words(self.custom_words.clone());
             }
             return ReadingSnakeAction::None;
         }
@@ -128,7 +136,11 @@ impl ReadingSnake {
 
     fn pick_word(&mut self) {
         let mut rng = ::rand::thread_rng();
-        self.word = WORDS.choose(&mut rng).unwrap_or(&"STAR").to_string();
+        self.word = self
+            .custom_words
+            .choose(&mut rng)
+            .cloned()
+            .unwrap_or_else(|| WORDS.choose(&mut rng).unwrap_or(&"STAR").to_string());
         self.letter_index = 0;
         self.message = "Spell the word in order.";
     }
@@ -334,6 +346,25 @@ impl ReadingSnake {
     }
 }
 
+pub fn custom_words_from_input(input: &str) -> Vec<String> {
+    input
+        .split(|ch: char| !ch.is_ascii_alphabetic())
+        .filter_map(|word| {
+            let word = word.trim();
+            if word.is_empty() {
+                None
+            } else {
+                Some(
+                    word.chars()
+                        .take(MAX_CUSTOM_WORD_LEN)
+                        .flat_map(char::to_uppercase)
+                        .collect(),
+                )
+            }
+        })
+        .collect()
+}
+
 fn format_word_progress(word: &str, letter_index: usize) -> String {
     word.chars()
         .enumerate()
@@ -353,4 +384,25 @@ fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
         font_size as f32,
         color,
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_custom_words_from_spaces_commas_and_lines() {
+        assert_eq!(
+            custom_words_from_input("cat, dog\nmoon sun"),
+            vec!["CAT", "DOG", "MOON", "SUN"]
+        );
+    }
+
+    #[test]
+    fn skips_punctuation_and_limits_word_length() {
+        assert_eq!(
+            custom_words_from_input("  rocket!!! supercalifragilistic  "),
+            vec!["ROCKET", "SUPERCALIFRA"]
+        );
+    }
 }

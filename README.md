@@ -9,7 +9,7 @@ Star Crusher is an educational arcade collection for K-5 practice. The main game
 - Space Invaders-inspired enemy waves with increasing grid size, speed, and fire rate.
 - Question gates between waves that require typed answers to advance.
 - Math Pong mode for launching a straight ball into randomly placed numbered targets.
-- Reading Snake mini game for letter order and word recognition practice.
+- Reading Snake mini game for letter order and word recognition practice, with optional custom weekly spelling lists.
 - Procedural graphics only; no external assets or fonts required.
 - Fixed 800x600 macroquad viewport.
 
@@ -20,6 +20,7 @@ Star Crusher is an educational arcade collection for K-5 practice. The main game
 - Start / continue: `Enter` or `Space`
 - Start Math Pong from title: `P`
 - Start Reading Snake from title: `R`
+- Type a Reading Snake spelling list from title: `L`
 - Return from mini games to title: `Esc`
 - Type gate answers with number keys, then press `Enter`
 - Delete typed answer characters with `Backspace`
@@ -29,6 +30,14 @@ Reading Snake controls:
 - Move: arrow keys or `W` / `A` / `S` / `D`
 - Restart after game over: `Enter` or `Space`
 - Return to title: `Esc`
+
+Spelling-list entry controls:
+
+- Start list entry from title: `L`
+- Type words separated by spaces or commas, then press `Enter`
+- Delete typed characters with `Backspace`
+- Leave the list blank and press `Enter` to use the default words
+- Return to title without starting: `Esc`
 
 Math Pong controls:
 
@@ -90,11 +99,12 @@ Math Pong:
 
 Reading Snake:
 
-1. Press `R` on the title screen.
-2. Follow the word prompt at the bottom of the screen.
-3. Steer the snake into the next correct letter.
-4. Avoid wrong letters, walls, and the snake's own tail.
-5. Complete words to earn bonus points and receive a new word.
+1. Press `R` on the title screen to play with the default word list.
+2. Or press `L`, type weekly spelling words separated by spaces or commas, then press `Enter`.
+3. Follow the word prompt at the bottom of the screen.
+4. Steer the snake into the next correct letter.
+5. Avoid wrong letters, walls, and the snake's own tail.
+6. Complete words to earn bonus points and receive a new word.
 
 ## Development Notes
 
