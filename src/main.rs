@@ -297,6 +297,10 @@ impl Game {
             if ch.is_ascii_alphabetic()
                 || ch == ' '
                 || ch == ','
+                || ch == ':'
+                || ch == ';'
+                || ch == '.'
+                || ch == '\''
                 || ch == '-'
                 || ch == '\n'
                 || ch == '\r'

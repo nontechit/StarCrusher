@@ -216,25 +216,26 @@ pub fn draw_spelling_list_screen(input: &str) {
         Color::new(0.4, 1.0, 0.65, 1.0),
     );
     centered_text(
-        "Type words separated by spaces or commas.",
+        "Type word: definition pairs separated by semicolons.",
         155.0,
         20,
         WHITE,
     );
-    centered_text("Press ENTER to play Reading Snake.", 185.0, 20, WHITE);
+    centered_text("Plain word lists still work too.", 182.0, 18, GRAY);
+    centered_text("Press ENTER to play Reading Snake.", 207.0, 20, WHITE);
 
     set_color(Color::new(0.05, 0.12, 0.08, 0.95));
-    draw_rectangle(100.0, 230.0, 600.0, 120.0);
+    draw_rectangle(100.0, 245.0, 600.0, 120.0);
     set_color(Color::new(0.25, 0.75, 0.4, 1.0));
-    draw_rectangle_lines(100.0, 230.0, 600.0, 120.0);
+    draw_rectangle_lines(100.0, 245.0, 600.0, 120.0);
 
     let shown_input = if input.is_empty() {
-        "cat, dog, sun"
+        "apple: a fruit; moon: shines at night"
     } else {
         input
     };
     let color = if input.is_empty() { GRAY } else { WHITE };
-    draw_wrapped_text(shown_input, 125.0, 270.0, 550.0, 24, color);
+    draw_wrapped_text(shown_input, 125.0, 285.0, 550.0, 22, color);
 
     let blink = if (get_time() as f32 * 3.0).fract() > 0.5 {
         1.0
@@ -242,7 +243,7 @@ pub fn draw_spelling_list_screen(input: &str) {
         0.0
     };
     set_color(Color::new(0.3, 1.0, 0.5, blink));
-    draw_rectangle(126.0, 315.0, 16.0, 3.0);
+    draw_rectangle(126.0, 330.0, 16.0, 3.0);
 
     centered_text(
         "Leave it blank to use the default words.",
