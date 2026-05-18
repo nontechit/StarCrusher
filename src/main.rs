@@ -15,8 +15,8 @@ use player::{Bullet, EnemyBullet, Player};
 use question::{generate_question, Question};
 use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
 
-const SCREEN_W: f32 = 800.0;
-const SCREEN_H: f32 = 600.0;
+const SCREEN_W: f32 = 1024.0;
+const SCREEN_H: f32 = 768.0;
 
 fn window_conf() -> Conf {
     Conf {
@@ -136,6 +136,9 @@ impl Game {
                     self.reset();
                 } else if is_key_pressed(KeyCode::R) {
                     self.reading_snake = ReadingSnake::new();
+                    self.mode = GameMode::ReadingSnake;
+                } else if is_key_pressed(KeyCode::N) {
+                    self.reading_snake = ReadingSnake::new_nightmare();
                     self.mode = GameMode::ReadingSnake;
                 } else if is_key_pressed(KeyCode::L) {
                     self.spelling_input.clear();
@@ -313,9 +316,13 @@ impl Game {
             self.spelling_input.pop();
         }
 
-        if is_key_pressed(KeyCode::Enter) {
+        if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::N) {
             let custom_words = custom_words_from_input(&self.spelling_input);
-            self.reading_snake = ReadingSnake::new_with_words(custom_words);
+            self.reading_snake = if is_key_pressed(KeyCode::N) {
+                ReadingSnake::new_nightmare_with_words(custom_words)
+            } else {
+                ReadingSnake::new_with_words(custom_words)
+            };
             self.mode = GameMode::ReadingSnake;
         }
     }
@@ -406,7 +413,7 @@ impl Game {
 fn draw_starfield() {
     for i in 0..90 {
         let x = ((i * 73 + 19) % SCREEN_W as i32) as f32;
-        let y = ((i * 41 + 37) % 560) as f32;
+        let y = ((i * 41 + 37) % (SCREEN_H as i32 - 40)) as f32;
         assets::draw_star(x, y, 0.6 + (i % 3) as f32 * 0.4);
     }
 }

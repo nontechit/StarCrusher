@@ -1,6 +1,6 @@
 [package]
 name = "star-crusher"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 description = "A Space Invaders game with K-5 educational math progression"
 

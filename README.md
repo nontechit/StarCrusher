@@ -2,6 +2,8 @@
 
 Star Crusher is an educational arcade collection for K-5 practice. The main game is a Space Invaders-style math game where enemies display possible answers to grade-level math questions. It also includes Math Pong, a paddle-and-ball number target mode, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
+Current build: `1.0.1`
+
 ## Features
 
 - Seven-grade progression from Preschool through 5th Grade.
@@ -9,9 +11,10 @@ Star Crusher is an educational arcade collection for K-5 practice. The main game
 - Space Invaders-inspired enemy waves with increasing grid size, speed, and fire rate.
 - Question gates between waves that require typed answers to advance.
 - Math Pong mode for launching a straight ball into randomly placed numbered targets.
-- Reading Snake mini game for letter order, word recognition, and definition practice, with optional custom weekly spelling lists.
+- Reading Snake mini game for letter order, word recognition, and definition practice, with optional custom weekly spelling lists and Nightmare mode.
+- Reading Snake shows definition cards, keeps the active definition visible above the board, and keeps new letter tiles away from the snake head.
 - Procedural graphics only; no external assets or fonts required.
-- Fixed 800x600 macroquad viewport.
+- Fixed 1024x768 macroquad viewport.
 
 ## Controls
 
@@ -20,6 +23,7 @@ Star Crusher is an educational arcade collection for K-5 practice. The main game
 - Start / continue: `Enter` or `Space`
 - Start Math Pong from title: `P`
 - Start Reading Snake from title: `R`
+- Start Reading Snake Nightmare from title: `N`
 - Type a Reading Snake spelling list from title: `L`
 - Return from mini games to title: `Esc`
 - Type gate answers with number keys, then press `Enter`
@@ -32,10 +36,24 @@ Reading Snake controls:
 - Restart after game over: `Enter` or `Space`
 - Return to title: `Esc`
 
+Reading Snake layout and safety:
+
+- The definition appears before each word and remains visible above the playfield.
+- The blank word prompt appears below the playfield.
+- After each correct letter, the next target and decoy letters avoid a 6-by-6 area around the snake head.
+
+Reading Snake Nightmare rules:
+
+- Start from title: `N`
+- All letter tiles use the same color
+- Wrong letters cost one life
+- Completing a nightmare word awards one bonus life, up to 9 lives
+
 Spelling-list entry controls:
 
 - Start list entry from title: `L`
 - Type `word: definition` pairs separated by semicolons, then press `Enter`
+- Press `N` from list entry to play Nightmare with the typed list
 - Plain word lists separated by spaces or commas still work
 - Delete typed characters with `Backspace`
 - Leave the list blank and press `Enter` to use the default words
@@ -105,10 +123,19 @@ Reading Snake:
 2. Or press `L`, type weekly spelling words with definitions, then press `Enter`.
 3. Use the format `apple: a fruit; moon: shines at night` for custom definitions.
 4. Read the definition card, then press `Enter` or `Space` to start spelling.
-5. Follow the blank word prompt at the bottom of the screen.
+5. Use the visible definition above the board and follow the blank word prompt below the board.
 6. Steer the snake into the next correct letter.
 7. Avoid wrong letters, walls, and the snake's own tail.
-8. Complete words to earn bonus points and see the next definition card.
+8. New letters appear away from the snake head so the player has room to react.
+9. Complete words to earn bonus points and see the next definition card.
+
+Reading Snake Nightmare:
+
+1. Press `N` on the title screen.
+2. Or press `L`, type a custom spelling list, then press `N`.
+3. Read the definition card and spell the hidden word.
+4. Choose carefully because all letter tiles look the same.
+5. Complete the word to earn a bonus life.
 
 ## Development Notes
 

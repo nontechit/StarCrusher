@@ -4,9 +4,9 @@ use macroquad::prelude::*;
 use crate::levels::Grade;
 use crate::question::{generate_question, Question};
 
-const SCREEN_W: f32 = 800.0;
-const SCREEN_H: f32 = 600.0;
-const PADDLE_Y: f32 = 540.0;
+const SCREEN_W: f32 = 1024.0;
+const SCREEN_H: f32 = 768.0;
+const PADDLE_Y: f32 = 708.0;
 const TARGET_Y: f32 = 120.0;
 const TARGET_W: f32 = 76.0;
 const TARGET_H: f32 = 42.0;
@@ -326,14 +326,14 @@ impl MathPong {
         draw_rectangle(
             100.0,
             424.0,
-            600.0,
+            SCREEN_H,
             box_h,
             Color::new(0.05, 0.08, 0.18, 0.88),
         );
         draw_rectangle_lines(
             100.0,
             424.0,
-            600.0,
+            SCREEN_H,
             box_h,
             2.0,
             Color::new(0.4, 0.7, 1.0, 1.0),

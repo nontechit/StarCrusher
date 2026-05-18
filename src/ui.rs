@@ -2,6 +2,10 @@ use crate::assets;
 use crate::levels::Grade;
 use macroquad::prelude::*;
 
+const SCREEN_W: f32 = 1024.0;
+const SCREEN_H: f32 = 768.0;
+const CENTER_X: f32 = SCREEN_W / 2.0;
+
 thread_local! {
     static CURRENT_COLOR: std::cell::Cell<Color> = const { std::cell::Cell::new(WHITE) };
 }
@@ -53,7 +57,7 @@ pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text
     draw_text(
         format!("GRADE: {}", grade.display_name()).as_str(),
         10.0,
-        580.0,
+        740.0,
         font_size as f32,
         WHITE,
     );
@@ -63,19 +67,19 @@ pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text
     let tm = measure_text(&score_txt, None, font_size as u16, 1.0);
     draw_text(
         &score_txt,
-        400.0 - tm.w / 2.0,
-        580.0,
+        CENTER_X - tm.w / 2.0,
+        740.0,
         font_size as f32,
         YELLOW,
     );
 
     // Wave number (top-right)
     let wave_txt = format!("WAVE: {}", wave);
-    draw_text(&wave_txt, 790.0, 580.0, font_size as f32, WHITE);
+    draw_text(&wave_txt, 930.0, 740.0, font_size as f32, WHITE);
 
     // Lives display (bottom-left corner area)
     for i in 0..lives {
-        assets::draw_life_icon(10.0 + (i as f32) * 20.0, 590.0);
+        assets::draw_life_icon(10.0 + (i as f32) * 20.0, 748.0);
     }
 
     // Active question text at bottom of screen (above player ship zone)
@@ -105,7 +109,7 @@ fn draw_question_banner(text: &str) {
         let tm = measure_text(line, None, font_size as u16, 1.0);
         draw_text(
             line,
-            400.0 - tm.w / 2.0,
+            CENTER_X - tm.w / 2.0,
             510.0 + (i as f32) * 18.0,
             font_size as f32,
             YELLOW,
@@ -120,8 +124,8 @@ pub fn draw_title_screen() {
     // Background stars for atmosphere
     let seed = 42;
     for i in 0..80 {
-        let x = ((seed + i * 7) % 800) as f32;
-        let y = ((seed + i * 13) % 560) as f32;
+        let x = ((seed + i * 7) % SCREEN_W as i32) as f32;
+        let y = ((seed + i * 13) % (SCREEN_H as i32 - 40)) as f32;
         assets::draw_star(x, y, (i % 3) as f32 * 0.5 + 0.5);
     }
 
@@ -131,7 +135,7 @@ pub fn draw_title_screen() {
     set_color(Color::new(0.3, 0.6, 1.0, 1.0));
     draw_text(
         title,
-        400.0 - tm_title.w / 2.0 + 2.0,
+        CENTER_X - tm_title.w / 2.0 + 2.0,
         150.0 + 2.0,
         48.0,
         current_color(),
@@ -140,7 +144,7 @@ pub fn draw_title_screen() {
     set_color(WHITE);
     draw_text(
         title,
-        400.0 - tm_title.w / 2.0,
+        CENTER_X - tm_title.w / 2.0,
         150.0,
         48.0,
         current_color(),
@@ -152,7 +156,7 @@ pub fn draw_title_screen() {
     set_color(Color::new(0.6, 0.9, 1.0, 1.0));
     draw_text(
         subtitle,
-        400.0 - tm_sub.w / 2.0,
+        CENTER_X - tm_sub.w / 2.0,
         200.0,
         24.0,
         current_color(),
@@ -169,6 +173,7 @@ pub fn draw_title_screen() {
         "Press ENTER or SPACE to Start Math Invaders",
         "Press P for Math Pong",
         "Press R for Reading Snake",
+        "Press N for Nightmare Snake",
         "Press L to type a spelling list",
     ];
 
@@ -177,7 +182,7 @@ pub fn draw_title_screen() {
         let tm = measure_text(line, None, 18, 1.0);
         draw_text(
             line,
-            400.0 - tm.w / 2.0,
+            CENTER_X - tm.w / 2.0,
             300.0 + (i as f32) * 25.0,
             18.0,
             WHITE,
@@ -191,8 +196,8 @@ pub fn draw_title_screen() {
         let _tm = measure_text(grade.display_name(), None, 12, 1.0);
         draw_text(
             grade.display_name(),
-            50.0 + (i as f32) * 98.0,
-            540.0,
+            120.0 + (i as f32) * 112.0,
+            700.0,
             12.0,
             WHITE,
         );
@@ -204,8 +209,8 @@ pub fn draw_title_screen() {
 /// Draws the weekly spelling-list entry screen for Reading Snake.
 pub fn draw_spelling_list_screen(input: &str) {
     for i in 0..80 {
-        let x = ((17 + i * 11) % 800) as f32;
-        let y = ((31 + i * 19) % 560) as f32;
+        let x = ((17 + i * 11) % SCREEN_W as i32) as f32;
+        let y = ((31 + i * 19) % (SCREEN_H as i32 - 40)) as f32;
         assets::draw_star(x, y, (i % 3) as f32 * 0.4 + 0.5);
     }
 
@@ -223,11 +228,12 @@ pub fn draw_spelling_list_screen(input: &str) {
     );
     centered_text("Plain word lists still work too.", 182.0, 18, GRAY);
     centered_text("Press ENTER to play Reading Snake.", 207.0, 20, WHITE);
+    centered_text("Press N for Nightmare with this list.", 232.0, 18, GRAY);
 
     set_color(Color::new(0.05, 0.12, 0.08, 0.95));
-    draw_rectangle(100.0, 245.0, 600.0, 120.0);
+    draw_rectangle(100.0, 270.0, 600.0, 120.0);
     set_color(Color::new(0.25, 0.75, 0.4, 1.0));
-    draw_rectangle_lines(100.0, 245.0, 600.0, 120.0);
+    draw_rectangle_lines(100.0, 270.0, 600.0, 120.0);
 
     let shown_input = if input.is_empty() {
         "apple: a fruit; moon: shines at night"
@@ -235,7 +241,7 @@ pub fn draw_spelling_list_screen(input: &str) {
         input
     };
     let color = if input.is_empty() { GRAY } else { WHITE };
-    draw_wrapped_text(shown_input, 125.0, 285.0, 550.0, 22, color);
+    draw_wrapped_text(shown_input, 125.0, 310.0, 550.0, 22, color);
 
     let blink = if (get_time() as f32 * 3.0).fract() > 0.5 {
         1.0
@@ -243,21 +249,21 @@ pub fn draw_spelling_list_screen(input: &str) {
         0.0
     };
     set_color(Color::new(0.3, 1.0, 0.5, blink));
-    draw_rectangle(126.0, 330.0, 16.0, 3.0);
+    draw_rectangle(126.0, 355.0, 16.0, 3.0);
 
     centered_text(
         "Leave it blank to use the default words.",
-        410.0,
+        435.0,
         18,
         YELLOW,
     );
-    centered_text("Backspace deletes   ESC returns to title", 450.0, 18, GRAY);
+    centered_text("Backspace deletes   ESC returns to title", 475.0, 18, GRAY);
     set_default_color();
 }
 
 fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
     let tm = measure_text(text, None, font_size, 1.0);
-    draw_text(text, 400.0 - tm.w / 2.0, y, font_size as f32, color);
+    draw_text(text, CENTER_X - tm.w / 2.0, y, font_size as f32, color);
 }
 
 fn draw_wrapped_text(text: &str, x: f32, y: f32, max_width: f32, font_size: u16, color: Color) {
@@ -289,7 +295,7 @@ fn draw_wrapped_text(text: &str, x: f32, y: f32, max_width: f32, font_size: u16,
 pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
     // Semi-transparent overlay
     set_color(Color::new(0.05, 0.05, 0.15, 0.85));
-    draw_rectangle(0.0, 0.0, 800.0, 600.0);
+    draw_rectangle(0.0, 0.0, SCREEN_W, SCREEN_H);
 
     // Gate title
     let gate_title = "WAVE COMPLETE!";
@@ -297,7 +303,7 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
     let tm_gt = measure_text(gate_title, None, 32, 1.0);
     draw_text(
         gate_title,
-        400.0 - tm_gt.w / 2.0,
+        CENTER_X - tm_gt.w / 2.0,
         80.0,
         32.0,
         current_color(),
@@ -317,7 +323,7 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
     let tm_gn = measure_text(&grade_txt, None, 26, 1.0);
     draw_text(
         &grade_txt,
-        400.0 - tm_gn.w / 2.0,
+        CENTER_X - tm_gn.w / 2.0,
         180.0,
         26.0,
         current_color(),
@@ -329,7 +335,7 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
     let tm_tp = measure_text(&topic_txt, None, 20, 1.0);
     draw_text(
         &topic_txt,
-        400.0 - tm_tp.w / 2.0,
+        CENTER_X - tm_tp.w / 2.0,
         230.0,
         20.0,
         current_color(),
@@ -349,7 +355,7 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
         let tm = measure_text(line, None, 16, 1.0);
         draw_text(
             line,
-            400.0 - tm.w / 2.0,
+            CENTER_X - tm.w / 2.0,
             300.0 + (i as f32) * 28.0,
             16.0,
             WHITE,
@@ -363,7 +369,7 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
 pub fn draw_game_over(score: u32, grade_reached: &Grade) {
     // Dark overlay
     set_color(Color::new(0.1, 0.05, 0.05, 0.9));
-    draw_rectangle(0.0, 0.0, 800.0, 600.0);
+    draw_rectangle(0.0, 0.0, SCREEN_W, SCREEN_H);
 
     // Game Over title with pulsing effect
     let pulse = (get_time() as f32 * 3.0).sin() * 0.2 + 0.8;
@@ -373,7 +379,7 @@ pub fn draw_game_over(score: u32, grade_reached: &Grade) {
     let tm_go = measure_text(go_title, None, 48, 1.0);
     draw_text(
         go_title,
-        400.0 - tm_go.w / 2.0,
+        CENTER_X - tm_go.w / 2.0,
         150.0,
         48.0,
         current_color(),
@@ -393,7 +399,7 @@ pub fn draw_game_over(score: u32, grade_reached: &Grade) {
     let tm_sc = measure_text(&score_txt, None, 28, 1.0);
     draw_text(
         &score_txt,
-        400.0 - tm_sc.w / 2.0,
+        CENTER_X - tm_sc.w / 2.0,
         260.0,
         28.0,
         current_color(),
@@ -405,7 +411,7 @@ pub fn draw_game_over(score: u32, grade_reached: &Grade) {
     let tm_gr = measure_text(&grade_txt, None, 24, 1.0);
     draw_text(
         &grade_txt,
-        400.0 - tm_gr.w / 2.0,
+        CENTER_X - tm_gr.w / 2.0,
         320.0,
         24.0,
         current_color(),
@@ -415,7 +421,13 @@ pub fn draw_game_over(score: u32, grade_reached: &Grade) {
     set_color(WHITE);
     let restart = "Press ENTER to Play Again";
     let tm_rs = measure_text(restart, None, 20, 1.0);
-    draw_text(restart, 400.0 - tm_rs.w / 2.0, 450.0, 20.0, current_color());
+    draw_text(
+        restart,
+        CENTER_X - tm_rs.w / 2.0,
+        450.0,
+        20.0,
+        current_color(),
+    );
 
     set_default_color();
 }
@@ -424,7 +436,7 @@ pub fn draw_game_over(score: u32, grade_reached: &Grade) {
 pub fn draw_victory_screen(score: u32) {
     // Celebration overlay with gradient-like effect
     set_color(Color::new(0.1, 0.1, 0.2, 0.9));
-    draw_rectangle(0.0, 0.0, 800.0, 600.0);
+    draw_rectangle(0.0, 0.0, SCREEN_W, SCREEN_H);
 
     // Victory title with rainbow cycling color
     let hue = (get_time() as f32 * 0.5) % 1.0;
@@ -434,7 +446,7 @@ pub fn draw_victory_screen(score: u32) {
     let tm_vt = measure_text(vic_title, None, 48, 1.0);
     draw_text(
         vic_title,
-        400.0 - tm_vt.w / 2.0,
+        CENTER_X - tm_vt.w / 2.0,
         150.0,
         48.0,
         current_color(),
@@ -454,7 +466,7 @@ pub fn draw_victory_screen(score: u32) {
     set_color(YELLOW);
     draw_text(
         &score_txt,
-        400.0 - tm_sc.w / 2.0,
+        CENTER_X - tm_sc.w / 2.0,
         280.0,
         36.0,
         current_color(),
@@ -467,7 +479,7 @@ pub fn draw_victory_screen(score: u32) {
         let tm = measure_text(line, None, 20, 1.0);
         draw_text(
             line,
-            400.0 - tm.w / 2.0,
+            CENTER_X - tm.w / 2.0,
             340.0 + (i as f32) * 25.0,
             20.0,
             WHITE,
@@ -478,7 +490,13 @@ pub fn draw_victory_screen(score: u32) {
     let restart = "Press ENTER to Play Again";
     set_color(WHITE);
     let tm_rs = measure_text(restart, None, 18, 1.0);
-    draw_text(restart, 400.0 - tm_rs.w / 2.0, 500.0, 18.0, current_color());
+    draw_text(
+        restart,
+        CENTER_X - tm_rs.w / 2.0,
+        500.0,
+        18.0,
+        current_color(),
+    );
 
     set_default_color();
 }
@@ -496,7 +514,7 @@ pub fn draw_answer_input(current_input: &str) {
     // Current typed answer (centered)
     set_color(WHITE);
     let tm = measure_text(current_input, None, 24, 1.0);
-    draw_text(current_input, 400.0 - tm.w / 2.0, 500.0, 24.0, WHITE);
+    draw_text(current_input, CENTER_X - tm.w / 2.0, 500.0, 24.0, WHITE);
 
     // Blinking cursor effect
     let blink = if (get_time() as f32 * 3.0).fract() > 0.5 {
@@ -506,9 +524,9 @@ pub fn draw_answer_input(current_input: &str) {
     };
     set_color(Color::new(0.3, 1.0, 1.0, blink));
     let cursor_x = if current_input.is_empty() {
-        400.0 - tm.w / 2.0 + 5.0
+        CENTER_X - tm.w / 2.0 + 5.0
     } else {
-        400.0 - tm.w / 2.0 + tm.w + 3.0
+        CENTER_X - tm.w / 2.0 + tm.w + 3.0
     };
     draw_rectangle(cursor_x, 490.0, 2.0, 28.0);
 
@@ -525,7 +543,7 @@ pub fn draw_answer_feedback(is_correct: bool) {
 
     set_color(color);
     let tm = measure_text(text, None, 28, 1.0);
-    draw_text(text, 400.0 - tm.w / 2.0, 560.0, 28.0, color);
+    draw_text(text, CENTER_X - tm.w / 2.0, 560.0, 28.0, color);
 
     set_default_color();
 }

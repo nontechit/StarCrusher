@@ -2,12 +2,16 @@ use ::rand::seq::SliceRandom;
 use ::rand::Rng;
 use macroquad::prelude::*;
 
-const GRID_W: i32 = 20;
-const GRID_H: i32 = 15;
+const SCREEN_W: f32 = 1024.0;
+const SCREEN_H: f32 = 768.0;
+const GRID_W: i32 = 34;
+const GRID_H: i32 = 21;
 const CELL: f32 = 24.0;
-const BOARD_X: f32 = 160.0;
-const BOARD_Y: f32 = 130.0;
-const STEP_SECONDS: f64 = 0.15;
+const BOARD_X: f32 = 104.0;
+const BOARD_Y: f32 = 110.0;
+const STEP_SECONDS: f64 = 0.18;
+const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
+const MAX_LIVES: u8 = 9;
 
 const WORDS: &[(&str, &str)] = &[
     ("CAT", "A small furry pet that says meow."),
@@ -72,6 +76,7 @@ pub struct ReadingSnake {
     letter_index: usize,
     score: u32,
     lives: u8,
+    nightmare_mode: bool,
     last_step: f64,
     game_over: bool,
     showing_definition_card: bool,
@@ -87,10 +92,22 @@ struct LetterTile {
 
 impl ReadingSnake {
     pub fn new() -> Self {
-        Self::new_with_words(Vec::new())
+        Self::new_with_mode(Vec::new(), false)
+    }
+
+    pub fn new_nightmare() -> Self {
+        Self::new_with_mode(Vec::new(), true)
     }
 
     pub fn new_with_words(custom_words: Vec<WordEntry>) -> Self {
+        Self::new_with_mode(custom_words, false)
+    }
+
+    pub fn new_nightmare_with_words(custom_words: Vec<WordEntry>) -> Self {
+        Self::new_with_mode(custom_words, true)
+    }
+
+    fn new_with_mode(custom_words: Vec<WordEntry>, nightmare_mode: bool) -> Self {
         let mut game = Self {
             snake: Vec::new(),
             dir: CellPos::new(1, 0),
@@ -106,10 +123,15 @@ impl ReadingSnake {
             letter_index: 0,
             score: 0,
             lives: 3,
+            nightmare_mode,
             last_step: get_time(),
             game_over: false,
             showing_definition_card: false,
-            definition_card_title: "New word!",
+            definition_card_title: if nightmare_mode {
+                "Nightmare word!"
+            } else {
+                "New word!"
+            },
             message: "Collect the next letter.",
         };
         game.reset_run();
@@ -123,7 +145,7 @@ impl ReadingSnake {
 
         if self.game_over {
             if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
-                *self = Self::new_with_words(self.custom_words.clone());
+                *self = Self::new_with_mode(self.custom_words.clone(), self.nightmare_mode);
             }
             return ReadingSnakeAction::None;
         }
@@ -131,6 +153,7 @@ impl ReadingSnake {
         if self.showing_definition_card {
             if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
                 self.showing_definition_card = false;
+                self.place_letters();
                 self.last_step = get_time();
             }
             return ReadingSnakeAction::None;
@@ -154,26 +177,25 @@ impl ReadingSnake {
         self.draw_footer();
 
         if self.game_over {
-            draw_rectangle(0.0, 0.0, 800.0, 600.0, Color::new(0.0, 0.0, 0.0, 0.75));
-            centered_text("READING SNAKE OVER", 220.0, 42, RED);
-            centered_text(&format!("Final Score: {}", self.score), 280.0, 28, YELLOW);
-            centered_text("Press ENTER to play again", 340.0, 22, WHITE);
-            centered_text("Press ESC for title", 375.0, 18, GRAY);
+            draw_rectangle(
+                0.0,
+                0.0,
+                SCREEN_W,
+                SCREEN_H,
+                Color::new(0.0, 0.0, 0.0, 0.75),
+            );
+            centered_text("READING SNAKE OVER", 300.0, 42, RED);
+            centered_text(&format!("Final Score: {}", self.score), 360.0, 28, YELLOW);
+            centered_text("Press ENTER to play again", 420.0, 22, WHITE);
+            centered_text("Press ESC for title", 455.0, 18, GRAY);
         } else if self.showing_definition_card {
             self.draw_definition_card();
         }
     }
 
     fn reset_run(&mut self) {
-        self.snake = vec![
-            CellPos::new(GRID_W / 2, GRID_H / 2),
-            CellPos::new(GRID_W / 2 - 1, GRID_H / 2),
-            CellPos::new(GRID_W / 2 - 2, GRID_H / 2),
-        ];
-        self.dir = CellPos::new(1, 0);
-        self.next_dir = self.dir;
+        self.reset_snake_to_spawn();
         self.pick_word();
-        self.place_letters();
     }
 
     fn pick_word(&mut self) {
@@ -227,12 +249,17 @@ impl ReadingSnake {
             self.letter_index += 1;
             if self.letter_index >= self.word.len() {
                 self.score += 50;
-                self.definition_card_title = "Great job! Next word:";
+                if self.nightmare_mode {
+                    self.lives = (self.lives + 1).min(MAX_LIVES);
+                    self.definition_card_title = "Nightmare complete! Bonus life!";
+                } else {
+                    self.definition_card_title = "Great job! Next word:";
+                }
                 self.pick_word();
             } else {
                 self.message = "Good letter. Keep spelling.";
+                self.place_letters();
             }
-            self.place_letters();
             return;
         }
 
@@ -249,15 +276,19 @@ impl ReadingSnake {
         if self.lives == 0 {
             self.game_over = true;
         } else {
-            self.snake = vec![
-                CellPos::new(GRID_W / 2, GRID_H / 2),
-                CellPos::new(GRID_W / 2 - 1, GRID_H / 2),
-                CellPos::new(GRID_W / 2 - 2, GRID_H / 2),
-            ];
-            self.dir = CellPos::new(1, 0);
-            self.next_dir = self.dir;
+            self.reset_snake_to_spawn();
             self.place_letters();
         }
+    }
+
+    fn reset_snake_to_spawn(&mut self) {
+        self.snake = vec![
+            CellPos::new(GRID_W / 2, GRID_H / 2),
+            CellPos::new(GRID_W / 2 - 1, GRID_H / 2),
+            CellPos::new(GRID_W / 2 - 2, GRID_H / 2),
+        ];
+        self.dir = CellPos::new(1, 0);
+        self.next_dir = self.dir;
     }
 
     fn place_letters(&mut self) {
@@ -289,23 +320,32 @@ impl ReadingSnake {
         let mut rng = ::rand::thread_rng();
         loop {
             let pos = CellPos::new(rng.gen_range(0..GRID_W), rng.gen_range(0..GRID_H));
-            if !self.snake.contains(&pos) && !reserved.contains(&pos) {
+            if !self.snake.contains(&pos)
+                && !reserved.contains(&pos)
+                && !self.is_in_head_safe_area(pos)
+            {
                 return pos;
             }
         }
     }
 
+    fn is_in_head_safe_area(&self, pos: CellPos) -> bool {
+        let head = self.snake[0];
+        (pos.x - head.x).abs() <= SNAKE_HEAD_SAFE_RADIUS
+            && (pos.y - head.y).abs() <= SNAKE_HEAD_SAFE_RADIUS
+    }
+
     fn draw_header(&self) {
-        centered_text("READING SNAKE", 48.0, 40, Color::new(0.4, 1.0, 0.65, 1.0));
-        centered_text(
-            "Collect letters in order to spell the word.",
-            82.0,
-            18,
-            WHITE,
-        );
+        let title = if self.nightmare_mode {
+            "READING SNAKE NIGHTMARE"
+        } else {
+            "READING SNAKE"
+        };
+        centered_text(title, 48.0, 40, Color::new(0.4, 1.0, 0.65, 1.0));
+        centered_text(&format!("Definition: {}", self.definition), 82.0, 18, WHITE);
 
         draw_text(&format!("Score: {}", self.score), 28.0, 40.0, 22.0, YELLOW);
-        draw_text(&format!("Lives: {}", self.lives), 670.0, 40.0, 22.0, WHITE);
+        draw_text(&format!("Lives: {}", self.lives), 870.0, 40.0, 22.0, WHITE);
     }
 
     fn draw_board(&self) {
@@ -344,9 +384,20 @@ impl ReadingSnake {
     }
 
     fn draw_tiles(&self) {
-        self.draw_tile(&self.target, Color::new(1.0, 0.86, 0.2, 1.0));
+        let target_color = if self.nightmare_mode {
+            Color::new(0.55, 0.75, 1.0, 1.0)
+        } else {
+            Color::new(1.0, 0.86, 0.2, 1.0)
+        };
+        let decoy_color = if self.nightmare_mode {
+            target_color
+        } else {
+            Color::new(0.8, 0.25, 0.25, 1.0)
+        };
+
+        self.draw_tile(&self.target, target_color);
         for tile in &self.decoys {
-            self.draw_tile(tile, Color::new(0.8, 0.25, 0.25, 1.0));
+            self.draw_tile(tile, decoy_color);
         }
     }
 
@@ -380,44 +431,50 @@ impl ReadingSnake {
 
     fn draw_footer(&self) {
         let progress = format_word_progress(&self.word, self.letter_index);
-        centered_text(&format!("Word: {}", progress), 515.0, 30, YELLOW);
+        centered_text(&format!("Word: {}", progress), 675.0, 30, YELLOW);
         centered_text(
             "Meaning: Read the card, then spell the word.",
-            548.0,
+            710.0,
             18,
             WHITE,
         );
-        centered_text(self.message, 572.0, 18, WHITE);
-        centered_text(
-            "Arrow Keys / WASD to move   ESC returns to title",
-            595.0,
-            16,
-            GRAY,
-        );
+        centered_text(self.message, 735.0, 18, WHITE);
+        let controls = if self.nightmare_mode {
+            "Nightmare: all letters look alike   ESC returns to title"
+        } else {
+            "Arrow Keys / WASD to move   ESC returns to title"
+        };
+        centered_text(controls, 760.0, 16, GRAY);
     }
 
     fn draw_definition_card(&self) {
-        draw_rectangle(0.0, 0.0, 800.0, 600.0, Color::new(0.0, 0.0, 0.0, 0.65));
         draw_rectangle(
-            125.0,
-            150.0,
+            0.0,
+            0.0,
+            SCREEN_W,
+            SCREEN_H,
+            Color::new(0.0, 0.0, 0.0, 0.65),
+        );
+        draw_rectangle(
+            237.0,
+            220.0,
             550.0,
             280.0,
             Color::new(0.06, 0.14, 0.1, 0.98),
         );
         draw_rectangle_lines(
-            125.0,
-            150.0,
+            237.0,
+            220.0,
             550.0,
             280.0,
             4.0,
             Color::new(0.4, 1.0, 0.65, 1.0),
         );
 
-        centered_text(self.definition_card_title, 205.0, 30, YELLOW);
-        centered_text("Definition", 250.0, 24, Color::new(0.4, 1.0, 0.65, 1.0));
-        draw_wrapped_centered_text(&self.definition, 292.0, 460.0, 24, WHITE);
-        centered_text("Press SPACE or ENTER when ready", 390.0, 20, GRAY);
+        centered_text(self.definition_card_title, 275.0, 30, YELLOW);
+        centered_text("Definition", 320.0, 24, Color::new(0.4, 1.0, 0.65, 1.0));
+        draw_wrapped_centered_text(&self.definition, 362.0, 460.0, 24, WHITE);
+        centered_text("Press SPACE or ENTER when ready", 460.0, 20, GRAY);
     }
 }
 
@@ -487,7 +544,7 @@ fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
     let metrics = measure_text(text, None, font_size, 1.0);
     draw_text(
         text,
-        400.0 - metrics.width / 2.0,
+        SCREEN_W / 2.0 - metrics.width / 2.0,
         y,
         font_size as f32,
         color,

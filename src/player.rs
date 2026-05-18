@@ -15,7 +15,7 @@ impl Player {
         let w = 32.0;
         Player {
             x: (screen_w - w) / 2.0,
-            y: 540.0,
+            y: 708.0,
             width: w,
             height: 32.0,
         }
@@ -123,7 +123,7 @@ impl EnemyBullet {
     /// Updates position each frame. Returns true if off-screen (bottom).
     pub fn update(&mut self) -> bool {
         self.y += self.speed;
-        self.y > 610.0 // Off bottom of screen
+        self.y > 778.0 // Off bottom of screen
     }
 
     /// Draws the enemy bullet at current position.
