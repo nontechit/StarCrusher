@@ -1,8 +1,8 @@
 # Star Crusher
 
-Star Crusher is an educational arcade collection for K-5 practice. The main game is a Space Invaders-style math game where enemies display possible answers to grade-level math questions. It also includes Math Pong, a paddle-and-ball number target mode, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
+Star Crusher is an educational arcade collection wrapped in a light kid-friendly dungeon adventure menu. The current encounters include a Space Invaders-style math game where enemies display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.0.1`
+Current build: `1.1.0`
 
 ## Features
 
@@ -13,18 +13,27 @@ Current build: `1.0.1`
 - Math Pong mode for launching a straight ball into randomly placed numbered targets.
 - Reading Snake mini game for letter order, word recognition, and definition practice, with optional custom weekly spelling lists and Nightmare mode.
 - Reading Snake shows definition cards, keeps the active definition visible above the board, and keeps new letter tiles away from the snake head.
+- RPG-style title menu with procedural stone paneling, dungeon glyphs, and selectable encounter options.
 - Procedural graphics only; no external assets or fonts required.
 - Fixed 1024x768 macroquad viewport.
 
 ## Controls
 
+Title menu controls:
+
+- Move menu cursor: `Up` / `Down` arrow keys or `W` / `S`
+- Launch selected option: `Enter` or `Space`
+- Direct shortcut for Math Invaders: `M`
+- Direct shortcut for Math Pong: `P`
+- Direct shortcut for Reading Snake: `R`
+- Direct shortcut for Reading Snake Nightmare: `N`
+- Direct shortcut for spelling-list entry: `L`
+
+Math Invaders controls:
+
 - Move: `Left` / `Right` arrow keys or `A` / `D`
 - Shoot: `Space`
 - Start / continue: `Enter` or `Space`
-- Start Math Pong from title: `P`
-- Start Reading Snake from title: `R`
-- Start Reading Snake Nightmare from title: `N`
-- Type a Reading Snake spelling list from title: `L`
 - Return from mini games to title: `Esc`
 - Type gate answers with number keys, then press `Enter`
 - Delete typed answer characters with `Backspace`
@@ -103,7 +112,7 @@ src/assets.rs    Procedural drawing helpers for ships, enemies, stars, effects
 
 Math Invaders:
 
-1. Start from the title screen.
+1. Choose `Start Adventure` or `Math Invaders` from the title menu.
 2. Clear the current enemy wave by shooting enemies.
 3. Use the active math question to identify correct puzzle enemies.
 4. Answer typed math questions at the wave-complete gate.
@@ -111,7 +120,7 @@ Math Invaders:
 
 Math Pong:
 
-1. Press `P` on the title screen.
+1. Choose `Math Pong` from the title menu, or press `P`.
 2. Read the math question and identify the correct numbered target.
 3. Move the paddle under the correct number before launching the ball.
 4. Launch straight upward into the correct number to clear the question.
@@ -119,8 +128,8 @@ Math Pong:
 
 Reading Snake:
 
-1. Press `R` on the title screen to play with the default word list.
-2. Or press `L`, type weekly spelling words with definitions, then press `Enter`.
+1. Choose `Reading Snake` from the title menu, or press `R`, to play with the default word list.
+2. Or choose `Spelling List`, type weekly spelling words with definitions, then press `Enter`.
 3. Use the format `apple: a fruit; moon: shines at night` for custom definitions.
 4. Read the definition card, then press `Enter` or `Space` to start spelling.
 5. Use the visible definition above the board and follow the blank word prompt below the board.
@@ -131,8 +140,8 @@ Reading Snake:
 
 Reading Snake Nightmare:
 
-1. Press `N` on the title screen.
-2. Or press `L`, type a custom spelling list, then press `N`.
+1. Choose `Nightmare Snake` from the title menu, or press `N`.
+2. Or choose `Spelling List`, type a custom spelling list, then press `N`.
 3. Read the definition card and spell the hidden word.
 4. Choose carefully because all letter tiles look the same.
 5. Complete the word to earn a bonus life.

@@ -119,91 +119,230 @@ fn draw_question_banner(text: &str) {
     set_default_color();
 }
 
-/// Draws the title screen with game logo and instructions.
-pub fn draw_title_screen() {
-    // Background stars for atmosphere
-    let seed = 42;
-    for i in 0..80 {
-        let x = ((seed + i * 7) % SCREEN_W as i32) as f32;
-        let y = ((seed + i * 13) % (SCREEN_H as i32 - 40)) as f32;
-        assets::draw_star(x, y, (i % 3) as f32 * 0.5 + 0.5);
-    }
+/// Draws the RPG-style title screen and adventure menu.
+pub fn draw_title_screen(selected_index: usize) {
+    let ink = Color::new(0.08, 0.1, 0.11, 1.0);
+    let stone_dark = Color::new(0.2, 0.24, 0.24, 1.0);
+    let stone = Color::new(0.46, 0.51, 0.48, 1.0);
+    let stone_light = Color::new(0.72, 0.77, 0.68, 1.0);
+    let parchment = Color::new(0.82, 0.86, 0.72, 1.0);
+    let torch = Color::new(0.95, 0.75, 0.28, 1.0);
 
-    // Title text with glow effect
-    let title = "STAR CRUSHER";
-    let tm_title = measure_text(title, None, 48, 1.0);
-    set_color(Color::new(0.3, 0.6, 1.0, 1.0));
-    draw_text(
-        title,
-        CENTER_X - tm_title.w / 2.0 + 2.0,
-        150.0 + 2.0,
-        48.0,
-        current_color(),
+    clear_background(Color::new(0.12, 0.15, 0.14, 1.0));
+    draw_dungeon_tiles(stone_dark, ink);
+    draw_stone_frame(54.0, 42.0, 916.0, 684.0, stone, stone_light, ink);
+
+    centered_text("STAR CRUSHER", 116.0, 48, stone_light);
+    centered_text("DUNGEON DWELLERS", 154.0, 26, parchment);
+    centered_text(
+        "Choose a path, then press ENTER or SPACE.",
+        688.0,
+        18,
+        stone_light,
+    );
+    centered_text(
+        "Shortcuts: M Math Invaders   P Pong   R Snake   N Nightmare   L List",
+        714.0,
+        16,
+        parchment,
     );
 
-    set_color(WHITE);
-    draw_text(
-        title,
-        CENTER_X - tm_title.w / 2.0,
-        150.0,
-        48.0,
-        current_color(),
+    draw_title_scene(
+        112.0,
+        198.0,
+        360.0,
+        374.0,
+        ink,
+        stone,
+        stone_light,
+        parchment,
+        torch,
     );
-
-    // Subtitle
-    let subtitle = "Math Space Invaders";
-    let tm_sub = measure_text(subtitle, None, 24, 1.0);
-    set_color(Color::new(0.6, 0.9, 1.0, 1.0));
-    draw_text(
-        subtitle,
-        CENTER_X - tm_sub.w / 2.0,
-        200.0,
-        24.0,
-        current_color(),
+    draw_adventure_menu(
+        552.0,
+        206.0,
+        332.0,
+        selected_index,
+        ink,
+        stone,
+        stone_light,
+        parchment,
     );
-
-    // Instructions
-    let instructions = [
-        "Arrow Keys / A,D to Move",
-        "Spacebar to Shoot",
-        "",
-        "Answer math questions by shooting the correct enemy!",
-        "Clear each grade level to advance.",
-        "",
-        "Press ENTER or SPACE to Start Math Invaders",
-        "Press P for Math Pong",
-        "Press R for Reading Snake",
-        "Press N for Nightmare Snake",
-        "Press L to type a spelling list",
-    ];
-
-    set_color(WHITE);
-    for (i, line) in instructions.iter().enumerate() {
-        let tm = measure_text(line, None, 18, 1.0);
-        draw_text(
-            line,
-            CENTER_X - tm.w / 2.0,
-            300.0 + (i as f32) * 25.0,
-            18.0,
-            WHITE,
-        );
-    }
-
-    // Grade progression preview at bottom
-    set_color(Color::new(0.4, 0.7, 0.9, 0.6));
-    let grades = Grade::all();
-    for (i, grade) in grades.iter().enumerate() {
-        let _tm = measure_text(grade.display_name(), None, 12, 1.0);
-        draw_text(
-            grade.display_name(),
-            120.0 + (i as f32) * 112.0,
-            700.0,
-            12.0,
-            WHITE,
-        );
-    }
 
     set_default_color();
+}
+
+fn draw_dungeon_tiles(stone_dark: Color, ink: Color) {
+    for row in 0..16 {
+        for col in 0..22 {
+            let x = col as f32 * 48.0 + if row % 2 == 0 { 0.0 } else { -24.0 };
+            let y = row as f32 * 48.0;
+            let shade = if (row + col) % 2 == 0 {
+                stone_dark
+            } else {
+                ink
+            };
+            set_color(Color::new(shade.r, shade.g, shade.b, 0.28));
+            draw_rectangle(x, y, 46.0, 46.0);
+        }
+    }
+}
+
+fn draw_stone_frame(x: f32, y: f32, w: f32, h: f32, stone: Color, stone_light: Color, ink: Color) {
+    set_color(ink);
+    draw_rectangle(x - 10.0, y - 10.0, w + 20.0, h + 20.0);
+    set_color(stone);
+    draw_rectangle(x, y, w, h);
+    set_color(stone_light);
+    draw_rectangle_lines(x + 10.0, y + 10.0, w - 20.0, h - 20.0);
+    set_color(ink);
+    draw_rectangle(x + 28.0, y + 28.0, w - 56.0, h - 56.0);
+
+    set_color(Color::new(
+        stone_light.r,
+        stone_light.g,
+        stone_light.b,
+        0.35,
+    ));
+    for i in 0..18 {
+        let bx = x + 22.0 + i as f32 * 50.0;
+        draw_rectangle_lines(bx, y + 8.0, 42.0, 24.0);
+        draw_rectangle_lines(bx, y + h - 32.0, 42.0, 24.0);
+    }
+    for i in 0..12 {
+        let by = y + 42.0 + i as f32 * 50.0;
+        draw_rectangle_lines(x + 8.0, by, 24.0, 42.0);
+        draw_rectangle_lines(x + w - 32.0, by, 24.0, 42.0);
+    }
+}
+
+fn draw_title_scene(
+    x: f32,
+    y: f32,
+    w: f32,
+    h: f32,
+    ink: Color,
+    stone: Color,
+    stone_light: Color,
+    parchment: Color,
+    torch: Color,
+) {
+    set_color(Color::new(0.13, 0.16, 0.15, 1.0));
+    draw_rectangle(x, y, w, h);
+    set_color(stone_light);
+    draw_rectangle_lines(x, y, w, h);
+
+    draw_door_glyph(x + 132.0, y + 44.0, ink, stone, stone_light);
+    draw_torch_glyph(x + 52.0, y + 82.0, ink, torch);
+    draw_torch_glyph(x + 282.0, y + 82.0, ink, torch);
+    draw_monster_glyph(x + 256.0, y + 238.0, ink, stone_light);
+    draw_hero_glyph(x + 88.0, y + 248.0, ink, parchment);
+
+    set_color(stone);
+    for step in 0..5 {
+        draw_rectangle(
+            x + 128.0 + step as f32 * 12.0,
+            y + 282.0 + step as f32 * 12.0,
+            114.0 - step as f32 * 24.0,
+            8.0,
+        );
+    }
+}
+
+fn draw_adventure_menu(
+    x: f32,
+    y: f32,
+    w: f32,
+    selected_index: usize,
+    ink: Color,
+    stone: Color,
+    stone_light: Color,
+    parchment: Color,
+) {
+    let options = [
+        ("Start Adventure", "Begin the dungeon trail"),
+        ("Math Invaders", "Space wave encounter"),
+        ("Math Pong", "Paddle target challenge"),
+        ("Reading Snake", "Word path encounter"),
+        ("Nightmare Snake", "Same-color letter trial"),
+        ("Spelling List", "Enter custom words"),
+    ];
+
+    set_color(Color::new(0.16, 0.19, 0.18, 1.0));
+    draw_rectangle(x, y, w, 382.0);
+    set_color(stone_light);
+    draw_rectangle_lines(x, y, w, 382.0);
+    centered_text_in("ADVENTURE MENU", x, y + 42.0, w, 24, parchment);
+
+    for (index, (label, detail)) in options.iter().enumerate() {
+        let row_y = y + 72.0 + index as f32 * 48.0;
+        let selected = selected_index % options.len() == index;
+        if selected {
+            set_color(parchment);
+            draw_rectangle(x + 22.0, row_y - 24.0, w - 44.0, 38.0);
+            set_color(ink);
+            draw_rectangle(x + 32.0, row_y - 10.0, 10.0, 10.0);
+            draw_text(label, x + 54.0, row_y, 22.0, ink);
+            draw_text(detail, x + 54.0, row_y + 18.0, 13.0, ink);
+        } else {
+            set_color(stone);
+            draw_rectangle_lines(x + 22.0, row_y - 24.0, w - 44.0, 38.0);
+            draw_text(label, x + 54.0, row_y, 22.0, stone_light);
+            draw_text(detail, x + 54.0, row_y + 18.0, 13.0, parchment);
+        }
+    }
+}
+
+fn draw_door_glyph(x: f32, y: f32, ink: Color, stone: Color, stone_light: Color) {
+    set_color(stone);
+    draw_rectangle(x, y + 40.0, 96.0, 104.0);
+    set_color(ink);
+    draw_rectangle(x + 18.0, y + 58.0, 60.0, 86.0);
+    set_color(stone_light);
+    draw_rectangle_lines(x + 18.0, y + 58.0, 60.0, 86.0);
+    draw_rectangle(x + 44.0, y + 20.0, 8.0, 34.0);
+    draw_rectangle(x + 30.0, y + 28.0, 36.0, 8.0);
+    draw_rectangle(x + 62.0, y + 100.0, 6.0, 6.0);
+}
+
+fn draw_torch_glyph(x: f32, y: f32, ink: Color, torch: Color) {
+    set_color(torch);
+    draw_rectangle(x + 10.0, y, 12.0, 22.0);
+    draw_rectangle(x + 4.0, y + 8.0, 24.0, 10.0);
+    set_color(ink);
+    draw_rectangle(x + 12.0, y + 28.0, 8.0, 56.0);
+    draw_rectangle(x + 4.0, y + 44.0, 24.0, 8.0);
+}
+
+fn draw_hero_glyph(x: f32, y: f32, ink: Color, parchment: Color) {
+    set_color(parchment);
+    draw_rectangle(x + 22.0, y, 24.0, 22.0);
+    draw_rectangle(x + 14.0, y + 24.0, 40.0, 46.0);
+    draw_rectangle(x + 4.0, y + 34.0, 12.0, 28.0);
+    draw_rectangle(x + 52.0, y + 34.0, 12.0, 28.0);
+    draw_rectangle(x + 16.0, y + 70.0, 14.0, 30.0);
+    draw_rectangle(x + 38.0, y + 70.0, 14.0, 30.0);
+    set_color(ink);
+    draw_rectangle(x + 28.0, y + 8.0, 4.0, 4.0);
+    draw_rectangle(x + 38.0, y + 8.0, 4.0, 4.0);
+}
+
+fn draw_monster_glyph(x: f32, y: f32, ink: Color, stone_light: Color) {
+    set_color(stone_light);
+    draw_rectangle(x + 8.0, y + 18.0, 58.0, 48.0);
+    draw_rectangle(x, y + 32.0, 10.0, 20.0);
+    draw_rectangle(x + 66.0, y + 32.0, 10.0, 20.0);
+    draw_rectangle(x + 14.0, y + 66.0, 12.0, 18.0);
+    draw_rectangle(x + 50.0, y + 66.0, 12.0, 18.0);
+    set_color(ink);
+    draw_rectangle(x + 24.0, y + 32.0, 8.0, 8.0);
+    draw_rectangle(x + 44.0, y + 32.0, 8.0, 8.0);
+    draw_rectangle(x + 28.0, y + 52.0, 22.0, 6.0);
+}
+
+fn centered_text_in(text: &str, x: f32, y: f32, w: f32, font_size: u16, color: Color) {
+    let tm = measure_text(text, None, font_size, 1.0);
+    draw_text(text, x + w / 2.0 - tm.w / 2.0, y, font_size as f32, color);
 }
 
 /// Draws the weekly spelling-list entry screen for Reading Snake.

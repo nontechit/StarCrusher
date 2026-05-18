@@ -41,8 +41,34 @@ enum GameMode {
     MathPong,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum TitleMenuOption {
+    StartAdventure,
+    MathInvaders,
+    MathPong,
+    ReadingSnake,
+    NightmareSnake,
+    SpellingList,
+}
+
+impl TitleMenuOption {
+    const ALL: [Self; 6] = [
+        Self::StartAdventure,
+        Self::MathInvaders,
+        Self::MathPong,
+        Self::ReadingSnake,
+        Self::NightmareSnake,
+        Self::SpellingList,
+    ];
+
+    fn from_index(index: usize) -> Self {
+        Self::ALL[index % Self::ALL.len()]
+    }
+}
+
 struct Game {
     mode: GameMode,
+    title_selection: usize,
     grade: Grade,
     wave: usize,
     score: u32,
@@ -71,6 +97,7 @@ impl Game {
 
         Self {
             mode: GameMode::Title,
+            title_selection: 0,
             grade,
             wave: 1,
             score: 0,
@@ -100,6 +127,28 @@ impl Game {
     fn start_game(&mut self) {
         self.mode = GameMode::Playing;
         self.spawn_wave();
+    }
+
+    fn launch_title_option(&mut self, option: TitleMenuOption) {
+        match option {
+            TitleMenuOption::StartAdventure | TitleMenuOption::MathInvaders => self.reset(),
+            TitleMenuOption::MathPong => {
+                self.math_pong = MathPong::new();
+                self.mode = GameMode::MathPong;
+            }
+            TitleMenuOption::ReadingSnake => {
+                self.reading_snake = ReadingSnake::new();
+                self.mode = GameMode::ReadingSnake;
+            }
+            TitleMenuOption::NightmareSnake => {
+                self.reading_snake = ReadingSnake::new_nightmare();
+                self.mode = GameMode::ReadingSnake;
+            }
+            TitleMenuOption::SpellingList => {
+                self.spelling_input.clear();
+                self.mode = GameMode::SpellingList;
+            }
+        }
     }
 
     fn spawn_wave(&mut self) {
@@ -132,20 +181,25 @@ impl Game {
     fn update(&mut self) {
         match self.mode {
             GameMode::Title => {
+                if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
+                    self.title_selection = (self.title_selection + TitleMenuOption::ALL.len() - 1)
+                        % TitleMenuOption::ALL.len();
+                } else if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
+                    self.title_selection = (self.title_selection + 1) % TitleMenuOption::ALL.len();
+                }
+
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
-                    self.reset();
+                    self.launch_title_option(TitleMenuOption::from_index(self.title_selection));
+                } else if is_key_pressed(KeyCode::M) {
+                    self.launch_title_option(TitleMenuOption::MathInvaders);
                 } else if is_key_pressed(KeyCode::R) {
-                    self.reading_snake = ReadingSnake::new();
-                    self.mode = GameMode::ReadingSnake;
+                    self.launch_title_option(TitleMenuOption::ReadingSnake);
                 } else if is_key_pressed(KeyCode::N) {
-                    self.reading_snake = ReadingSnake::new_nightmare();
-                    self.mode = GameMode::ReadingSnake;
+                    self.launch_title_option(TitleMenuOption::NightmareSnake);
                 } else if is_key_pressed(KeyCode::L) {
-                    self.spelling_input.clear();
-                    self.mode = GameMode::SpellingList;
+                    self.launch_title_option(TitleMenuOption::SpellingList);
                 } else if is_key_pressed(KeyCode::P) {
-                    self.math_pong = MathPong::new();
-                    self.mode = GameMode::MathPong;
+                    self.launch_title_option(TitleMenuOption::MathPong);
                 }
             }
             GameMode::Playing => self.update_playing(),
@@ -342,7 +396,7 @@ impl Game {
         clear_background(BLACK);
 
         match self.mode {
-            GameMode::Title => ui::draw_title_screen(),
+            GameMode::Title => ui::draw_title_screen(self.title_selection),
             GameMode::Playing => self.draw_playing(),
             GameMode::GateIntro => {
                 self.draw_playing();

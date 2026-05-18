@@ -13,19 +13,6 @@ pub enum Grade {
 }
 
 impl Grade {
-    /// Returns all grades in order for progression.
-    pub fn all() -> [Grade; 7] {
-        [
-            Self::Preschool,
-            Self::Kindergarten,
-            Self::FirstGrade,
-            Self::SecondGrade,
-            Self::ThirdGrade,
-            Self::FourthGrade,
-            Self::FifthGrade,
-        ]
-    }
-
     /// Display name for the grade level.
     pub fn display_name(&self) -> &'static str {
         match self {
