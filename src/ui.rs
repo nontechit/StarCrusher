@@ -167,6 +167,7 @@ pub fn draw_title_screen() {
         "Clear each grade level to advance.",
         "",
         "Press ENTER or SPACE to Start Math Invaders",
+        "Press P for Math Pong",
         "Press R for Reading Snake",
     ];
 

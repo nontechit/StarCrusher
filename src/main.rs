@@ -1,6 +1,7 @@
 mod assets;
 mod enemy;
 mod levels;
+mod math_pong;
 mod player;
 mod question;
 mod reading_snake;
@@ -9,6 +10,7 @@ mod ui;
 use enemy::{EnemyGrid, Explosion};
 use levels::Grade;
 use macroquad::prelude::*;
+use math_pong::{MathPong, MathPongAction};
 use player::{Bullet, EnemyBullet, Player};
 use question::{generate_question, Question};
 use reading_snake::{ReadingSnake, ReadingSnakeAction};
@@ -35,6 +37,7 @@ enum GameMode {
     GameOver,
     Victory,
     ReadingSnake,
+    MathPong,
 }
 
 struct Game {
@@ -55,6 +58,7 @@ struct Game {
     gates_remaining: usize,
     last_enemy_fire: f64,
     reading_snake: ReadingSnake,
+    math_pong: MathPong,
 }
 
 impl Game {
@@ -81,6 +85,7 @@ impl Game {
             gates_remaining: grade.config().question_gate_count,
             last_enemy_fire: 0.0,
             reading_snake: ReadingSnake::new(),
+            math_pong: MathPong::new(),
         }
     }
 
@@ -129,6 +134,9 @@ impl Game {
                 } else if is_key_pressed(KeyCode::R) {
                     self.reading_snake = ReadingSnake::new();
                     self.mode = GameMode::ReadingSnake;
+                } else if is_key_pressed(KeyCode::P) {
+                    self.math_pong = MathPong::new();
+                    self.mode = GameMode::MathPong;
                 }
             }
             GameMode::Playing => self.update_playing(),
@@ -145,6 +153,11 @@ impl Game {
             }
             GameMode::ReadingSnake => {
                 if self.reading_snake.update() == ReadingSnakeAction::ExitToTitle {
+                    self.mode = GameMode::Title;
+                }
+            }
+            GameMode::MathPong => {
+                if self.math_pong.update() == MathPongAction::ExitToTitle {
                     self.mode = GameMode::Title;
                 }
             }
@@ -295,6 +308,7 @@ impl Game {
             }
             GameMode::Victory => ui::draw_victory_screen(self.score),
             GameMode::ReadingSnake => self.reading_snake.draw(),
+            GameMode::MathPong => self.math_pong.draw(),
         }
     }
 

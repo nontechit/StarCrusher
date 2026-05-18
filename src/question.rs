@@ -179,20 +179,13 @@ fn gen_fourth_grade() -> Question {
         }
         // Decimal addition
         1 => {
-            let a = rng.gen_range(1..=9);
-            let b = rng.gen_range(1..=9);
-            let c = rng.gen_range(10..=99);
-            let d = rng.gen_range(10..=99);
-            // e.g., 3.45 + 2.67 -> answer is integer part of sum * 100 for display
+            let a = rng.gen_range(10..=99);
+            let b = rng.gen_range(10..=99);
+            let sum = a + b;
             Question {
-                text: format!("{}.{:02} + {}.{:02} = ?", a, b, c % 10, d),
-                correct_answer: ((a as i64) * 100 + (b as i64) + (c / 10) as i64 + (d / 10) as i64),
-                wrong_answers: gen_unique_wrongs(
-                    (a as i64) * 100 + (b as i64) + (c / 10) as i64 + (d / 10) as i64,
-                    1,
-                    2000,
-                    3,
-                ),
+                text: format!("{} hundredths + {} hundredths = ?", a, b),
+                correct_answer: sum as i64,
+                wrong_answers: gen_unique_wrongs(sum as i64, 10, 198, 3),
             }
         }
         // Multi-step: e.g., "What is 8 × 7 - 5?"
@@ -270,17 +263,27 @@ fn gen_fifth_grade() -> Question {
 /// Generates `count` unique wrong answers in range [min_val, max_val] that differ from correct.
 fn gen_unique_wrongs(correct: i64, min_val: i64, max_val: i64, count: usize) -> Vec<i64> {
     let mut rng = rand::thread_rng();
-    let mut wrongs = Vec::new();
-    while wrongs.len() < count {
-        let w = rng.gen_range(min_val..=max_val);
-        if w != correct && !wrongs.contains(&w) {
-            wrongs.push(w);
+    let mut candidates: Vec<i64> = (min_val..=max_val)
+        .filter(|value| *value != correct)
+        .collect();
+
+    while candidates.len() < count {
+        let offset = candidates.len() as i64 + 1;
+        for value in [correct - offset, correct + offset] {
+            if value != correct && !candidates.contains(&value) {
+                candidates.push(value);
+            }
+            if candidates.len() >= count {
+                break;
+            }
         }
     }
-    // Shuffle so the right answer isn't always in a predictable slot among enemies
-    for i in (1..wrongs.len()).rev() {
+
+    for i in (1..candidates.len()).rev() {
         let j = rng.gen_range(0..=i);
-        wrongs.swap(i, j);
+        candidates.swap(i, j);
     }
-    wrongs
+
+    candidates.truncate(count);
+    candidates
 }

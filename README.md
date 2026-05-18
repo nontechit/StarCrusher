@@ -1,6 +1,6 @@
 # Star Crusher
 
-Star Crusher is an educational arcade collection for K-5 practice. The main game is a Space Invaders-style math game where enemies display possible answers to grade-level math questions. It also includes Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
+Star Crusher is an educational arcade collection for K-5 practice. The main game is a Space Invaders-style math game where enemies display possible answers to grade-level math questions. It also includes Math Pong, a paddle-and-ball number target mode, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
 ## Features
 
@@ -8,6 +8,7 @@ Star Crusher is an educational arcade collection for K-5 practice. The main game
 - Grade-appropriate math questions covering counting, arithmetic, multiplication, division, fractions, percentages, pre-algebra, area, volume, and ratios.
 - Space Invaders-inspired enemy waves with increasing grid size, speed, and fire rate.
 - Question gates between waves that require typed answers to advance.
+- Math Pong mode for launching a straight ball into randomly placed numbered targets.
 - Reading Snake mini game for letter order and word recognition practice.
 - Procedural graphics only; no external assets or fonts required.
 - Fixed 800x600 macroquad viewport.
@@ -17,14 +18,22 @@ Star Crusher is an educational arcade collection for K-5 practice. The main game
 - Move: `Left` / `Right` arrow keys or `A` / `D`
 - Shoot: `Space`
 - Start / continue: `Enter` or `Space`
+- Start Math Pong from title: `P`
 - Start Reading Snake from title: `R`
-- Return from Reading Snake to title: `Esc`
+- Return from mini games to title: `Esc`
 - Type gate answers with number keys, then press `Enter`
 - Delete typed answer characters with `Backspace`
 
 Reading Snake controls:
 
 - Move: arrow keys or `W` / `A` / `S` / `D`
+- Restart after game over: `Enter` or `Space`
+- Return to title: `Esc`
+
+Math Pong controls:
+
+- Move paddle: `Left` / `Right` arrow keys or `A` / `D`
+- Launch ball: `Space` or `Enter`
 - Restart after game over: `Enter` or `Space`
 - Return to title: `Esc`
 
@@ -53,6 +62,7 @@ cargo check
 src/main.rs      Game entry point, state machine, update/draw loop
 src/levels.rs    Grade progression and difficulty configuration
 src/question.rs  Grade-specific math question generation
+src/math_pong.rs Math Pong number target mini game
 src/reading_snake.rs Reading Snake mini game
 src/enemy.rs     Enemy grid, puzzle enemies, enemy movement, explosions
 src/player.rs    Player ship, player bullets, enemy bullets
@@ -69,6 +79,14 @@ Math Invaders:
 3. Use the active math question to identify correct puzzle enemies.
 4. Answer typed math questions at the wave-complete gate.
 5. Advance through each grade until the 5th Grade wave is completed.
+
+Math Pong:
+
+1. Press `P` on the title screen.
+2. Read the math question and identify the correct numbered target.
+3. Move the paddle under the correct number before launching the ball.
+4. Launch straight upward into the correct number to clear the question.
+5. Clear five questions to advance to the next grade.
 
 Reading Snake:
 
