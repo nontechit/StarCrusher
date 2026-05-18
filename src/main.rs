@@ -3,6 +3,7 @@ mod enemy;
 mod levels;
 mod player;
 mod question;
+mod reading_snake;
 mod ui;
 
 use enemy::{EnemyGrid, Explosion};
@@ -10,6 +11,7 @@ use levels::Grade;
 use macroquad::prelude::*;
 use player::{Bullet, EnemyBullet, Player};
 use question::{generate_question, Question};
+use reading_snake::{ReadingSnake, ReadingSnakeAction};
 
 const SCREEN_W: f32 = 800.0;
 const SCREEN_H: f32 = 600.0;
@@ -32,6 +34,7 @@ enum GameMode {
     GateQuestion,
     GameOver,
     Victory,
+    ReadingSnake,
 }
 
 struct Game {
@@ -51,6 +54,7 @@ struct Game {
     gate_feedback: Option<(bool, f64)>,
     gates_remaining: usize,
     last_enemy_fire: f64,
+    reading_snake: ReadingSnake,
 }
 
 impl Game {
@@ -76,6 +80,7 @@ impl Game {
             gate_feedback: None,
             gates_remaining: grade.config().question_gate_count,
             last_enemy_fire: 0.0,
+            reading_snake: ReadingSnake::new(),
         }
     }
 
@@ -121,6 +126,9 @@ impl Game {
             GameMode::Title => {
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
                     self.reset();
+                } else if is_key_pressed(KeyCode::R) {
+                    self.reading_snake = ReadingSnake::new();
+                    self.mode = GameMode::ReadingSnake;
                 }
             }
             GameMode::Playing => self.update_playing(),
@@ -133,6 +141,11 @@ impl Game {
             GameMode::GameOver | GameMode::Victory => {
                 if is_key_pressed(KeyCode::Enter) {
                     self.reset();
+                }
+            }
+            GameMode::ReadingSnake => {
+                if self.reading_snake.update() == ReadingSnakeAction::ExitToTitle {
+                    self.mode = GameMode::Title;
                 }
             }
         }
@@ -281,6 +294,7 @@ impl Game {
                 ui::draw_game_over(self.score, &self.grade);
             }
             GameMode::Victory => ui::draw_victory_screen(self.score),
+            GameMode::ReadingSnake => self.reading_snake.draw(),
         }
     }
 

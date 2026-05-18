@@ -166,7 +166,8 @@ pub fn draw_title_screen() {
         "Answer math questions by shooting the correct enemy!",
         "Clear each grade level to advance.",
         "",
-        "Press ENTER or SPACE to Start",
+        "Press ENTER or SPACE to Start Math Invaders",
+        "Press R for Reading Snake",
     ];
 
     set_color(WHITE);
