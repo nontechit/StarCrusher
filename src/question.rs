@@ -62,7 +62,7 @@ fn gen_kindergarten() -> Question {
         // Counting / number recognition
         let n = rng.gen_range(1..=10);
         Question {
-            text: format!("What number is this?   {}", n),
+            text: format!("Shoot number {}", number_word(n)),
             correct_answer: n as i64,
             wrong_answers: gen_unique_wrongs(n as i64, 1, 10, 3),
         }
@@ -257,6 +257,22 @@ fn gen_fifth_grade() -> Question {
                 wrong_answers: gen_unique_wrongs((b_part * multiplier) as i64, 1, total as i64, 3),
             }
         }
+    }
+}
+
+fn number_word(number: i32) -> &'static str {
+    match number {
+        1 => "one",
+        2 => "two",
+        3 => "three",
+        4 => "four",
+        5 => "five",
+        6 => "six",
+        7 => "seven",
+        8 => "eight",
+        9 => "nine",
+        10 => "ten",
+        _ => "number",
     }
 }
 

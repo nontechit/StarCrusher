@@ -9,6 +9,7 @@ Current build: `1.3.0`
 - Seven-grade progression from Preschool through 5th Grade.
 - Grade-appropriate math questions covering counting, arithmetic, multiplication, division, fractions, percentages, pre-algebra, area, volume, and ratios.
 - Math Invaders waves with Time Pilot-style drifting numbered targets tied to the active math question.
+- Kindergarten number-recognition prompts use words, such as `Shoot number three`, while targets remain numeric.
 - Question gates between waves that require typed answers to advance.
 - Math Pong mode for launching a straight ball into randomly placed numbered targets.
 - Reading Snake mini game for letter order, word recognition, and definition practice, with optional custom weekly spelling lists and Nightmare mode.
