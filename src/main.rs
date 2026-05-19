@@ -282,6 +282,10 @@ impl Game {
                 if is_correct {
                     self.enemies.kill_enemy(enemy_idx);
                     self.score += 10 + self.grade.index() as u32 * 5;
+                    if !self.enemies.is_cleared() {
+                        self.active_question = generate_question(self.grade);
+                        self.enemies.assign_answers(&self.active_question);
+                    }
                 } else {
                     self.lives = self.lives.saturating_sub(1);
                 }

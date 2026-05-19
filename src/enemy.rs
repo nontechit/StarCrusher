@@ -18,19 +18,23 @@ pub struct Enemy {
     pub y: f32,
     pub width: f32,
     pub height: f32,
+    pub velocity_x: f32,
+    pub velocity_y: f32,
     pub alive: bool,
     pub r#type: EnemyType,
 }
 
 impl Enemy {
     /// Creates a new enemy at the given grid position.
-    fn new(x: f32, y: f32) -> Self {
-        let w = 24.0;
+    fn new(x: f32, y: f32, velocity_x: f32, velocity_y: f32) -> Self {
+        let w = 44.0;
         Enemy {
             x,
             y,
             width: w,
-            height: 18.0,
+            height: 34.0,
+            velocity_x,
+            velocity_y,
             alive: true,
             r#type: EnemyType::Standard,
         }
@@ -46,7 +50,7 @@ impl Enemy {
                 assets::draw_enemy_invader(self.x, self.y, grade_color, 1.0);
             }
             EnemyType::Puzzle(num) => {
-                assets::draw_puzzle_enemy(self.x, self.y, grade_color, 1.2, *num);
+                assets::draw_puzzle_enemy(self.x, self.y, grade_color, 1.0, *num);
             }
         }
     }
@@ -71,17 +75,13 @@ impl Enemy {
     }
 }
 
-/// Manages a grid of enemies with movement, firing, and puzzle assignment.
+/// Manages Math Invaders targets with movement, firing, and puzzle assignment.
 pub struct EnemyGrid {
     pub enemies: Vec<Enemy>,
-    /// Current horizontal direction: 1 = right, -1 = left.
-    pub move_dir: i32,
     /// Horizontal speed multiplier (increases as fewer enemies remain).
     pub speed_mult: f32,
     /// Base movement pixels per frame.
     pub base_speed: f32,
-    /// How far to drop when hitting screen edge.
-    pub drop_amount: f32,
     /// Minimum interval between enemy fire attempts (ms).
     pub fire_interval_ms: u64,
 }
@@ -95,113 +95,94 @@ impl EnemyGrid {
         active_question: Option<&Question>,
     ) -> Self {
         let mut rng = ::rand::thread_rng();
-
-        // Calculate starting positions to center the grid on screen
-        let total_width = (config.cols as f32) * 40.0;
-        let start_x = (screen_w - total_width) / 2.0 + 8.0;
-        let start_y = 60.0;
+        let target_count = config.rows * config.cols;
 
         let mut enemies = Vec::new();
-        for row in 0..config.rows {
-            for col in 0..config.cols {
-                let x = start_x + (col as f32) * 40.0;
-                let y = start_y + (row as f32) * 35.0;
+        for index in 0..target_count {
+            let band = index % 4;
+            let x = rng.gen_range(40.0..screen_w - 84.0);
+            let y = 70.0 + band as f32 * 90.0 + rng.gen_range(0.0..38.0);
+            let direction = if rng.gen_bool(0.5) { 1.0 } else { -1.0 };
+            let velocity_x = direction * rng.gen_range(0.45..1.15);
+            let velocity_y = rng.gen_range(-0.18..0.18);
 
-                let mut enemy = Enemy::new(x, y);
-
-                // Assign puzzle type if there's an active question and this enemy is chosen randomly
-                if let Some(q) = active_question {
-                    if rng.gen_bool(config.puzzle_enemy_chance as f64) {
-                        // Pick either the correct answer or a wrong one
-                        if rng.gen_bool(0.25) && !q.wrong_answers.is_empty() {
-                            enemy.r#type = EnemyType::Puzzle(q.correct_answer);
-                        } else if !q.wrong_answers.is_empty() {
-                            let idx = rng.gen_range(0..q.wrong_answers.len());
-                            enemy.r#type = EnemyType::Puzzle(q.wrong_answers[idx]);
-                        }
-                    }
-                }
-
-                enemies.push(enemy);
-            }
+            enemies.push(Enemy::new(x, y, velocity_x, velocity_y));
         }
 
-        // Ensure at least one puzzle enemy shows the correct answer if we have a question
-        if active_question.is_some() && config.puzzle_enemy_chance > 0.0 {
-            let has_correct = enemies.iter().any(|e| matches!(&e.r#type, EnemyType::Puzzle(n) if Some(*n as i64) == active_question.map(|q| q.correct_answer)));
-            if !has_correct && config.puzzle_enemy_chance >= 0.15 {
-                // Force one enemy to show the correct answer
-                let idx = rng.gen_range(0..enemies.len());
-                enemies[idx].r#type = EnemyType::Puzzle(active_question.unwrap().correct_answer);
-            }
-        }
-
-        EnemyGrid {
+        let mut grid = EnemyGrid {
             enemies,
-            move_dir: 1,
             speed_mult: config.enemy_move_speed,
             base_speed: 0.5,
-            drop_amount: config.enemy_drop_amount,
             fire_interval_ms: config.fire_interval_ms,
+        };
+
+        if let Some(question) = active_question {
+            grid.assign_answers(question);
+        }
+
+        grid
+    }
+
+    /// Assigns answer numbers to every alive enemy, with exactly one correct target.
+    pub fn assign_answers(&mut self, question: &Question) {
+        let alive_indices: Vec<usize> = self
+            .enemies
+            .iter()
+            .enumerate()
+            .filter(|(_, enemy)| enemy.alive)
+            .map(|(index, _)| index)
+            .collect();
+
+        if alive_indices.is_empty() {
+            return;
+        }
+
+        let mut rng = ::rand::thread_rng();
+        let correct_slot = rng.gen_range(0..alive_indices.len());
+
+        for (slot, enemy_index) in alive_indices.iter().enumerate() {
+            let number = if slot == correct_slot {
+                question.correct_answer
+            } else if question.wrong_answers.is_empty() {
+                question.correct_answer + slot as i64 + 1
+            } else {
+                let wrong_index = rng.gen_range(0..question.wrong_answers.len());
+                question.wrong_answers[wrong_index]
+            };
+
+            self.enemies[*enemy_index].r#type = EnemyType::Puzzle(number);
         }
     }
 
-    /// Updates enemy positions each frame. Returns true if any enemy reached the player zone (game over condition).
+    /// Updates enemy positions each frame. Returns true if any enemy reached the player zone.
     pub fn update(&mut self) -> bool {
-        let alive_count = self.enemies.iter().filter(|e| e.alive).count();
-        // Speed up as fewer enemies remain
-        let total = self.enemies.len() as f32;
-        let _survival_ratio = if total > 0.0 {
-            (alive_count as f32) / total
-        } else {
-            1.0
-        };
-
-        // Calculate speed: faster when more are alive, slightly slower as they thin out but with a minimum
         let effective_speed = self.base_speed * self.speed_mult.max(0.5);
 
-        // Check if any enemy needs to trigger edge bounce or drop
-        let mut need_drop = false;
-        for e in &self.enemies {
+        for e in &mut self.enemies {
             if !e.alive {
                 continue;
             }
-            if (self.move_dir == 1 && e.x + e.width > 780.0) || (self.move_dir == -1 && e.x < 20.0)
-            {
-                need_drop = true;
-                break;
-            }
-        }
 
-        // Check if any enemy reached the player zone (y > 450)
-        for e in &self.enemies {
-            if !e.alive {
-                continue;
+            e.x += e.velocity_x * effective_speed;
+            e.y += e.velocity_y * effective_speed;
+
+            if e.x > 980.0 {
+                e.x = -e.width;
+            } else if e.x + e.width < 0.0 {
+                e.x = 980.0;
             }
+
+            if e.y < 55.0 || e.y > 430.0 {
+                e.velocity_y *= -1.0;
+                e.y = e.y.clamp(55.0, 430.0);
+            }
+
             if e.y + e.height > 480.0 {
-                return true; // Enemies breached the defense line
+                return true;
             }
         }
 
-        if need_drop {
-            self.move_dir *= -1;
-            for e in &mut self.enemies {
-                if !e.alive {
-                    continue;
-                }
-                e.y += self.drop_amount;
-                e.x -= (self.move_dir as f32) * effective_speed; // Undo the horizontal move that caused edge hit
-            }
-        } else {
-            for e in &mut self.enemies {
-                if !e.alive {
-                    continue;
-                }
-                e.x += (self.move_dir as f32) * effective_speed;
-            }
-        }
-
-        false // No breach yet
+        false
     }
 
     /// Draws all alive enemies with the given grade color.

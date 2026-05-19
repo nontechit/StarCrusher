@@ -72,63 +72,49 @@ impl Grade {
                 rows: 2,
                 cols: 4,
                 enemy_move_speed: 0.3,
-                enemy_drop_amount: 15.0,
                 fire_interval_ms: 800,
-                puzzle_enemy_chance: 0.0,
                 question_gate_count: 1,
             },
             Grade::Kindergarten => LevelConfig {
                 rows: 2,
                 cols: 5,
                 enemy_move_speed: 0.4,
-                enemy_drop_amount: 18.0,
                 fire_interval_ms: 700,
-                puzzle_enemy_chance: 0.15,
                 question_gate_count: 1,
             },
             Grade::FirstGrade => LevelConfig {
                 rows: 3,
                 cols: 6,
                 enemy_move_speed: 0.5,
-                enemy_drop_amount: 20.0,
                 fire_interval_ms: 600,
-                puzzle_enemy_chance: 0.25,
                 question_gate_count: 1,
             },
             Grade::SecondGrade => LevelConfig {
                 rows: 3,
                 cols: 7,
                 enemy_move_speed: 0.6,
-                enemy_drop_amount: 22.0,
                 fire_interval_ms: 500,
-                puzzle_enemy_chance: 0.3,
                 question_gate_count: 2,
             },
             Grade::ThirdGrade => LevelConfig {
                 rows: 4,
                 cols: 8,
                 enemy_move_speed: 0.7,
-                enemy_drop_amount: 25.0,
                 fire_interval_ms: 450,
-                puzzle_enemy_chance: 0.35,
                 question_gate_count: 2,
             },
             Grade::FourthGrade => LevelConfig {
                 rows: 4,
                 cols: 9,
                 enemy_move_speed: 0.8,
-                enemy_drop_amount: 28.0,
                 fire_interval_ms: 400,
-                puzzle_enemy_chance: 0.4,
                 question_gate_count: 2,
             },
             Grade::FifthGrade => LevelConfig {
                 rows: 5,
                 cols: 10,
                 enemy_move_speed: 1.0,
-                enemy_drop_amount: 30.0,
                 fire_interval_ms: 350,
-                puzzle_enemy_chance: 0.45,
                 question_gate_count: 3,
             },
         }
@@ -157,12 +143,8 @@ pub struct LevelConfig {
     pub cols: usize,
     /// Horizontal movement speed multiplier (pixels per frame base).
     pub enemy_move_speed: f32,
-    /// How far enemies drop when they reach screen edge.
-    pub enemy_drop_amount: f32,
     /// Minimum interval between enemy fire attempts (milliseconds).
     pub fire_interval_ms: u64,
-    /// Chance that a spawned enemy is a "puzzle" type showing an answer number.
-    pub puzzle_enemy_chance: f64,
     /// Number of questions in the gate after clearing this wave.
     pub question_gate_count: usize,
 }

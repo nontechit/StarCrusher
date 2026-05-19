@@ -111,36 +111,29 @@ pub fn draw_enemy_invader(x: f32, y: f32, color: Color, scale: f32) {
     set_default_color();
 }
 
-/// Draws a puzzle enemy (shows an answer number on its body).
+/// Draws a puzzle target as a large answer number.
 pub fn draw_puzzle_enemy(x: f32, y: f32, color: Color, scale: f32, answer_number: i64) {
-    let s = 18.0 * scale;
-
-    // Glowing outline for puzzle enemies
-    set_color(Color::new(
-        (color.r + 0.3).min(1.0),
-        (color.g + 0.3).min(1.0),
-        (color.b + 0.3).min(1.0),
-        0.4,
-    ));
-    draw_rectangle(x - s * 0.05, y - s * 0.05, s * 1.1, s * 1.1);
-
-    // Main body (diamond shape)
-    set_color(color);
-    draw_triangle(x + s / 2.0, y, x, y + s / 2.0, x + s / 2.0, y + s);
-    draw_triangle(x + s, y + s / 2.0, x + s / 2.0, y + s, x + s / 2.0, y);
-
-    // Answer number in center (white text)
-    set_default_color();
+    let target_w = 44.0 * scale;
+    let target_h = 34.0 * scale;
     let txt = format!("{}", answer_number);
-    let font_size = (s * 0.5).max(8.0);
+    let font_size = if txt.len() >= 3 { 24.0 } else { 30.0 } * scale;
     let tm = measure_text(&txt, None, font_size as u16, 1.0);
+
+    let text_x = x + target_w / 2.0 - tm.w / 2.0;
+    let text_y = y + target_h / 2.0 + tm.h * 0.35;
+
+    set_color(Color::new(color.r, color.g, color.b, 0.25));
+    draw_rectangle(x - 3.0, y - 2.0, target_w + 6.0, target_h + 4.0);
+
+    set_color(BLACK);
+    draw_text(&txt, text_x + 2.0, text_y + 2.0, font_size);
+
+    set_color(color);
+    draw_text(&txt, text_x - 1.0, text_y, font_size);
+    draw_text(&txt, text_x + 1.0, text_y, font_size);
+
     set_color(WHITE);
-    draw_text(
-        &txt,
-        x + s / 2.0 - tm.w / 2.0,
-        y + s / 2.0 + tm.h * 0.35,
-        font_size as f32,
-    );
+    draw_text(&txt, text_x, text_y, font_size);
 
     set_default_color();
 }

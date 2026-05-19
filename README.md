@@ -1,14 +1,14 @@
 # Star Crusher
 
-Star Crusher is an educational arcade collection wrapped in a light kid-friendly dungeon adventure menu. The current encounters include a Space Invaders-style math game where enemies display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
+Star Crusher is an educational arcade collection wrapped in a light kid-friendly dungeon adventure menu. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.1.0`
+Current build: `1.3.0`
 
 ## Features
 
 - Seven-grade progression from Preschool through 5th Grade.
 - Grade-appropriate math questions covering counting, arithmetic, multiplication, division, fractions, percentages, pre-algebra, area, volume, and ratios.
-- Space Invaders-inspired enemy waves with increasing grid size, speed, and fire rate.
+- Math Invaders waves with Time Pilot-style drifting numbered targets tied to the active math question.
 - Question gates between waves that require typed answers to advance.
 - Math Pong mode for launching a straight ball into randomly placed numbered targets.
 - Reading Snake mini game for letter order, word recognition, and definition practice, with optional custom weekly spelling lists and Nightmare mode.
@@ -102,7 +102,7 @@ src/levels.rs    Grade progression and difficulty configuration
 src/question.rs  Grade-specific math question generation
 src/math_pong.rs Math Pong number target mini game
 src/reading_snake.rs Reading Snake mini game
-src/enemy.rs     Enemy grid, puzzle enemies, enemy movement, explosions
+src/enemy.rs     Numbered Math Invaders targets, movement, explosions
 src/player.rs    Player ship, player bullets, enemy bullets
 src/ui.rs        HUD, title, game over, victory, and question gate UI
 src/assets.rs    Procedural drawing helpers for ships, enemies, stars, effects
@@ -113,10 +113,11 @@ src/assets.rs    Procedural drawing helpers for ships, enemies, stars, effects
 Math Invaders:
 
 1. Choose `Start Adventure` or `Math Invaders` from the title menu.
-2. Clear the current enemy wave by shooting enemies.
-3. Use the active math question to identify correct puzzle enemies.
-4. Answer typed math questions at the wave-complete gate.
-5. Advance through each grade until the 5th Grade wave is completed.
+2. Read the active math question and find the drifting target showing the correct answer.
+3. Shoot the correct drifting number to score and receive a new question for the remaining targets.
+4. Shooting an incorrect number costs one life and leaves that target in play.
+5. Clear all numbered targets, then answer typed math questions at the wave-complete gate.
+6. Advance through each grade until the 5th Grade wave is completed.
 
 Math Pong:
 
