@@ -39,6 +39,7 @@ enum GameMode {
     ReadingSnake,
     SpellingList,
     MathPong,
+    AdventureIntro,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -87,6 +88,7 @@ struct Game {
     last_enemy_fire: f64,
     reading_snake: ReadingSnake,
     math_pong: MathPong,
+    intro_page: usize,
 }
 
 impl Game {
@@ -116,6 +118,7 @@ impl Game {
             last_enemy_fire: 0.0,
             reading_snake: ReadingSnake::new(),
             math_pong: MathPong::new(),
+            intro_page: 0,
         }
     }
 
@@ -131,7 +134,11 @@ impl Game {
 
     fn launch_title_option(&mut self, option: TitleMenuOption) {
         match option {
-            TitleMenuOption::StartAdventure | TitleMenuOption::MathInvaders => self.reset(),
+            TitleMenuOption::StartAdventure => {
+                self.intro_page = 0;
+                self.mode = GameMode::AdventureIntro;
+            }
+            TitleMenuOption::MathInvaders => self.reset(),
             TitleMenuOption::MathPong => {
                 self.math_pong = MathPong::new();
                 self.mode = GameMode::MathPong;
@@ -225,6 +232,7 @@ impl Game {
                     self.mode = GameMode::Title;
                 }
             }
+            GameMode::AdventureIntro => self.update_adventure_intro(),
         }
     }
 
@@ -385,6 +393,21 @@ impl Game {
         }
     }
 
+    fn update_adventure_intro(&mut self) {
+        let total_pages = ui::adventure_intro_page_count();
+
+        if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+            if self.intro_page + 1 >= total_pages {
+                // Last page done; launch Math Invaders.
+                self.reset();
+            } else {
+                self.intro_page += 1;
+            }
+        } else if is_key_pressed(KeyCode::Escape) {
+            self.mode = GameMode::Title;
+        }
+    }
+
     fn advance_grade_or_finish(&mut self) {
         if let Some(next_grade) = self.grade.next() {
             self.grade = next_grade;
@@ -415,6 +438,7 @@ impl Game {
             GameMode::ReadingSnake => self.reading_snake.draw(),
             GameMode::SpellingList => ui::draw_spelling_list_screen(&self.spelling_input),
             GameMode::MathPong => self.math_pong.draw(),
+            GameMode::AdventureIntro => ui::draw_adventure_intro(self.intro_page),
         }
     }
 

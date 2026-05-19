@@ -345,6 +345,103 @@ fn centered_text_in(text: &str, x: f32, y: f32, w: f32, font_size: u16, color: C
     draw_text(text, x + w / 2.0 - tm.w / 2.0, y, font_size as f32, color);
 }
 
+const ADVENTURE_INTRO_PAGES: [(&str, &str); 5] = [
+    ("THE MATH DUNGEON", "A Star Crusher Adventure"),
+    (
+        "Deep beneath the Crystal Mountains lies an ancient dungeon.",
+        "Its stone halls glow with quiet number magic.",
+    ),
+    (
+        "Its doors open only for heroes who can solve the number riddles.",
+        "Every correct answer lights the path ahead.",
+    ),
+    (
+        "You are the newest Star Crusher, brave, clever, and ready.",
+        "Take your first steps into the torchlit halls.",
+    ),
+    (
+        "First quest: clear the drifting number monsters.",
+        "Press ENTER or SPACE to begin!",
+    ),
+];
+
+pub fn adventure_intro_page_count() -> usize {
+    ADVENTURE_INTRO_PAGES.len()
+}
+
+/// Draws the lightweight RPG intro before Start Adventure enters Math Invaders.
+pub fn draw_adventure_intro(page: usize) {
+    let ink = Color::new(0.07, 0.08, 0.1, 1.0);
+    let stone_dark = Color::new(0.16, 0.18, 0.2, 1.0);
+    let stone = Color::new(0.38, 0.42, 0.43, 1.0);
+    let stone_light = Color::new(0.72, 0.76, 0.7, 1.0);
+    let parchment = Color::new(0.88, 0.83, 0.62, 1.0);
+    let torch = Color::new(1.0, 0.68, 0.22, 1.0);
+    let page = page.min(ADVENTURE_INTRO_PAGES.len() - 1);
+    let (line_one, line_two) = ADVENTURE_INTRO_PAGES[page];
+
+    clear_background(Color::new(0.08, 0.09, 0.11, 1.0));
+    draw_dungeon_tiles(stone_dark, ink);
+    draw_stone_frame(68.0, 48.0, 888.0, 642.0, stone, stone_light, ink);
+
+    draw_door_glyph(464.0, 164.0, ink, stone, stone_light);
+    draw_torch_glyph(314.0, 218.0, ink, torch);
+    draw_torch_glyph(684.0, 218.0, ink, torch);
+    draw_hero_glyph(302.0, 432.0, ink, parchment);
+    draw_monster_glyph(658.0, 420.0, ink, stone_light);
+
+    set_color(stone);
+    for step in 0..6 {
+        draw_rectangle(
+            424.0 + step as f32 * 16.0,
+            330.0 + step as f32 * 18.0,
+            176.0 - step as f32 * 32.0,
+            10.0,
+        );
+    }
+
+    centered_text("START ADVENTURE", 104.0, 26, parchment);
+    centered_text_in(
+        &format!("PAGE {} / {}", page + 1, ADVENTURE_INTRO_PAGES.len()),
+        722.0,
+        106.0,
+        170.0,
+        16,
+        stone_light,
+    );
+
+    set_color(Color::new(0.1, 0.08, 0.12, 0.96));
+    draw_rectangle(112.0, 552.0, 800.0, 116.0);
+    set_color(parchment);
+    draw_rectangle_lines(112.0, 552.0, 800.0, 116.0);
+
+    let title_card = page == 0;
+    centered_text_in(
+        line_one,
+        142.0,
+        596.0,
+        740.0,
+        if title_card { 34 } else { 24 },
+        parchment,
+    );
+    centered_text_in(
+        line_two,
+        142.0,
+        632.0,
+        740.0,
+        if title_card { 22 } else { 20 },
+        WHITE,
+    );
+    centered_text(
+        "ENTER / SPACE: continue     ESC: return to title",
+        716.0,
+        18,
+        stone_light,
+    );
+
+    set_default_color();
+}
+
 /// Draws the weekly spelling-list entry screen for Reading Snake.
 pub fn draw_spelling_list_screen(input: &str) {
     for i in 0..80 {

@@ -2,12 +2,13 @@
 
 Star Crusher is an educational arcade collection wrapped in a light kid-friendly dungeon adventure menu. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.3.0`
+Current build: `1.4.0`
 
 ## Features
 
 - Seven-grade progression from Preschool through 5th Grade.
 - Grade-appropriate math questions covering counting, arithmetic, multiplication, division, fractions, percentages, pre-algebra, area, volume, and ratios.
+- Start Adventure opens a short RPG-style dungeon intro before the first Math Invaders encounter.
 - Math Invaders waves with Time Pilot-style drifting numbered targets tied to the active math question.
 - Kindergarten number-recognition prompts use words, such as `Shoot number three`, while targets remain numeric.
 - Question gates between waves that require typed answers to advance.
@@ -24,6 +25,8 @@ Title menu controls:
 
 - Move menu cursor: `Up` / `Down` arrow keys or `W` / `S`
 - Launch selected option: `Enter` or `Space`
+- Continue Start Adventure intro: `Enter` or `Space`
+- Return from Start Adventure intro to title: `Esc`
 - Direct shortcut for Math Invaders: `M`
 - Direct shortcut for Math Pong: `P`
 - Direct shortcut for Reading Snake: `R`
@@ -113,12 +116,13 @@ src/assets.rs    Procedural drawing helpers for ships, enemies, stars, effects
 
 Math Invaders:
 
-1. Choose `Start Adventure` or `Math Invaders` from the title menu.
-2. Read the active math question and find the drifting target showing the correct answer.
-3. Shoot the correct drifting number to score and receive a new question for the remaining targets.
-4. Shooting an incorrect number costs one life and leaves that target in play.
-5. Clear all numbered targets, then answer typed math questions at the wave-complete gate.
-6. Advance through each grade until the 5th Grade wave is completed.
+1. Choose `Start Adventure` to see the RPG-style intro, then press `Enter` or `Space` through the final prompt to begin.
+2. Choose `Math Invaders` from the title menu, or press `M`, to launch Math Invaders immediately.
+3. Read the active math question and find the drifting target showing the correct answer.
+4. Shoot the correct drifting number to score and receive a new question for the remaining targets.
+5. Shooting an incorrect number costs one life and leaves that target in play.
+6. Clear all numbered targets, then answer typed math questions at the wave-complete gate.
+7. Advance through each grade until the 5th Grade wave is completed.
 
 Math Pong:
 
