@@ -5,6 +5,7 @@ mod math_pong;
 mod player;
 mod question;
 mod reading_snake;
+mod screen;
 mod ui;
 
 use enemy::{EnemyGrid, Explosion};
@@ -14,28 +15,7 @@ use math_pong::{MathPong, MathPongAction};
 use player::{Bullet, EnemyBullet, Player};
 use question::{generate_question, Question};
 use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
-
-const SCREEN_W: f32 = 1024.0;
-const SCREEN_H: f32 = 768.0;
-const WINDOW_SCALE: f32 = 1.25;
-
-fn window_conf() -> Conf {
-    Conf {
-        window_title: "Star Crusher".to_string(),
-        window_width: (SCREEN_W * WINDOW_SCALE) as i32,
-        window_height: (SCREEN_H * WINDOW_SCALE) as i32,
-        window_resizable: false,
-        ..Default::default()
-    }
-}
-
-fn use_virtual_screen() {
-    set_camera(&Camera2D {
-        target: vec2(SCREEN_W / 2.0, SCREEN_H / 2.0),
-        zoom: vec2(2.0 / SCREEN_W, 2.0 / SCREEN_H),
-        ..Default::default()
-    });
-}
+use screen::{enter_fullscreen, use_virtual_screen, window_conf, SCREEN_H, SCREEN_W};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum GameMode {
@@ -512,6 +492,10 @@ fn draw_starfield() {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    enter_fullscreen();
+    next_frame().await;
+    enter_fullscreen();
+
     let mut game = Game::new();
 
     loop {

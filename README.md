@@ -19,7 +19,7 @@ Current build: `1.4.1`
 - Reading Snake shows definition cards, keeps the active definition visible above the board, and keeps new letter tiles away from the snake head.
 - RPG-style title menu with procedural stone paneling, dungeon glyphs, and selectable encounter options.
 - Procedural graphics only; no external assets or fonts required.
-- Fixed 1280x960 macroquad window with a scaled 1024x768 virtual playfield.
+- Launches in a 1920x1080 fullscreen window with a fixed 1024x768 virtual playfield.
 
 ## Controls
 
@@ -110,7 +110,8 @@ cargo check
 
 ```text
 run-game         Convenience launcher that loads rustup environment and runs Cargo
-src/main.rs      Game entry point, state machine, update/draw loop
+src/main.rs      Game state machine and update/draw loop
+src/screen.rs    Window configuration, fullscreen launch, and virtual screen camera
 src/levels.rs    Grade progression and difficulty configuration
 src/question.rs  Grade-specific math question generation
 src/math_pong.rs Math Pong number target mini game

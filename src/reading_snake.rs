@@ -1,9 +1,8 @@
 use ::rand::seq::SliceRandom;
 use ::rand::Rng;
+use crate::screen::{SCREEN_H, SCREEN_W};
 use macroquad::prelude::*;
 
-const SCREEN_W: f32 = 1024.0;
-const SCREEN_H: f32 = 768.0;
 const GRID_W: i32 = 34;
 const GRID_H: i32 = 21;
 const CELL: f32 = 24.0;

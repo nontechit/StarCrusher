@@ -1,9 +1,8 @@
 use crate::assets;
 use crate::levels::Grade;
+use crate::screen::{SCREEN_H, SCREEN_W};
 use macroquad::prelude::*;
 
-const SCREEN_W: f32 = 1024.0;
-const SCREEN_H: f32 = 768.0;
 const CENTER_X: f32 = SCREEN_W / 2.0;
 
 thread_local! {

@@ -3,9 +3,8 @@ use macroquad::prelude::*;
 
 use crate::levels::Grade;
 use crate::question::{generate_question, Question};
+use crate::screen::{SCREEN_H, SCREEN_W};
 
-const SCREEN_W: f32 = 1024.0;
-const SCREEN_H: f32 = 768.0;
 const PADDLE_Y: f32 = 708.0;
 const TARGET_Y: f32 = 120.0;
 const TARGET_W: f32 = 76.0;
