@@ -57,6 +57,7 @@ impl CellPos {
 pub enum ReadingSnakeAction {
     None,
     ExitToTitle,
+    Completed,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -96,6 +97,8 @@ pub struct ReadingSnake {
     lives: u8,
     nightmare_mode: bool,
     bonus_round: bool,
+    start_bonus_on_complete: bool,
+    completion_returns_action: bool,
     last_step: f64,
     game_over: bool,
     completed: bool,
@@ -127,6 +130,19 @@ impl ReadingSnake {
         Self::new_with_mode(custom_words, true)
     }
 
+    pub fn new_adventure() -> Self {
+        let mut game = Self::new_with_mode(Vec::new(), false);
+        game.start_bonus_on_complete = false;
+        game.completion_returns_action = true;
+        game
+    }
+
+    pub fn new_adventure_nightmare() -> Self {
+        let mut game = Self::new_with_mode(Vec::new(), true);
+        game.completion_returns_action = true;
+        game
+    }
+
     fn new_with_mode(custom_words: Vec<WordEntry>, nightmare_mode: bool) -> Self {
         let mut game = Self {
             snake: Vec::new(),
@@ -147,6 +163,8 @@ impl ReadingSnake {
             lives: 3,
             nightmare_mode,
             bonus_round: false,
+            start_bonus_on_complete: true,
+            completion_returns_action: false,
             last_step: get_time(),
             game_over: false,
             completed: false,
@@ -168,6 +186,9 @@ impl ReadingSnake {
         }
 
         if self.game_over {
+            if self.completed && self.completion_returns_action {
+                return ReadingSnakeAction::Completed;
+            }
             if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
                 *self = Self::new_with_mode(self.custom_words.clone(), self.nightmare_mode);
             }
@@ -187,6 +208,9 @@ impl ReadingSnake {
         if get_time() - self.last_step >= STEP_SECONDS {
             self.step();
             self.last_step = get_time();
+            if self.completed && self.completion_returns_action {
+                return ReadingSnakeAction::Completed;
+            }
         }
 
         ReadingSnakeAction::None
@@ -311,7 +335,7 @@ impl ReadingSnake {
         if self.word_index + 1 < self.word_count() {
             self.word_index += 1;
             self.pick_word();
-        } else if self.nightmare_mode {
+        } else if self.nightmare_mode || !self.start_bonus_on_complete {
             self.completed = true;
             self.game_over = true;
             self.message = "You completed every word.";

@@ -388,7 +388,7 @@ const ADVENTURE_INTRO_PAGES: [(&str, &str); 5] = [
     ),
     (
         "First quest: clear the drifting number monsters.",
-        "Press ENTER or SPACE to begin!",
+        "Then Reading Snake, Math Pong, and Nightmare Snake await.",
     ),
 ];
 

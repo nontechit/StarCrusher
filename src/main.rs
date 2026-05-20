@@ -32,6 +32,15 @@ enum GameMode {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum AdventureStep {
+    MathInvaders,
+    ReadingSnake,
+    MathPong,
+    NightmareSnake,
+    MathInvadersProgression,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum TitleMenuPage {
     Main,
     MiniGames,
@@ -98,6 +107,8 @@ struct Game {
     reading_snake: ReadingSnake,
     math_pong: MathPong,
     intro_page: usize,
+    adventure_active: bool,
+    adventure_step: AdventureStep,
 }
 
 impl Game {
@@ -129,6 +140,8 @@ impl Game {
             reading_snake: ReadingSnake::new(),
             math_pong: MathPong::new(),
             intro_page: 0,
+            adventure_active: false,
+            adventure_step: AdventureStep::MathInvaders,
         }
     }
 
@@ -146,6 +159,8 @@ impl Game {
         match option {
             TitleMenuOption::StartAdventure => {
                 self.intro_page = 0;
+                self.adventure_active = true;
+                self.adventure_step = AdventureStep::MathInvaders;
                 self.mode = GameMode::AdventureIntro;
             }
             TitleMenuOption::PlayMiniGames => {
@@ -248,16 +263,18 @@ impl Game {
                 }
             }
             GameMode::ReadingSnake => {
-                if self.reading_snake.update() == ReadingSnakeAction::ExitToTitle {
-                    self.title_menu_page = TitleMenuPage::Main;
-                    self.mode = GameMode::Title;
+                match self.reading_snake.update() {
+                    ReadingSnakeAction::None => {}
+                    ReadingSnakeAction::ExitToTitle => self.exit_to_title(),
+                    ReadingSnakeAction::Completed => self.complete_reading_snake(),
                 }
             }
             GameMode::SpellingList => self.update_spelling_list(),
             GameMode::MathPong => {
-                if self.math_pong.update() == MathPongAction::ExitToTitle {
-                    self.title_menu_page = TitleMenuPage::Main;
-                    self.mode = GameMode::Title;
+                match self.math_pong.update() {
+                    MathPongAction::None => {}
+                    MathPongAction::ExitToTitle => self.exit_to_title(),
+                    MathPongAction::Completed => self.complete_math_pong(),
                 }
             }
             GameMode::AdventureIntro => self.update_adventure_intro(),
@@ -284,8 +301,50 @@ impl Game {
 
         if self.enemies.is_cleared() {
             self.score += 100 * (self.grade.index() as u32 + 1);
-            self.begin_gate();
+            if self.adventure_active && self.adventure_step == AdventureStep::MathInvaders {
+                self.adventure_step = AdventureStep::ReadingSnake;
+                self.reading_snake = ReadingSnake::new_adventure();
+                self.mode = GameMode::ReadingSnake;
+            } else {
+                self.begin_gate();
+            }
         }
+    }
+
+    fn exit_to_title(&mut self) {
+        self.adventure_active = false;
+        self.adventure_step = AdventureStep::MathInvaders;
+        self.title_menu_page = TitleMenuPage::Main;
+        self.mode = GameMode::Title;
+    }
+
+    fn complete_reading_snake(&mut self) {
+        if !self.adventure_active {
+            return;
+        }
+
+        match self.adventure_step {
+            AdventureStep::ReadingSnake => {
+                self.adventure_step = AdventureStep::MathPong;
+                self.math_pong = MathPong::new();
+                self.mode = GameMode::MathPong;
+            }
+            AdventureStep::NightmareSnake => {
+                self.adventure_step = AdventureStep::MathInvadersProgression;
+                self.begin_gate();
+            }
+            _ => {}
+        }
+    }
+
+    fn complete_math_pong(&mut self) {
+        if !self.adventure_active || self.adventure_step != AdventureStep::MathPong {
+            return;
+        }
+
+        self.adventure_step = AdventureStep::NightmareSnake;
+        self.reading_snake = ReadingSnake::new_adventure_nightmare();
+        self.mode = GameMode::ReadingSnake;
     }
 
     fn update_enemy_fire(&mut self) {
@@ -426,14 +485,21 @@ impl Game {
 
         if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
             if self.intro_page + 1 >= total_pages {
-                // Last page done; launch Math Invaders.
-                self.reset();
+                self.start_adventure_math_invaders();
             } else {
                 self.intro_page += 1;
             }
         } else if is_key_pressed(KeyCode::Escape) {
-            self.mode = GameMode::Title;
+            self.exit_to_title();
         }
+    }
+
+    fn start_adventure_math_invaders(&mut self) {
+        let mut next = Self::new();
+        next.adventure_active = true;
+        next.adventure_step = AdventureStep::MathInvaders;
+        *self = next;
+        self.start_game();
     }
 
     fn advance_grade_or_finish(&mut self) {

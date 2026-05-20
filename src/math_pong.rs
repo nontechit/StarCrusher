@@ -16,6 +16,7 @@ const QUESTIONS_PER_GRADE: u8 = 5;
 pub enum MathPongAction {
     None,
     ExitToTitle,
+    Completed,
 }
 
 #[derive(Clone, Debug)]
@@ -81,6 +82,9 @@ impl MathPong {
 
         self.update_paddle();
         self.update_ball();
+        if self.victory {
+            return MathPongAction::Completed;
+        }
         MathPongAction::None
     }
 

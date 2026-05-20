@@ -2,13 +2,13 @@
 
 Star Crusher is an educational arcade collection wrapped in a light kid-friendly dungeon adventure menu. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.4.4`
+Current build: `1.4.5`
 
 ## Features
 
 - Seven-grade progression from Preschool through 5th Grade.
 - Grade-appropriate math questions covering counting, arithmetic, multiplication, division, fractions, percentages, pre-algebra, area, volume, and ratios.
-- Start Adventure opens a short RPG-style dungeon intro before the first Math Invaders encounter.
+- Start Adventure opens a guided campaign path: intro, first Math Invaders wave, Reading Snake, Math Pong, Nightmare Snake, then continued Math Invaders progression.
 - Math Invaders waves with Time Pilot-style drifting numbered targets tied to the active math question.
 - Math Invaders shows the active question in a larger top-centered banner, with targets kept below the banner.
 - Preschool shape prompts use default-font-safe ASCII markers so shapes display reliably.
@@ -20,6 +20,7 @@ Current build: `1.4.4`
 - Reading Snake shows definition cards, keeps the active definition visible above the board, and keeps new letter tiles away from the snake head.
 - Reading Snake definition cards show part of speech and use larger definition text for easier reading.
 - Completing the standard Reading Snake list starts a bonus Nightmare round using the same words.
+- In Start Adventure, completing normal Reading Snake advances directly to Math Pong instead of the standalone bonus round.
 - RPG-style title menu with procedural stone paneling, dungeon glyphs, a focused main adventure menu, and a Play Mini Games submenu.
 - Game over and victory stat panels are centered with their score and progress text.
 - Procedural graphics only; no external assets or fonts required.
@@ -36,6 +37,7 @@ Title menu controls:
 - Return from Play Mini Games to the main menu: `Esc`
 - Continue Start Adventure intro: `Enter` or `Space`
 - Return from Start Adventure intro to title: `Esc`
+- Return from adventure mini-games to title and cancel the adventure: `Esc`
 - Direct shortcut for Math Invaders: `M`
 - Direct shortcut for Play Mini Games from the main menu: `P`
 - Direct shortcut for Math Pong from Play Mini Games: `P`
@@ -135,13 +137,17 @@ src/assets.rs    Procedural drawing helpers for ships, enemies, stars, effects
 Math Invaders:
 
 1. Choose `Start Adventure` to see the RPG-style intro, then press `Enter` or `Space` through the final prompt to begin.
-2. Choose `Math Invaders` from the title menu, or press `M`, to launch Math Invaders immediately.
-3. Read the active math question and find the drifting target showing the correct answer.
-4. Use the top-centered question banner; targets spawn and drift below it for visibility.
-5. Shoot the correct drifting number to score and receive a new question for the remaining targets.
-6. Shooting an incorrect number costs one life and leaves that target in play.
-7. Clear all numbered targets, then answer typed math questions at the wave-complete gate.
-8. Advance through each grade until the 5th Grade wave is completed.
+2. Clear the first Math Invaders wave to enter normal Reading Snake automatically.
+3. Complete normal Reading Snake to enter Math Pong automatically.
+4. Complete Math Pong to enter Nightmare Snake automatically.
+5. Complete Nightmare Snake to return to Math Invaders progression and answer the wave-complete gate.
+6. Choose `Math Invaders` from the title menu, or press `M`, to launch standalone Math Invaders immediately.
+7. Read the active math question and find the drifting target showing the correct answer.
+8. Use the top-centered question banner; targets spawn and drift below it for visibility.
+9. Shoot the correct drifting number to score and receive a new question for the remaining targets.
+10. Shooting an incorrect number costs one life and leaves that target in play.
+11. Clear all numbered targets, then answer typed math questions at the wave-complete gate.
+12. Advance through each grade until the 5th Grade wave is completed.
 
 Math Pong:
 
