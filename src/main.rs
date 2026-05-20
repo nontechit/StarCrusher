@@ -469,7 +469,7 @@ impl Game {
             draw_text(
                 line,
                 SCREEN_W / 2.0 - metrics.width / 2.0,
-                430.0 + i as f32 * 28.0,
+                455.0 + i as f32 * 28.0,
                 text_size as f32,
                 YELLOW,
             );

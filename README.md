@@ -2,7 +2,7 @@
 
 Star Crusher is an educational arcade collection wrapped in a light kid-friendly dungeon adventure menu. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.4.2`
+Current build: `1.4.3`
 
 ## Features
 
@@ -14,12 +14,14 @@ Current build: `1.4.2`
 - Preschool shape prompts use default-font-safe ASCII markers so shapes display reliably.
 - Kindergarten number-recognition prompts use words, such as `Shoot number three`, while targets remain numeric.
 - Question gates between waves that require typed answers to advance.
+- Question gate prompts and answer input are spaced to avoid overlapping the wave-complete instructions.
 - Math Pong mode for launching a straight ball into randomly placed numbered targets.
 - Reading Snake mini game for letter order, word recognition, and definition practice, with a default weekly spelling list, optional custom lists, and Nightmare mode.
 - Reading Snake shows definition cards, keeps the active definition visible above the board, and keeps new letter tiles away from the snake head.
 - Reading Snake definition cards show part of speech and use larger definition text for easier reading.
 - Completing the standard Reading Snake list starts a bonus Nightmare round using the same words.
 - RPG-style title menu with procedural stone paneling, dungeon glyphs, and selectable encounter options.
+- Game over and victory stat panels are centered with their score and progress text.
 - Procedural graphics only; no external assets or fonts required.
 - Launches in a 1920x1080 fullscreen window with a fixed 1024x768 virtual playfield.
 

@@ -631,12 +631,16 @@ pub fn draw_game_over(score: u32, grade_reached: &Grade) {
     );
 
     // Stats box
+    let box_w = 520.0;
+    let box_h = 200.0;
+    let box_x = CENTER_X - box_w / 2.0;
+    let box_y = 200.0;
     set_color(Color::new(0.15, 0.15, 0.3, 0.9));
-    draw_rectangle(200.0, 200.0, 400.0, 200.0);
+    draw_rectangle(box_x, box_y, box_w, box_h);
 
     // Border
     set_color(Color::new(0.8, 0.3, 0.3, 1.0));
-    draw_rectangle_lines(200.0, 200.0, 400.0, 200.0);
+    draw_rectangle_lines(box_x, box_y, box_w, box_h);
 
     // Final score
     set_color(YELLOW);
@@ -698,12 +702,16 @@ pub fn draw_victory_screen(score: u32) {
     );
 
     // Stats box
+    let box_w = 620.0;
+    let box_h = 220.0;
+    let box_x = CENTER_X - box_w / 2.0;
+    let box_y = 200.0;
     set_color(Color::new(0.15, 0.2, 0.3, 0.9));
-    draw_rectangle(150.0, 200.0, 500.0, 220.0);
+    draw_rectangle(box_x, box_y, box_w, box_h);
 
     // Border with gold color
     set_color(YELLOW);
-    draw_rectangle_lines(150.0, 200.0, 500.0, 220.0);
+    draw_rectangle_lines(box_x, box_y, box_w, box_h);
 
     // Final score (large)
     let score_txt = format!("Final Score: {}", score);
@@ -748,18 +756,23 @@ pub fn draw_victory_screen(score: u32) {
 
 /// Draws the current answer input display during question gates.
 pub fn draw_answer_input(current_input: &str) {
+    let input_w = 240.0;
+    let input_h = 50.0;
+    let input_x = CENTER_X - input_w / 2.0;
+    let input_y = 540.0;
+
     // Input box background
     set_color(Color::new(0.2, 0.2, 0.4, 0.9));
-    draw_rectangle(300.0, 480.0, 200.0, 50.0);
+    draw_rectangle(input_x, input_y, input_w, input_h);
 
     // Border (cyan for active input)
     set_color(Color::new(0.3, 1.0, 1.0, 1.0));
-    draw_rectangle_lines(300.0, 480.0, 200.0, 50.0);
+    draw_rectangle_lines(input_x, input_y, input_w, input_h);
 
     // Current typed answer (centered)
     set_color(WHITE);
     let tm = measure_text(current_input, None, 24, 1.0);
-    draw_text(current_input, CENTER_X - tm.w / 2.0, 500.0, 24.0, WHITE);
+    draw_text(current_input, CENTER_X - tm.w / 2.0, input_y + 32.0, 24.0, WHITE);
 
     // Blinking cursor effect
     let blink = if (get_time() as f32 * 3.0).fract() > 0.5 {
@@ -773,7 +786,7 @@ pub fn draw_answer_input(current_input: &str) {
     } else {
         CENTER_X - tm.w / 2.0 + tm.w + 3.0
     };
-    draw_rectangle(cursor_x, 490.0, 2.0, 28.0);
+    draw_rectangle(cursor_x, input_y + 10.0, 2.0, 28.0);
 
     set_default_color();
 }
@@ -788,7 +801,7 @@ pub fn draw_answer_feedback(is_correct: bool) {
 
     set_color(color);
     let tm = measure_text(text, None, 28, 1.0);
-    draw_text(text, CENTER_X - tm.w / 2.0, 560.0, 28.0, color);
+    draw_text(text, CENTER_X - tm.w / 2.0, 630.0, 28.0, color);
 
     set_default_color();
 }
