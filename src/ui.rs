@@ -124,7 +124,7 @@ fn draw_question_banner(text: &str) {
 }
 
 /// Draws the RPG-style title screen and adventure menu.
-pub fn draw_title_screen(selected_index: usize) {
+pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
     let ink = Color::new(0.08, 0.1, 0.11, 1.0);
     let stone_dark = Color::new(0.2, 0.24, 0.24, 1.0);
     let stone = Color::new(0.46, 0.51, 0.48, 1.0);
@@ -144,8 +144,13 @@ pub fn draw_title_screen(selected_index: usize) {
         18,
         stone_light,
     );
+    let shortcuts = if showing_mini_games {
+        "ESC Back   P Pong   R Snake   N Nightmare"
+    } else {
+        "Shortcuts: M Math Invaders   P Mini Games   L Custom Spelling List"
+    };
     centered_text(
-        "Shortcuts: M Math Invaders   P Pong   R Snake   N Nightmare   L List",
+        shortcuts,
         714.0,
         16,
         parchment,
@@ -166,6 +171,7 @@ pub fn draw_title_screen(selected_index: usize) {
         552.0,
         206.0,
         332.0,
+        showing_mini_games,
         selected_index,
         ink,
         stone,
@@ -257,43 +263,60 @@ fn draw_adventure_menu(
     x: f32,
     y: f32,
     w: f32,
+    showing_mini_games: bool,
     selected_index: usize,
     ink: Color,
     stone: Color,
     stone_light: Color,
     parchment: Color,
 ) {
-    let options = [
+    let main_options = [
         ("Start Adventure", "Begin the dungeon trail"),
-        ("Math Invaders", "Space wave encounter"),
-        ("Math Pong", "Paddle target challenge"),
-        ("Reading Snake", "Word path encounter"),
-        ("Nightmare Snake", "Same-color letter trial"),
-        ("Spelling List", "Enter custom words"),
+        ("Play Mini Games", "Open arcade side quests"),
+        ("Custom Spelling List", "Enter weekly words"),
     ];
+    let mini_game_options = [
+        ("Reading Snake", "Word path encounter"),
+        ("Math Pong", "Paddle target challenge"),
+        ("Nightmare Snake", "Same-color letter trial"),
+    ];
+    let options = if showing_mini_games {
+        &mini_game_options
+    } else {
+        &main_options
+    };
+    let title = if showing_mini_games {
+        "PLAY MINI GAMES"
+    } else {
+        "ADVENTURE MENU"
+    };
 
     set_color(Color::new(0.16, 0.19, 0.18, 1.0));
     draw_rectangle(x, y, w, 382.0);
     set_color(stone_light);
     draw_rectangle_lines(x, y, w, 382.0);
-    centered_text_in("ADVENTURE MENU", x, y + 42.0, w, 24, parchment);
+    centered_text_in(title, x, y + 42.0, w, 24, parchment);
 
     for (index, (label, detail)) in options.iter().enumerate() {
-        let row_y = y + 72.0 + index as f32 * 48.0;
+        let row_y = y + 110.0 + index as f32 * 62.0;
         let selected = selected_index % options.len() == index;
         if selected {
             set_color(parchment);
-            draw_rectangle(x + 22.0, row_y - 24.0, w - 44.0, 38.0);
+            draw_rectangle(x + 22.0, row_y - 30.0, w - 44.0, 46.0);
             set_color(ink);
             draw_rectangle(x + 32.0, row_y - 10.0, 10.0, 10.0);
             draw_text(label, x + 54.0, row_y, 22.0, ink);
             draw_text(detail, x + 54.0, row_y + 18.0, 13.0, ink);
         } else {
             set_color(stone);
-            draw_rectangle_lines(x + 22.0, row_y - 24.0, w - 44.0, 38.0);
+            draw_rectangle_lines(x + 22.0, row_y - 30.0, w - 44.0, 46.0);
             draw_text(label, x + 54.0, row_y, 22.0, stone_light);
             draw_text(detail, x + 54.0, row_y + 18.0, 13.0, parchment);
         }
+    }
+
+    if showing_mini_games {
+        centered_text_in("Press ESC to return", x, y + 338.0, w, 14, parchment);
     }
 }
 

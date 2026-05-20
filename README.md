@@ -2,7 +2,7 @@
 
 Star Crusher is an educational arcade collection wrapped in a light kid-friendly dungeon adventure menu. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.4.3`
+Current build: `1.4.4`
 
 ## Features
 
@@ -20,7 +20,7 @@ Current build: `1.4.3`
 - Reading Snake shows definition cards, keeps the active definition visible above the board, and keeps new letter tiles away from the snake head.
 - Reading Snake definition cards show part of speech and use larger definition text for easier reading.
 - Completing the standard Reading Snake list starts a bonus Nightmare round using the same words.
-- RPG-style title menu with procedural stone paneling, dungeon glyphs, and selectable encounter options.
+- RPG-style title menu with procedural stone paneling, dungeon glyphs, a focused main adventure menu, and a Play Mini Games submenu.
 - Game over and victory stat panels are centered with their score and progress text.
 - Procedural graphics only; no external assets or fonts required.
 - Launches in a 1920x1080 fullscreen window with a fixed 1024x768 virtual playfield.
@@ -31,13 +31,17 @@ Title menu controls:
 
 - Move menu cursor: `Up` / `Down` arrow keys or `W` / `S`
 - Launch selected option: `Enter` or `Space`
+- Main menu options: `Start Adventure`, `Play Mini Games`, and `Custom Spelling List`
+- Play Mini Games options: `Reading Snake`, `Math Pong`, and `Nightmare Snake`
+- Return from Play Mini Games to the main menu: `Esc`
 - Continue Start Adventure intro: `Enter` or `Space`
 - Return from Start Adventure intro to title: `Esc`
 - Direct shortcut for Math Invaders: `M`
-- Direct shortcut for Math Pong: `P`
+- Direct shortcut for Play Mini Games from the main menu: `P`
+- Direct shortcut for Math Pong from Play Mini Games: `P`
 - Direct shortcut for Reading Snake: `R`
 - Direct shortcut for Reading Snake Nightmare: `N`
-- Direct shortcut for spelling-list entry: `L`
+- Direct shortcut for Custom Spelling List: `L`
 
 Math Invaders controls:
 
@@ -141,7 +145,7 @@ Math Invaders:
 
 Math Pong:
 
-1. Choose `Math Pong` from the title menu, or press `P`.
+1. Choose `Play Mini Games`, then choose `Math Pong`, or press `P` from Play Mini Games.
 2. Read the math question and identify the correct numbered target.
 3. Move the paddle under the correct number before launching the ball.
 4. Launch straight upward into the correct number to clear the question.
@@ -149,8 +153,8 @@ Math Pong:
 
 Reading Snake:
 
-1. Choose `Reading Snake` from the title menu, or press `R`, to play with the default word list.
-2. Or choose `Spelling List`, type weekly spelling words with definitions, then press `Enter`.
+1. Choose `Play Mini Games`, then choose `Reading Snake`, or press `R`, to play with the default word list.
+2. Or choose `Custom Spelling List`, type weekly spelling words with definitions, then press `Enter`.
 3. Use the format `apple: a fruit; moon: shines at night` for custom definitions.
 4. Read the definition card, then press `Enter` or `Space` to start spelling.
 5. Use the visible definition above the board and follow the blank word prompt below the board.
@@ -161,8 +165,8 @@ Reading Snake:
 
 Reading Snake Nightmare:
 
-1. Choose `Nightmare Snake` from the title menu, or press `N`.
-2. Or choose `Spelling List`, type a custom spelling list, then press `N`.
+1. Choose `Play Mini Games`, then choose `Nightmare Snake`, or press `N`.
+2. Or choose `Custom Spelling List`, type a custom spelling list, then press `N`.
 3. Read the definition card and spell the hidden word.
 4. Choose carefully because all letter tiles look the same.
 5. Complete the word to earn a bonus life.

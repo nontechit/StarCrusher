@@ -32,8 +32,15 @@ enum GameMode {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum TitleMenuPage {
+    Main,
+    MiniGames,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum TitleMenuOption {
     StartAdventure,
+    PlayMiniGames,
     MathInvaders,
     MathPong,
     ReadingSnake,
@@ -42,22 +49,35 @@ enum TitleMenuOption {
 }
 
 impl TitleMenuOption {
-    const ALL: [Self; 6] = [
+    const MAIN: [Self; 3] = [
         Self::StartAdventure,
-        Self::MathInvaders,
-        Self::MathPong,
-        Self::ReadingSnake,
-        Self::NightmareSnake,
+        Self::PlayMiniGames,
         Self::SpellingList,
     ];
+    const MINI_GAMES: [Self; 3] = [
+        Self::ReadingSnake,
+        Self::MathPong,
+        Self::NightmareSnake,
+    ];
 
-    fn from_index(index: usize) -> Self {
-        Self::ALL[index % Self::ALL.len()]
+    fn menu_len(page: TitleMenuPage) -> usize {
+        match page {
+            TitleMenuPage::Main => Self::MAIN.len(),
+            TitleMenuPage::MiniGames => Self::MINI_GAMES.len(),
+        }
+    }
+
+    fn from_index(page: TitleMenuPage, index: usize) -> Self {
+        match page {
+            TitleMenuPage::Main => Self::MAIN[index % Self::MAIN.len()],
+            TitleMenuPage::MiniGames => Self::MINI_GAMES[index % Self::MINI_GAMES.len()],
+        }
     }
 }
 
 struct Game {
     mode: GameMode,
+    title_menu_page: TitleMenuPage,
     title_selection: usize,
     grade: Grade,
     wave: usize,
@@ -88,6 +108,7 @@ impl Game {
 
         Self {
             mode: GameMode::Title,
+            title_menu_page: TitleMenuPage::Main,
             title_selection: 0,
             grade,
             wave: 1,
@@ -126,6 +147,10 @@ impl Game {
             TitleMenuOption::StartAdventure => {
                 self.intro_page = 0;
                 self.mode = GameMode::AdventureIntro;
+            }
+            TitleMenuOption::PlayMiniGames => {
+                self.title_menu_page = TitleMenuPage::MiniGames;
+                self.title_selection = 0;
             }
             TitleMenuOption::MathInvaders => self.reset(),
             TitleMenuOption::MathPong => {
@@ -177,15 +202,23 @@ impl Game {
     fn update(&mut self) {
         match self.mode {
             GameMode::Title => {
+                let menu_len = TitleMenuOption::menu_len(self.title_menu_page);
                 if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
-                    self.title_selection = (self.title_selection + TitleMenuOption::ALL.len() - 1)
-                        % TitleMenuOption::ALL.len();
+                    self.title_selection = (self.title_selection + menu_len - 1) % menu_len;
                 } else if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
-                    self.title_selection = (self.title_selection + 1) % TitleMenuOption::ALL.len();
+                    self.title_selection = (self.title_selection + 1) % menu_len;
                 }
 
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
-                    self.launch_title_option(TitleMenuOption::from_index(self.title_selection));
+                    self.launch_title_option(TitleMenuOption::from_index(
+                        self.title_menu_page,
+                        self.title_selection,
+                    ));
+                } else if is_key_pressed(KeyCode::Escape)
+                    && self.title_menu_page == TitleMenuPage::MiniGames
+                {
+                    self.title_menu_page = TitleMenuPage::Main;
+                    self.title_selection = 1;
                 } else if is_key_pressed(KeyCode::M) {
                     self.launch_title_option(TitleMenuOption::MathInvaders);
                 } else if is_key_pressed(KeyCode::R) {
@@ -195,7 +228,11 @@ impl Game {
                 } else if is_key_pressed(KeyCode::L) {
                     self.launch_title_option(TitleMenuOption::SpellingList);
                 } else if is_key_pressed(KeyCode::P) {
-                    self.launch_title_option(TitleMenuOption::MathPong);
+                    if self.title_menu_page == TitleMenuPage::Main {
+                        self.launch_title_option(TitleMenuOption::PlayMiniGames);
+                    } else {
+                        self.launch_title_option(TitleMenuOption::MathPong);
+                    }
                 }
             }
             GameMode::Playing => self.update_playing(),
@@ -212,12 +249,14 @@ impl Game {
             }
             GameMode::ReadingSnake => {
                 if self.reading_snake.update() == ReadingSnakeAction::ExitToTitle {
+                    self.title_menu_page = TitleMenuPage::Main;
                     self.mode = GameMode::Title;
                 }
             }
             GameMode::SpellingList => self.update_spelling_list(),
             GameMode::MathPong => {
                 if self.math_pong.update() == MathPongAction::ExitToTitle {
+                    self.title_menu_page = TitleMenuPage::Main;
                     self.mode = GameMode::Title;
                 }
             }
@@ -413,7 +452,10 @@ impl Game {
         clear_background(BLACK);
 
         match self.mode {
-            GameMode::Title => ui::draw_title_screen(self.title_selection),
+            GameMode::Title => ui::draw_title_screen(
+                self.title_menu_page == TitleMenuPage::MiniGames,
+                self.title_selection,
+            ),
             GameMode::Playing => self.draw_playing(),
             GameMode::GateIntro => {
                 self.draw_playing();
