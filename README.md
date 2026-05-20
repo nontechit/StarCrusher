@@ -2,7 +2,7 @@
 
 Star Crusher is an educational arcade collection wrapped in a light kid-friendly dungeon adventure menu. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.4.1`
+Current build: `1.4.2`
 
 ## Features
 
@@ -15,8 +15,10 @@ Current build: `1.4.1`
 - Kindergarten number-recognition prompts use words, such as `Shoot number three`, while targets remain numeric.
 - Question gates between waves that require typed answers to advance.
 - Math Pong mode for launching a straight ball into randomly placed numbered targets.
-- Reading Snake mini game for letter order, word recognition, and definition practice, with optional custom weekly spelling lists and Nightmare mode.
+- Reading Snake mini game for letter order, word recognition, and definition practice, with a default weekly spelling list, optional custom lists, and Nightmare mode.
 - Reading Snake shows definition cards, keeps the active definition visible above the board, and keeps new letter tiles away from the snake head.
+- Reading Snake definition cards show part of speech and use larger definition text for easier reading.
+- Completing the standard Reading Snake list starts a bonus Nightmare round using the same words.
 - RPG-style title menu with procedural stone paneling, dungeon glyphs, and selectable encounter options.
 - Procedural graphics only; no external assets or fonts required.
 - Launches in a 1920x1080 fullscreen window with a fixed 1024x768 virtual playfield.
@@ -53,7 +55,7 @@ Reading Snake controls:
 
 Reading Snake layout and safety:
 
-- The definition appears before each word and remains visible above the playfield.
+- The definition card shows the part of speech before each word, and the definition remains visible above the playfield.
 - The blank word prompt appears below the playfield.
 - After each correct letter, the next target and decoy letters avoid a 6-by-6 area around the snake head.
 
@@ -153,7 +155,7 @@ Reading Snake:
 6. Steer the snake into the next correct letter.
 7. Avoid wrong letters, walls, and the snake's own tail.
 8. New letters appear away from the snake head so the player has room to react.
-9. Complete words to earn bonus points and see the next definition card.
+9. Complete every word in the list to unlock a bonus Nightmare pass through those same words.
 
 Reading Snake Nightmare:
 

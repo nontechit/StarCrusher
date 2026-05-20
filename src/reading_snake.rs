@@ -12,19 +12,31 @@ const STEP_SECONDS: f64 = 0.18;
 const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
 const MAX_LIVES: u8 = 9;
 
-const WORDS: &[(&str, &str)] = &[
-    ("CAT", "A small furry pet that says meow."),
-    ("DOG", "A friendly pet that often barks."),
-    ("SUN", "The bright star that gives Earth light."),
-    ("MAP", "A picture that helps you find places."),
-    ("BOOK", "Pages with words or pictures to read."),
-    ("STAR", "A bright light seen in the night sky."),
-    ("MOON", "The round object that shines at night."),
-    ("PLANT", "A living thing that grows from soil."),
-    ("SPACE", "The huge area beyond Earth."),
-    ("ROCKET", "A ship that can fly into space."),
-    ("PLANET", "A large round world that moves around a star."),
-    ("GALAXY", "A giant group of stars."),
+const WORDS: &[(&str, &str, &str)] = &[
+    ("KEY", "noun", "A small tool used to open a lock."),
+    ("BUMPY", "adjective", "Not smooth; full of bumps."),
+    ("PUPPY", "noun", "A young dog."),
+    ("FUNNY", "adjective", "Something that makes you laugh."),
+    ("PENNY", "noun", "A coin worth one cent."),
+    ("SANDY", "adjective", "Covered with or made of sand."),
+    ("MY", "adjective", "Belonging to me."),
+    ("NIGHT", "noun", "The dark time between sunset and morning."),
+    ("WASH", "verb", "To clean with water."),
+    (
+        "WOULD",
+        "helping verb",
+        "A helping word used to tell what might happen.",
+    ),
+    ("FOUND", "verb", "Discovered or located something."),
+    ("HARD", "adjective", "Firm, difficult, or not easy."),
+    ("NEAR", "preposition", "Close by."),
+    ("WOMAN", "noun", "An adult female person."),
+    (
+        "WOULD",
+        "helping verb",
+        "A helping word used to tell what might happen.",
+    ),
+    ("WRITE", "verb", "To make words with letters."),
 ];
 
 const MAX_CUSTOM_WORD_LEN: usize = 12;
@@ -50,12 +62,17 @@ pub enum ReadingSnakeAction {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WordEntry {
     word: String,
+    part_of_speech: String,
     definition: String,
 }
 
 impl WordEntry {
-    fn from_parts(word: String, definition: String) -> Self {
-        Self { word, definition }
+    fn from_parts(word: String, part_of_speech: String, definition: String) -> Self {
+        Self {
+            word,
+            part_of_speech,
+            definition,
+        }
     }
 
     fn default_definition(word: &str) -> String {
@@ -70,14 +87,18 @@ pub struct ReadingSnake {
     target: LetterTile,
     decoys: Vec<LetterTile>,
     word: String,
+    part_of_speech: String,
     definition: String,
     custom_words: Vec<WordEntry>,
+    word_index: usize,
     letter_index: usize,
     score: u32,
     lives: u8,
     nightmare_mode: bool,
+    bonus_round: bool,
     last_step: f64,
     game_over: bool,
+    completed: bool,
     showing_definition_card: bool,
     definition_card_title: &'static str,
     message: &'static str,
@@ -117,14 +138,18 @@ impl ReadingSnake {
             },
             decoys: Vec::new(),
             word: String::new(),
+            part_of_speech: String::new(),
             definition: String::new(),
             custom_words,
+            word_index: 0,
             letter_index: 0,
             score: 0,
             lives: 3,
             nightmare_mode,
+            bonus_round: false,
             last_step: get_time(),
             game_over: false,
+            completed: false,
             showing_definition_card: false,
             definition_card_title: if nightmare_mode {
                 "Nightmare word!"
@@ -183,7 +208,13 @@ impl ReadingSnake {
                 SCREEN_H,
                 Color::new(0.0, 0.0, 0.0, 0.75),
             );
-            centered_text("READING SNAKE OVER", 300.0, 42, RED);
+            let title = if self.completed {
+                "READING SNAKE COMPLETE"
+            } else {
+                "READING SNAKE OVER"
+            };
+            let title_color = if self.completed { YELLOW } else { RED };
+            centered_text(title, 300.0, 42, title_color);
             centered_text(&format!("Final Score: {}", self.score), 360.0, 28, YELLOW);
             centered_text("Press ENTER to play again", 420.0, 22, WHITE);
             centered_text("Press ESC for title", 455.0, 18, GRAY);
@@ -198,13 +229,9 @@ impl ReadingSnake {
     }
 
     fn pick_word(&mut self) {
-        let mut rng = ::rand::thread_rng();
-        let word_entry = self
-            .custom_words
-            .choose(&mut rng)
-            .cloned()
-            .unwrap_or_else(|| default_word_entry(&mut rng));
+        let word_entry = self.word_entry(self.word_index);
         self.word = word_entry.word;
+        self.part_of_speech = word_entry.part_of_speech;
         self.definition = word_entry.definition;
         self.letter_index = 0;
         self.showing_definition_card = true;
@@ -254,7 +281,7 @@ impl ReadingSnake {
                 } else {
                     self.definition_card_title = "Great job! Next word:";
                 }
-                self.pick_word();
+                self.advance_word();
             } else {
                 self.message = "Good letter. Keep spelling.";
                 self.place_letters();
@@ -277,6 +304,52 @@ impl ReadingSnake {
         } else {
             self.reset_snake_to_spawn();
             self.place_letters();
+        }
+    }
+
+    fn advance_word(&mut self) {
+        if self.word_index + 1 < self.word_count() {
+            self.word_index += 1;
+            self.pick_word();
+        } else if self.nightmare_mode {
+            self.completed = true;
+            self.game_over = true;
+            self.message = "You completed every word.";
+        } else {
+            self.start_bonus_round();
+        }
+    }
+
+    fn start_bonus_round(&mut self) {
+        self.nightmare_mode = true;
+        self.bonus_round = true;
+        self.word_index = 0;
+        self.letter_index = 0;
+        self.lives = (self.lives + 1).min(MAX_LIVES);
+        self.definition_card_title = "Bonus Nightmare round!";
+        self.message = "Bonus round: all letters look alike.";
+        self.reset_snake_to_spawn();
+        self.pick_word();
+    }
+
+    fn word_count(&self) -> usize {
+        if self.custom_words.is_empty() {
+            WORDS.len()
+        } else {
+            self.custom_words.len()
+        }
+    }
+
+    fn word_entry(&self, index: usize) -> WordEntry {
+        if self.custom_words.is_empty() {
+            let (word, part_of_speech, definition) = WORDS[index % WORDS.len()];
+            WordEntry::from_parts(
+                word.to_string(),
+                part_of_speech.to_string(),
+                definition.to_string(),
+            )
+        } else {
+            self.custom_words[index % self.custom_words.len()].clone()
         }
     }
 
@@ -336,12 +409,16 @@ impl ReadingSnake {
 
     fn draw_header(&self) {
         let title = if self.nightmare_mode {
-            "READING SNAKE NIGHTMARE"
+            if self.bonus_round {
+                "READING SNAKE BONUS NIGHTMARE"
+            } else {
+                "READING SNAKE NIGHTMARE"
+            }
         } else {
             "READING SNAKE"
         };
-        centered_text(title, 48.0, 40, Color::new(0.4, 1.0, 0.65, 1.0));
-        centered_text(&format!("Definition: {}", self.definition), 82.0, 18, WHITE);
+        centered_text(title, 38.0, 18, Color::new(0.4, 1.0, 0.65, 1.0));
+        centered_text(&format!("Definition: {}", self.definition), 88.0, 40, WHITE);
 
         draw_text(&format!("Score: {}", self.score), 28.0, 40.0, 22.0, YELLOW);
         draw_text(&format!("Lives: {}", self.lives), 870.0, 40.0, 22.0, WHITE);
@@ -455,25 +532,30 @@ impl ReadingSnake {
             Color::new(0.0, 0.0, 0.0, 0.65),
         );
         draw_rectangle(
-            237.0,
-            220.0,
-            550.0,
-            280.0,
+            157.0,
+            180.0,
+            710.0,
+            380.0,
             Color::new(0.06, 0.14, 0.1, 0.98),
         );
         draw_rectangle_lines(
-            237.0,
-            220.0,
-            550.0,
-            280.0,
+            157.0,
+            180.0,
+            710.0,
+            380.0,
             4.0,
             Color::new(0.4, 1.0, 0.65, 1.0),
         );
 
-        centered_text(self.definition_card_title, 275.0, 30, YELLOW);
-        centered_text("Definition", 320.0, 24, Color::new(0.4, 1.0, 0.65, 1.0));
-        draw_wrapped_centered_text(&self.definition, 362.0, 460.0, 24, WHITE);
-        centered_text("Press SPACE or ENTER when ready", 460.0, 20, GRAY);
+        centered_text(self.definition_card_title, 245.0, 40, YELLOW);
+        centered_text(
+            &format!("Part of speech: {}", self.part_of_speech),
+            310.0,
+            28,
+            Color::new(0.4, 1.0, 0.65, 1.0),
+        );
+        draw_wrapped_centered_text(&self.definition, 382.0, 610.0, 40, WHITE);
+        centered_text("Press SPACE or ENTER when ready", 520.0, 20, GRAY);
     }
 }
 
@@ -487,6 +569,7 @@ pub fn custom_words_from_input(input: &str) -> Vec<WordEntry> {
                 let definition = definition.trim();
                 Some(WordEntry::from_parts(
                     word.clone(),
+                    "custom word".to_string(),
                     if definition.is_empty() {
                         WordEntry::default_definition(&word)
                     } else {
@@ -501,18 +584,14 @@ pub fn custom_words_from_input(input: &str) -> Vec<WordEntry> {
             .filter_map(|word| {
                 let word = normalize_word(word)?;
                 let definition = WordEntry::default_definition(&word);
-                Some(WordEntry::from_parts(word, definition))
+                Some(WordEntry::from_parts(
+                    word,
+                    "custom word".to_string(),
+                    definition,
+                ))
             })
             .collect()
     }
-}
-
-fn default_word_entry<R: Rng + ?Sized>(rng: &mut R) -> WordEntry {
-    let (word, definition) = WORDS
-        .choose(rng)
-        .copied()
-        .unwrap_or(("STAR", "A bright light seen in the night sky."));
-    WordEntry::from_parts(word.to_string(), definition.to_string())
 }
 
 fn normalize_word(word: &str) -> Option<String> {
@@ -586,18 +665,22 @@ mod tests {
             vec![
                 WordEntry::from_parts(
                     "CAT".to_string(),
+                    "custom word".to_string(),
                     "Practice spelling the word CAT.".to_string()
                 ),
                 WordEntry::from_parts(
                     "DOG".to_string(),
+                    "custom word".to_string(),
                     "Practice spelling the word DOG.".to_string()
                 ),
                 WordEntry::from_parts(
                     "MOON".to_string(),
+                    "custom word".to_string(),
                     "Practice spelling the word MOON.".to_string()
                 ),
                 WordEntry::from_parts(
                     "SUN".to_string(),
+                    "custom word".to_string(),
                     "Practice spelling the word SUN.".to_string()
                 ),
             ]
@@ -611,10 +694,12 @@ mod tests {
             vec![
                 WordEntry::from_parts(
                     "ROCKET".to_string(),
+                    "custom word".to_string(),
                     "Practice spelling the word ROCKET.".to_string()
                 ),
                 WordEntry::from_parts(
                     "SUPERCALIFRA".to_string(),
+                    "custom word".to_string(),
                     "Practice spelling the word SUPERCALIFRA.".to_string(),
                 ),
             ]
@@ -626,8 +711,16 @@ mod tests {
         assert_eq!(
             custom_words_from_input("apple: a fruit; moon: shines at night"),
             vec![
-                WordEntry::from_parts("APPLE".to_string(), "a fruit".to_string()),
-                WordEntry::from_parts("MOON".to_string(), "shines at night".to_string()),
+                WordEntry::from_parts(
+                    "APPLE".to_string(),
+                    "custom word".to_string(),
+                    "a fruit".to_string()
+                ),
+                WordEntry::from_parts(
+                    "MOON".to_string(),
+                    "custom word".to_string(),
+                    "shines at night".to_string()
+                ),
             ]
         );
     }
