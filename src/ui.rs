@@ -92,25 +92,30 @@ pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text
 
 /// Draws a semi-transparent banner with the current math question.
 fn draw_question_banner(text: &str) {
-    // Banner background
-    set_color(Color::new(0.1, 0.1, 0.25, 0.8));
     let lines: Vec<&str> = text.lines().collect();
-    let banner_h = (lines.len() as f32 * 16.0 + 16.0).max(40.0);
-    draw_rectangle(100.0, 500.0, 600.0, banner_h);
+    let banner_w = 760.0;
+    let banner_x = CENTER_X - banner_w / 2.0;
+    let banner_y = 28.0;
+    let font_size = if lines.len() > 2 { 22 } else { 28 };
+    let line_h = font_size as f32 + 8.0;
+    let banner_h = (lines.len() as f32 * line_h + 22.0).max(62.0);
+
+    // Banner background
+    set_color(Color::new(0.1, 0.1, 0.25, 0.86));
+    draw_rectangle(banner_x, banner_y, banner_w, banner_h);
 
     // Banner border
     set_color(Color::new(0.3, 0.3, 0.7, 1.0));
-    draw_rectangle_lines(100.0, 500.0, 600.0, banner_h);
+    draw_rectangle_lines(banner_x, banner_y, banner_w, banner_h);
 
     // Question text (centered in banner)
     set_color(YELLOW);
-    let font_size = if lines.len() > 2 { 14 } else { 18 };
     for (i, line) in lines.iter().enumerate() {
         let tm = measure_text(line, None, font_size as u16, 1.0);
         draw_text(
             line,
             CENTER_X - tm.w / 2.0,
-            510.0 + (i as f32) * 18.0,
+            banner_y + 28.0 + (i as f32) * line_h,
             font_size as f32,
             YELLOW,
         );
@@ -529,6 +534,11 @@ fn draw_wrapped_text(text: &str, x: f32, y: f32, max_width: f32, font_size: u16,
 
 /// Draws the question gate screen between waves.
 pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
+    let box_w = 640.0;
+    let box_h = 280.0;
+    let box_x = CENTER_X - box_w / 2.0;
+    let box_y = 140.0;
+
     // Semi-transparent overlay
     set_color(Color::new(0.05, 0.05, 0.15, 0.85));
     draw_rectangle(0.0, 0.0, SCREEN_W, SCREEN_H);
@@ -547,11 +557,11 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
 
     // Grade info box
     set_color(Color::new(0.15, 0.15, 0.3, 0.9));
-    draw_rectangle(150.0, 140.0, 500.0, 280.0);
+    draw_rectangle(box_x, box_y, box_w, box_h);
 
     // Border around info box
     set_color(Color::new(0.3, 0.6, 1.0, 1.0));
-    draw_rectangle_lines(150.0, 140.0, 500.0, 280.0);
+    draw_rectangle_lines(box_x, box_y, box_w, box_h);
 
     // Grade name
     set_color(WHITE);

@@ -4,6 +4,9 @@ use crate::question::Question;
 use ::rand::Rng;
 use macroquad::prelude::*;
 
+const ENEMY_MIN_Y: f32 = 145.0;
+const ENEMY_MAX_Y: f32 = 430.0;
+
 /// Type of enemy: standard invader or puzzle type showing an answer.
 #[derive(Debug, Clone)]
 pub enum EnemyType {
@@ -101,7 +104,7 @@ impl EnemyGrid {
         for index in 0..target_count {
             let band = index % 4;
             let x = rng.gen_range(40.0..screen_w - 84.0);
-            let y = 70.0 + band as f32 * 90.0 + rng.gen_range(0.0..38.0);
+            let y = ENEMY_MIN_Y + band as f32 * 70.0 + rng.gen_range(0.0..32.0);
             let direction = if rng.gen_bool(0.5) { 1.0 } else { -1.0 };
             let velocity_x = direction * rng.gen_range(0.45..1.15);
             let velocity_y = rng.gen_range(-0.18..0.18);
@@ -172,9 +175,9 @@ impl EnemyGrid {
                 e.x = 980.0;
             }
 
-            if e.y < 55.0 || e.y > 430.0 {
+            if e.y < ENEMY_MIN_Y || e.y > ENEMY_MAX_Y {
                 e.velocity_y *= -1.0;
-                e.y = e.y.clamp(55.0, 430.0);
+                e.y = e.y.clamp(ENEMY_MIN_Y, ENEMY_MAX_Y);
             }
 
             if e.y + e.height > 480.0 {

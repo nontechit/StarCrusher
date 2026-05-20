@@ -2,7 +2,7 @@
 
 Star Crusher is an educational arcade collection wrapped in a light kid-friendly dungeon adventure menu. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.4.0`
+Current build: `1.4.1`
 
 ## Features
 
@@ -10,6 +10,8 @@ Current build: `1.4.0`
 - Grade-appropriate math questions covering counting, arithmetic, multiplication, division, fractions, percentages, pre-algebra, area, volume, and ratios.
 - Start Adventure opens a short RPG-style dungeon intro before the first Math Invaders encounter.
 - Math Invaders waves with Time Pilot-style drifting numbered targets tied to the active math question.
+- Math Invaders shows the active question in a larger top-centered banner, with targets kept below the banner.
+- Preschool shape prompts use default-font-safe ASCII markers so shapes display reliably.
 - Kindergarten number-recognition prompts use words, such as `Shoot number three`, while targets remain numeric.
 - Question gates between waves that require typed answers to advance.
 - Math Pong mode for launching a straight ball into randomly placed numbered targets.
@@ -17,7 +19,7 @@ Current build: `1.4.0`
 - Reading Snake shows definition cards, keeps the active definition visible above the board, and keeps new letter tiles away from the snake head.
 - RPG-style title menu with procedural stone paneling, dungeon glyphs, and selectable encounter options.
 - Procedural graphics only; no external assets or fonts required.
-- Fixed 1024x768 macroquad viewport.
+- Fixed 1280x960 macroquad window with a scaled 1024x768 virtual playfield.
 
 ## Controls
 
@@ -92,6 +94,12 @@ Install Rust from <https://www.rust-lang.org/tools/install> if needed.
 cargo run
 ```
 
+Or use the included launcher:
+
+```bash
+./run-game
+```
+
 ## Check Compilation
 
 ```bash
@@ -101,6 +109,7 @@ cargo check
 ## Project Structure
 
 ```text
+run-game         Convenience launcher that loads rustup environment and runs Cargo
 src/main.rs      Game entry point, state machine, update/draw loop
 src/levels.rs    Grade progression and difficulty configuration
 src/question.rs  Grade-specific math question generation
@@ -119,10 +128,11 @@ Math Invaders:
 1. Choose `Start Adventure` to see the RPG-style intro, then press `Enter` or `Space` through the final prompt to begin.
 2. Choose `Math Invaders` from the title menu, or press `M`, to launch Math Invaders immediately.
 3. Read the active math question and find the drifting target showing the correct answer.
-4. Shoot the correct drifting number to score and receive a new question for the remaining targets.
-5. Shooting an incorrect number costs one life and leaves that target in play.
-6. Clear all numbered targets, then answer typed math questions at the wave-complete gate.
-7. Advance through each grade until the 5th Grade wave is completed.
+4. Use the top-centered question banner; targets spawn and drift below it for visibility.
+5. Shoot the correct drifting number to score and receive a new question for the remaining targets.
+6. Shooting an incorrect number costs one life and leaves that target in play.
+7. Clear all numbered targets, then answer typed math questions at the wave-complete gate.
+8. Advance through each grade until the 5th Grade wave is completed.
 
 Math Pong:
 

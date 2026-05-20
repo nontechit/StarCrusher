@@ -17,15 +17,24 @@ use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
 
 const SCREEN_W: f32 = 1024.0;
 const SCREEN_H: f32 = 768.0;
+const WINDOW_SCALE: f32 = 1.25;
 
 fn window_conf() -> Conf {
     Conf {
         window_title: "Star Crusher".to_string(),
-        window_width: SCREEN_W as i32,
-        window_height: SCREEN_H as i32,
+        window_width: (SCREEN_W * WINDOW_SCALE) as i32,
+        window_height: (SCREEN_H * WINDOW_SCALE) as i32,
         window_resizable: false,
         ..Default::default()
     }
+}
+
+fn use_virtual_screen() {
+    set_camera(&Camera2D {
+        target: vec2(SCREEN_W / 2.0, SCREEN_H / 2.0),
+        zoom: vec2(2.0 / SCREEN_W, 2.0 / SCREEN_H),
+        ..Default::default()
+    });
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -420,6 +429,7 @@ impl Game {
     }
 
     fn draw(&self) {
+        use_virtual_screen();
         clear_background(BLACK);
 
         match self.mode {

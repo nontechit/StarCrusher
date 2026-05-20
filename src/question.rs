@@ -30,12 +30,12 @@ fn gen_preschool() -> Question {
     let shapes = ["star", "circle", "square", "heart"];
     let shape = shapes[rng.gen_range(0..shapes.len())];
 
-    // Build a visual representation like:  ★ ★ ★
+    // Macroquad's default font does not include shape glyphs, so use ASCII markers.
     let symbols = match shape {
-        "star" => "★ ",
-        "circle" => "● ",
-        "square" => "■ ",
-        _ => "♥ ",
+        "star" => "* ",
+        "circle" => "o ",
+        "square" => "[] ",
+        _ => "<3 ",
     };
     let display = (0..count).map(|_| symbols).collect::<String>();
 
