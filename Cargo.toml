@@ -6,7 +6,3 @@ description = "An educational arcade collection with K-5 math and reading games"
 
 [dependencies]
 macroquad = "0.4"
-rand = "0.8"
-
-[target.wasm32-unknown-unknown.dependencies]
-getrandom = { version = "0.2", features = ["js"] }

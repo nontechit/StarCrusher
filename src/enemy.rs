@@ -1,7 +1,7 @@
 use crate::assets;
 use crate::levels::{Grade, LevelConfig};
 use crate::question::Question;
-use ::rand::Rng;
+use crate::random;
 use macroquad::prelude::*;
 
 const ENEMY_MIN_Y: f32 = 145.0;
@@ -97,17 +97,16 @@ impl EnemyGrid {
         screen_w: f32,
         active_question: Option<&Question>,
     ) -> Self {
-        let mut rng = ::rand::thread_rng();
         let target_count = config.rows * config.cols;
 
         let mut enemies = Vec::new();
         for index in 0..target_count {
             let band = index % 4;
-            let x = rng.gen_range(40.0..screen_w - 84.0);
-            let y = ENEMY_MIN_Y + band as f32 * 70.0 + rng.gen_range(0.0..32.0);
-            let direction = if rng.gen_bool(0.5) { 1.0 } else { -1.0 };
-            let velocity_x = direction * rng.gen_range(0.45..1.15);
-            let velocity_y = rng.gen_range(-0.18..0.18);
+            let x = random::f32_range(40.0, screen_w - 84.0);
+            let y = ENEMY_MIN_Y + band as f32 * 70.0 + random::f32_range(0.0, 32.0);
+            let direction = if random::bool(0.5) { 1.0 } else { -1.0 };
+            let velocity_x = direction * random::f32_range(0.45, 1.15);
+            let velocity_y = random::f32_range(-0.18, 0.18);
 
             enemies.push(Enemy::new(x, y, velocity_x, velocity_y));
         }
@@ -140,8 +139,7 @@ impl EnemyGrid {
             return;
         }
 
-        let mut rng = ::rand::thread_rng();
-        let correct_slot = rng.gen_range(0..alive_indices.len());
+        let correct_slot = random::usize_exclusive(alive_indices.len());
 
         for (slot, enemy_index) in alive_indices.iter().enumerate() {
             let number = if slot == correct_slot {
@@ -149,7 +147,7 @@ impl EnemyGrid {
             } else if question.wrong_answers.is_empty() {
                 question.correct_answer + slot as i64 + 1
             } else {
-                let wrong_index = rng.gen_range(0..question.wrong_answers.len());
+                let wrong_index = random::usize_exclusive(question.wrong_answers.len());
                 question.wrong_answers[wrong_index]
             };
 
@@ -212,7 +210,6 @@ impl EnemyGrid {
 
     /// Returns a random alive enemy for firing (or None).
     pub fn random_alive_enemy(&self) -> Option<(usize, &Enemy)> {
-        let mut rng = ::rand::thread_rng();
         let alive_indices: Vec<usize> = self
             .enemies
             .iter()
@@ -224,7 +221,7 @@ impl EnemyGrid {
         if alive_indices.is_empty() {
             return None;
         }
-        let idx = rng.gen_range(0..alive_indices.len());
+        let idx = random::usize_exclusive(alive_indices.len());
         Some((alive_indices[idx], &self.enemies[alive_indices[idx]]))
     }
 

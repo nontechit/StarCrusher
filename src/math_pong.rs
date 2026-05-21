@@ -1,8 +1,8 @@
-use ::rand::seq::SliceRandom;
 use macroquad::prelude::*;
 
 use crate::levels::Grade;
 use crate::question::{generate_question, Question};
+use crate::random;
 use crate::screen::{SCREEN_H, SCREEN_W};
 
 const PADDLE_Y: f32 = 708.0;
@@ -225,8 +225,7 @@ impl MathPong {
 
     fn spawn_targets(&mut self) {
         let mut answers = build_answer_choices(&self.question, 5);
-        let mut rng = ::rand::thread_rng();
-        answers.shuffle(&mut rng);
+        random::shuffle(&mut answers);
         let count = answers.len();
         let spacing = 28.0;
         let total_w = count as f32 * TARGET_W + count.saturating_sub(1) as f32 * spacing;

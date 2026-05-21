@@ -1,5 +1,4 @@
-use ::rand::seq::SliceRandom;
-use ::rand::Rng;
+use crate::random;
 use crate::screen::{SCREEN_H, SCREEN_W};
 use macroquad::prelude::*;
 
@@ -420,18 +419,20 @@ impl ReadingSnake {
             let occupied: Vec<CellPos> = std::iter::once(self.target.pos)
                 .chain(self.decoys.iter().map(|tile| tile.pos))
                 .collect();
-            let mut rng = ::rand::thread_rng();
+            let letter_index = random::usize_exclusive(alphabet.len());
             self.decoys.push(LetterTile {
                 pos: self.random_empty_cell(&occupied),
-                letter: *alphabet.choose(&mut rng).unwrap_or(&'Z'),
+                letter: alphabet.get(letter_index).copied().unwrap_or('Z'),
             });
         }
     }
 
     fn random_empty_cell(&self, reserved: &[CellPos]) -> CellPos {
-        let mut rng = ::rand::thread_rng();
         loop {
-            let pos = CellPos::new(rng.gen_range(0..GRID_W), rng.gen_range(0..GRID_H));
+            let pos = CellPos::new(
+                random::i32_inclusive(0, GRID_W - 1),
+                random::i32_inclusive(0, GRID_H - 1),
+            );
             if !self.snake.contains(&pos)
                 && !reserved.contains(&pos)
                 && !self.is_in_head_safe_area(pos)
@@ -660,8 +661,7 @@ fn format_word_progress(word: &str, letter_index: usize) -> String {
 
 fn shuffled_word_order(word_count: usize) -> Vec<usize> {
     let mut order: Vec<usize> = (0..word_count).collect();
-    let mut rng = ::rand::thread_rng();
-    order.shuffle(&mut rng);
+    random::shuffle(&mut order);
     order
 }
 

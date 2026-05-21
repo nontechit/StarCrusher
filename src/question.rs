@@ -1,5 +1,5 @@
 use crate::levels::Grade;
-use rand::Rng;
+use crate::random;
 
 /// A math question with its correct answer and distractor options.
 #[derive(Debug, Clone)]
@@ -25,10 +25,9 @@ pub fn generate_question(grade: Grade) -> Question {
 
 /// Preschool: Count objects (1-5). Simple visual counting.
 fn gen_preschool() -> Question {
-    let mut rng = rand::thread_rng();
-    let count = rng.gen_range(1..=5);
+    let count = random::i32_inclusive(1, 5);
     let shapes = ["star", "circle", "square", "heart"];
-    let shape = shapes[rng.gen_range(0..shapes.len())];
+    let shape = shapes[random::usize_exclusive(shapes.len())];
 
     // Macroquad's default font does not include shape glyphs, so use ASCII markers.
     let symbols = match shape {
@@ -48,11 +47,10 @@ fn gen_preschool() -> Question {
 
 /// Kindergarten: Numbers 1-10, simple addition within 5.
 fn gen_kindergarten() -> Question {
-    let mut rng = rand::thread_rng();
-    if rng.gen_bool(0.5) {
+    if random::bool(0.5) {
         // Simple addition within 5
-        let a = rng.gen_range(0..=3);
-        let b = rng.gen_range(1..=(5 - a));
+        let a = random::i32_inclusive(0, 3);
+        let b = random::i32_inclusive(1, 5 - a);
         Question {
             text: format!("{} + {} = ?", a, b),
             correct_answer: (a + b) as i64,
@@ -60,7 +58,7 @@ fn gen_kindergarten() -> Question {
         }
     } else {
         // Counting / number recognition
-        let n = rng.gen_range(1..=10);
+        let n = random::i32_inclusive(1, 10);
         Question {
             text: format!("Shoot number {}", number_word(n)),
             correct_answer: n as i64,
@@ -71,11 +69,10 @@ fn gen_kindergarten() -> Question {
 
 /// First Grade: Addition and subtraction within 20.
 fn gen_first_grade() -> Question {
-    let mut rng = rand::thread_rng();
-    if rng.gen_bool(0.5) {
+    if random::bool(0.5) {
         // Addition within 20
-        let a = rng.gen_range(1..=15);
-        let b = rng.gen_range(1..=(20 - a));
+        let a = random::i32_inclusive(1, 15);
+        let b = random::i32_inclusive(1, 20 - a);
         Question {
             text: format!("{} + {} = ?", a, b),
             correct_answer: (a + b) as i64,
@@ -83,8 +80,8 @@ fn gen_first_grade() -> Question {
         }
     } else {
         // Subtraction within 20
-        let a = rng.gen_range(5..=20);
-        let b = rng.gen_range(1..=(a));
+        let a = random::i32_inclusive(5, 20);
+        let b = random::i32_inclusive(1, a);
         Question {
             text: format!("{} - {} = ?", a, b),
             correct_answer: (a - b) as i64,
@@ -95,11 +92,10 @@ fn gen_first_grade() -> Question {
 
 /// Second Grade: Multiplication tables x1-x5, addition within 100.
 fn gen_second_grade() -> Question {
-    let mut rng = rand::thread_rng();
-    if rng.gen_bool(0.6) {
+    if random::bool(0.6) {
         // Multiplication (factors up to 5)
-        let a = rng.gen_range(1..=5);
-        let b = rng.gen_range(1..=10);
+        let a = random::i32_inclusive(1, 5);
+        let b = random::i32_inclusive(1, 10);
         Question {
             text: format!("{} × {} = ?", a, b),
             correct_answer: (a * b) as i64,
@@ -107,8 +103,8 @@ fn gen_second_grade() -> Question {
         }
     } else {
         // Addition within 100
-        let a = rng.gen_range(10..=80);
-        let b = rng.gen_range(1..=(99 - a));
+        let a = random::i32_inclusive(10, 80);
+        let b = random::i32_inclusive(1, 99 - a);
         Question {
             text: format!("{} + {} = ?", a, b),
             correct_answer: (a + b) as i64,
@@ -119,13 +115,12 @@ fn gen_second_grade() -> Question {
 
 /// Third Grade: Division, fractions basics, multiplication up to 12.
 fn gen_third_grade() -> Question {
-    let mut rng = rand::thread_rng();
-    let variant = rng.gen_range(0..=2);
+    let variant = random::i32_inclusive(0, 2);
     match variant {
         // Multiplication tables up to 12
         0 => {
-            let a = rng.gen_range(2..=12);
-            let b = rng.gen_range(2..=12);
+            let a = random::i32_inclusive(2, 12);
+            let b = random::i32_inclusive(2, 12);
             Question {
                 text: format!("{} × {} = ?", a, b),
                 correct_answer: (a * b) as i64,
@@ -134,8 +129,8 @@ fn gen_third_grade() -> Question {
         }
         // Division with clean answers
         1 => {
-            let divisor = rng.gen_range(2..=9);
-            let quotient = rng.gen_range(2..=10);
+            let divisor = random::i32_inclusive(2, 9);
+            let quotient = random::i32_inclusive(2, 10);
             let dividend = divisor * quotient;
             Question {
                 text: format!("{} ÷ {} = ?", dividend, divisor),
@@ -145,8 +140,8 @@ fn gen_third_grade() -> Question {
         }
         // Fraction basics (numerator identification)
         _ => {
-            let denom = rng.gen_range(2..=8);
-            let numer = rng.gen_range(1..denom);
+            let denom = random::i32_inclusive(2, 8);
+            let numer = random::i32_inclusive(1, denom - 1);
             Question {
                 text: format!("What is the numerator of {} / {}?", numer, denom),
                 correct_answer: numer as i64,
@@ -158,14 +153,13 @@ fn gen_third_grade() -> Question {
 
 /// Fourth Grade: Decimals, percentages, multi-step problems.
 fn gen_fourth_grade() -> Question {
-    let mut rng = rand::thread_rng();
-    let variant = rng.gen_range(0..=2);
+    let variant = random::i32_inclusive(0, 2);
     match variant {
         // Percentages of round numbers
         0 => {
             let pct_choices = [10, 25, 50];
-            let pct = pct_choices[rng.gen_range(0..pct_choices.len())];
-            let base = rng.gen_range(1..=20) * 4; // multiples of 4 for clean answers
+            let pct = pct_choices[random::usize_exclusive(pct_choices.len())];
+            let base = random::i32_inclusive(1, 20) * 4; // multiples of 4 for clean answers
             Question {
                 text: format!("What is {}% of {}?", pct, base),
                 correct_answer: ((pct as i64 * base as i64) / 100),
@@ -179,8 +173,8 @@ fn gen_fourth_grade() -> Question {
         }
         // Decimal addition
         1 => {
-            let a = rng.gen_range(10..=99);
-            let b = rng.gen_range(10..=99);
+            let a = random::i32_inclusive(10, 99);
+            let b = random::i32_inclusive(10, 99);
             let sum = a + b;
             Question {
                 text: format!("{} hundredths + {} hundredths = ?", a, b),
@@ -190,9 +184,9 @@ fn gen_fourth_grade() -> Question {
         }
         // Multi-step: e.g., "What is 8 × 7 - 5?"
         _ => {
-            let a = rng.gen_range(2..=9);
-            let b = rng.gen_range(2..=9);
-            let c = rng.gen_range(1..=(a * b));
+            let a = random::i32_inclusive(2, 9);
+            let b = random::i32_inclusive(2, 9);
+            let c = random::i32_inclusive(1, a * b);
             Question {
                 text: format!("{} × {} - {} = ?", a, b, c),
                 correct_answer: (a * b - c) as i64,
@@ -204,14 +198,13 @@ fn gen_fourth_grade() -> Question {
 
 /// Fifth Grade: Pre-algebra, area/volume, ratios.
 fn gen_fifth_grade() -> Question {
-    let mut rng = rand::thread_rng();
-    let variant = rng.gen_range(0..=2);
+    let variant = random::i32_inclusive(0, 2);
     match variant {
         // Solve for x in simple linear equations: ax + b = c
         0 => {
-            let a = rng.gen_range(1..=5);
-            let x = rng.gen_range(1..=9);
-            let b = rng.gen_range(1..=20);
+            let a = random::i32_inclusive(1, 5);
+            let x = random::i32_inclusive(1, 9);
+            let b = random::i32_inclusive(1, 20);
             let c = a * x + b;
             Question {
                 text: format!("If {}x + {} = {}, what is x?", a, b, c),
@@ -221,11 +214,11 @@ fn gen_fifth_grade() -> Question {
         }
         // Area of rectangle / triangle
         1 => {
-            let shape = rng.gen_bool(0.5);
+            let shape = random::bool(0.5);
             if shape {
                 // Rectangle area
-                let w = rng.gen_range(2..=12);
-                let h = rng.gen_range(2..=12);
+                let w = random::i32_inclusive(2, 12);
+                let h = random::i32_inclusive(2, 12);
                 Question {
                     text: format!("Area of rectangle {} × {}?", w, h),
                     correct_answer: (w * h) as i64,
@@ -233,8 +226,8 @@ fn gen_fifth_grade() -> Question {
                 }
             } else {
                 // Triangle area with even base for clean division
-                let b = rng.gen_range(2..=12) * 2;
-                let h = rng.gen_range(2..=10);
+                let b = random::i32_inclusive(2, 12) * 2;
+                let h = random::i32_inclusive(2, 10);
                 Question {
                     text: format!("Area of triangle (base={}, height={})?", b, h),
                     correct_answer: ((b * h) / 2) as i64,
@@ -244,9 +237,9 @@ fn gen_fifth_grade() -> Question {
         }
         // Ratios: "If the ratio of A:B is 3:5 and total is 24, what is B?"
         _ => {
-            let a_part = rng.gen_range(1..=4);
-            let b_part = rng.gen_range(a_part + 1..=(a_part * 3));
-            let multiplier = rng.gen_range(1..=6);
+            let a_part = random::i32_inclusive(1, 4);
+            let b_part = random::i32_inclusive(a_part + 1, a_part * 3);
+            let multiplier = random::i32_inclusive(1, 6);
             let total = (a_part + b_part) * multiplier;
             Question {
                 text: format!(
@@ -278,7 +271,6 @@ fn number_word(number: i32) -> &'static str {
 
 /// Generates `count` unique wrong answers in range [min_val, max_val] that differ from correct.
 fn gen_unique_wrongs(correct: i64, min_val: i64, max_val: i64, count: usize) -> Vec<i64> {
-    let mut rng = rand::thread_rng();
     let mut candidates: Vec<i64> = (min_val..=max_val)
         .filter(|value| *value != correct)
         .collect();
@@ -296,7 +288,7 @@ fn gen_unique_wrongs(correct: i64, min_val: i64, max_val: i64, count: usize) -> 
     }
 
     for i in (1..candidates.len()).rev() {
-        let j = rng.gen_range(0..=i);
+        let j = random::usize_exclusive(i + 1);
         candidates.swap(i, j);
     }
 

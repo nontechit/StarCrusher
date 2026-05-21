@@ -4,6 +4,7 @@ mod levels;
 mod math_pong;
 mod player;
 mod question;
+mod random;
 mod reading_snake;
 mod screen;
 mod ui;
