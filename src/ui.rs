@@ -140,7 +140,7 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
     centered_text("DUNGEON DWELLERS", 154.0, 26, parchment);
     centered_text(
         "Choose a path, then press ENTER or SPACE.",
-        688.0,
+        654.0,
         18,
         stone_light,
     );
@@ -151,7 +151,7 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
     };
     centered_text(
         shortcuts,
-        714.0,
+        680.0,
         16,
         parchment,
     );
@@ -479,32 +479,40 @@ pub fn draw_spelling_list_screen(input: &str) {
 
     centered_text(
         "WEEKLY SPELLING LIST",
-        110.0,
+        100.0,
         36,
         Color::new(0.4, 1.0, 0.65, 1.0),
     );
     centered_text(
         "Type word: definition pairs separated by semicolons.",
-        155.0,
+        148.0,
         20,
         WHITE,
     );
-    centered_text("Plain word lists still work too.", 182.0, 18, GRAY);
-    centered_text("Press ENTER to play Reading Snake.", 207.0, 20, WHITE);
-    centered_text("Press N for Nightmare with this list.", 232.0, 18, GRAY);
+    centered_text("Plain word lists still work too.", 176.0, 18, GRAY);
+    centered_text("ENTER plays Reading Snake   N starts Nightmare", 218.0, 20, WHITE);
+
+    let input_w = 760.0;
+    let input_h = 118.0;
+    let input_x = CENTER_X - input_w / 2.0;
+    let input_y = 278.0;
 
     set_color(Color::new(0.05, 0.12, 0.08, 0.95));
-    draw_rectangle(100.0, 270.0, 600.0, 120.0);
+    draw_rectangle(input_x, input_y, input_w, input_h);
     set_color(Color::new(0.25, 0.75, 0.4, 1.0));
-    draw_rectangle_lines(100.0, 270.0, 600.0, 120.0);
+    draw_rectangle_lines(input_x, input_y, input_w, input_h);
 
     let shown_input = if input.is_empty() {
         "apple: a fruit; moon: shines at night"
     } else {
         input
     };
-    let color = if input.is_empty() { GRAY } else { WHITE };
-    draw_wrapped_text(shown_input, 125.0, 310.0, 550.0, 22, color);
+    let color = if input.is_empty() {
+        Color::new(0.58, 0.68, 0.62, 1.0)
+    } else {
+        WHITE
+    };
+    draw_wrapped_text(shown_input, input_x + 26.0, input_y + 48.0, input_w - 52.0, 22, color);
 
     let blink = if (get_time() as f32 * 3.0).fract() > 0.5 {
         1.0
@@ -512,15 +520,17 @@ pub fn draw_spelling_list_screen(input: &str) {
         0.0
     };
     set_color(Color::new(0.3, 1.0, 0.5, blink));
-    draw_rectangle(126.0, 355.0, 16.0, 3.0);
+    if input.is_empty() {
+        draw_rectangle(input_x + 26.0, input_y + 78.0, 16.0, 3.0);
+    }
 
     centered_text(
         "Leave it blank to use the default words.",
-        435.0,
+        456.0,
         18,
         YELLOW,
     );
-    centered_text("Backspace deletes   ESC returns to title", 475.0, 18, GRAY);
+    centered_text("Backspace deletes   ESC returns to title", 504.0, 18, GRAY);
     set_default_color();
 }
 

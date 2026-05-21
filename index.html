@@ -254,6 +254,32 @@
             display: block;
         }
 
+        .site-exit {
+            position: fixed;
+            z-index: 4;
+            top: max(14px, env(safe-area-inset-top));
+            left: max(14px, env(safe-area-inset-left));
+            display: none;
+            align-items: center;
+            min-height: 42px;
+            padding: 0 16px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 8px;
+            color: #f8fbff;
+            background: rgba(7, 12, 22, 0.82);
+            box-shadow: 0 10px 34px rgba(0, 0, 0, 0.32);
+            backdrop-filter: blur(12px);
+        }
+
+        .site-exit.visible {
+            display: inline-flex;
+        }
+
+        .site-exit:hover,
+        .site-exit:focus-visible {
+            background: rgba(23, 33, 52, 0.92);
+        }
+
         #glcanvas {
             display: block;
             width: 100vw;
@@ -435,6 +461,7 @@
     </main>
 
     <section class="game-shell" id="game-shell" aria-label="StarCrusher game">
+        <button class="site-exit" id="site-exit" type="button">Back to Site</button>
         <canvas id="glcanvas" tabindex="1"></canvas>
     </section>
 
@@ -445,6 +472,7 @@
         const status = document.getElementById('status');
         const landing = document.getElementById('landing');
         const shell = document.getElementById('game-shell');
+        const siteExit = document.getElementById('site-exit');
         const glcanvas = document.getElementById('glcanvas');
         const particles = [];
         let loaderStarted = false;
@@ -493,6 +521,7 @@
             status.textContent = 'Preparing launch...';
             landing.style.display = 'none';
             shell.classList.add('active');
+            siteExit.classList.add('visible');
             document.body.style.overflow = 'hidden';
             glcanvas.focus();
 
@@ -516,6 +545,7 @@
         function showLaunchError(error) {
             console.error(error);
             shell.classList.remove('active');
+            siteExit.classList.remove('visible');
             landing.style.display = '';
             launch.disabled = false;
             loaderStarted = false;
@@ -524,6 +554,9 @@
 
         window.addEventListener('resize', resizeStars);
         launch.addEventListener('click', launchGame);
+        siteExit.addEventListener('click', () => {
+            window.location.href = `${window.location.origin}${window.location.pathname}`;
+        });
         resizeStars();
         drawStars();
     </script>
