@@ -91,6 +91,7 @@ pub struct ReadingSnake {
     part_of_speech: String,
     definition: String,
     custom_words: Vec<WordEntry>,
+    word_order: Vec<usize>,
     word_index: usize,
     letter_index: usize,
     score: u32,
@@ -157,6 +158,7 @@ impl ReadingSnake {
             part_of_speech: String::new(),
             definition: String::new(),
             custom_words,
+            word_order: Vec::new(),
             word_index: 0,
             letter_index: 0,
             score: 0,
@@ -248,11 +250,13 @@ impl ReadingSnake {
     }
 
     fn reset_run(&mut self) {
+        self.regenerate_word_order();
         self.reset_snake_to_spawn();
         self.pick_word();
     }
 
     fn pick_word(&mut self) {
+        self.ensure_word_order();
         let word_entry = self.word_entry(self.word_index);
         self.word = word_entry.word;
         self.part_of_speech = word_entry.part_of_speech;
@@ -364,16 +368,28 @@ impl ReadingSnake {
         }
     }
 
+    fn regenerate_word_order(&mut self) {
+        self.word_order = shuffled_word_order(self.word_count());
+    }
+
+    fn ensure_word_order(&mut self) {
+        if self.word_order.len() != self.word_count() {
+            self.regenerate_word_order();
+            self.word_index = self.word_index.min(self.word_count().saturating_sub(1));
+        }
+    }
+
     fn word_entry(&self, index: usize) -> WordEntry {
+        let ordered_index = self.word_order.get(index).copied().unwrap_or(index);
         if self.custom_words.is_empty() {
-            let (word, part_of_speech, definition) = WORDS[index % WORDS.len()];
+            let (word, part_of_speech, definition) = WORDS[ordered_index % WORDS.len()];
             WordEntry::from_parts(
                 word.to_string(),
                 part_of_speech.to_string(),
                 definition.to_string(),
             )
         } else {
-            self.custom_words[index % self.custom_words.len()].clone()
+            self.custom_words[ordered_index % self.custom_words.len()].clone()
         }
     }
 
@@ -642,6 +658,13 @@ fn format_word_progress(word: &str, letter_index: usize) -> String {
         .collect()
 }
 
+fn shuffled_word_order(word_count: usize) -> Vec<usize> {
+    let mut order: Vec<usize> = (0..word_count).collect();
+    let mut rng = ::rand::thread_rng();
+    order.shuffle(&mut rng);
+    order
+}
+
 fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
     let metrics = measure_text(text, None, font_size, 1.0);
     draw_text(
@@ -681,6 +704,43 @@ fn draw_wrapped_centered_text(text: &str, y: f32, max_width: f32, font_size: u16
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn sorted_order(mut order: Vec<usize>) -> Vec<usize> {
+        order.sort_unstable();
+        order
+    }
+
+    fn test_game(custom_words: Vec<WordEntry>, word_order: Vec<usize>) -> ReadingSnake {
+        ReadingSnake {
+            snake: vec![CellPos::new(0, 0)],
+            dir: CellPos::new(1, 0),
+            next_dir: CellPos::new(1, 0),
+            target: LetterTile {
+                pos: CellPos::new(0, 0),
+                letter: 'A',
+            },
+            decoys: Vec::new(),
+            word: String::new(),
+            part_of_speech: String::new(),
+            definition: String::new(),
+            custom_words,
+            word_order,
+            word_index: 0,
+            letter_index: 0,
+            score: 0,
+            lives: 3,
+            nightmare_mode: false,
+            bonus_round: false,
+            start_bonus_on_complete: true,
+            completion_returns_action: false,
+            last_step: 0.0,
+            game_over: false,
+            completed: false,
+            showing_definition_card: false,
+            definition_card_title: "New word!",
+            message: "Collect the next letter.",
+        }
+    }
 
     #[test]
     fn parses_custom_words_from_spaces_commas_and_lines() {
@@ -747,5 +807,35 @@ mod tests {
                 ),
             ]
         );
+    }
+
+    #[test]
+    fn shuffled_word_order_contains_each_default_index_once() {
+        let order = shuffled_word_order(WORDS.len());
+
+        assert_eq!(order.len(), WORDS.len());
+        assert_eq!(sorted_order(order), (0..WORDS.len()).collect::<Vec<usize>>());
+    }
+
+    #[test]
+    fn shuffled_word_order_contains_each_custom_index_once() {
+        let custom_word_count = 4;
+        let order = shuffled_word_order(custom_word_count);
+
+        assert_eq!(order.len(), custom_word_count);
+        assert_eq!(
+            sorted_order(order),
+            (0..custom_word_count).collect::<Vec<usize>>()
+        );
+    }
+
+    #[test]
+    fn word_entry_maps_through_custom_word_order() {
+        let custom_words = custom_words_from_input("cat dog moon");
+        let game = test_game(custom_words, vec![2, 0, 1]);
+
+        assert_eq!(game.word_entry(0).word, "MOON");
+        assert_eq!(game.word_entry(1).word, "CAT");
+        assert_eq!(game.word_entry(2).word, "DOG");
     }
 }

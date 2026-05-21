@@ -2,7 +2,7 @@
 
 Star Crusher is an educational arcade collection wrapped in a light kid-friendly dungeon adventure menu. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.4.5`
+Current build: `1.4.6`
 
 ## Features
 
@@ -16,10 +16,10 @@ Current build: `1.4.5`
 - Question gates between waves that require typed answers to advance.
 - Question gate prompts and answer input are spaced to avoid overlapping the wave-complete instructions.
 - Math Pong mode for launching a straight ball into randomly placed numbered targets.
-- Reading Snake mini game for letter order, word recognition, and definition practice, with a default weekly spelling list, optional custom lists, and Nightmare mode.
+- Reading Snake mini game for letter order, word recognition, and definition practice, with randomized default or custom spelling lists and Nightmare mode.
 - Reading Snake shows definition cards, keeps the active definition visible above the board, and keeps new letter tiles away from the snake head.
 - Reading Snake definition cards show part of speech and use larger definition text for easier reading.
-- Completing the standard Reading Snake list starts a bonus Nightmare round using the same words.
+- Completing the standard Reading Snake list starts a bonus Nightmare round using the same words in the same randomized order.
 - In Start Adventure, completing normal Reading Snake advances directly to Math Pong instead of the standalone bonus round.
 - RPG-style title menu with procedural stone paneling, dungeon glyphs, a focused main adventure menu, and a Play Mini Games submenu.
 - Game over and victory stat panels are centered with their score and progress text.
@@ -167,7 +167,7 @@ Reading Snake:
 6. Steer the snake into the next correct letter.
 7. Avoid wrong letters, walls, and the snake's own tail.
 8. New letters appear away from the snake head so the player has room to react.
-9. Complete every word in the list to unlock a bonus Nightmare pass through those same words.
+9. Complete every word in the randomized list to unlock a bonus Nightmare pass through those same words in the same order.
 
 Reading Snake Nightmare:
 
