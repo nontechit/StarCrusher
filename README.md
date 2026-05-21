@@ -182,3 +182,45 @@ Reading Snake Nightmare:
 - This is a binary Rust project, so `Cargo.lock` is intentionally committed.
 - Build output in `target/` is ignored.
 - The game uses `macroquad` for windowing, input, and drawing, and `rand` for question/enemy randomization.
+
+## Web Deployment (GitHub Pages)
+
+This project builds to WASM and deploys automatically via GitHub Actions to [GitHub Pages](https://nontechit.github.io/StarCrusher/).
+
+### How It Works
+
+1. Pushing to `main` triggers `.github/workflows/pages.yml`.
+2. The action installs Rust, compiles the WASM target, runs `wasm-bindgen`, and stages the output in `dist/`.
+3. GitHub Pages serves the static files from the `gh-pages` branch.
+
+### Custom Domain (www.boohw.com)
+
+The site is configured for the custom domain **www.boohw.com**. To complete setup:
+
+1. Go to **Settings → Pages** on this repo and add `www.boohw.com` as a custom domain.
+2. Add these DNS records at your registrar for boohw.com:
+
+| Type    | Name          | Value                  |
+|---------|---------------|------------------------|
+| CNAME   | www           | nontechit.github.io    |
+| A       | @             | 185.199.108.153        |
+| A       | @             | 185.199.109.153        |
+| A       | @             | 185.199.110.153        |
+| A       | @             | 185.199.111.153        |
+
+3. After DNS propagates (up to 48 hours), enable **Enforce HTTPS** in Pages settings.
+
+### Local WASM Build
+
+```bash
+rustup target add wasm32-unknown-unknown
+cargo build --target wasm32-unknown-unknown --release
+# Output: target/wasm32-unknown-unknown/release/star_crusher.wasm
+```
+
+Then open `index.html` in a browser (requires a local server due to WASM module loading):
+
+```bash
+python3 -m http.server 8080
+# Visit http://localhost:8080
+```
