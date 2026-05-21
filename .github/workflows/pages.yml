@@ -38,23 +38,12 @@ jobs:
       - name: Build WASM
         run: cargo build --target wasm32-unknown-unknown --release
 
-      - name: Install wasm-bindgen
-        uses: jetli/wasm-bindgen-action@v0.1.0
-        with:
-          version: 'latest'
-
-      - name: Generate JS glue code
-        run: |
-          wasm-bindgen target/wasm32-unknown-unknown/release/star-crusher.wasm \
-            --out-dir dist \
-            --out-name star_crusher \
-            --target web \
-            --no-typescript
-
       - name: Copy static site files
         run: |
+          mkdir -p dist
           cp index.html dist/index.html
           cp CNAME dist/CNAME
+          cp target/wasm32-unknown-unknown/release/star-crusher.wasm dist/star-crusher.wasm
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
