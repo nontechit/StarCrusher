@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -45,13 +45,16 @@ jobs:
 
       - name: Generate JS glue code
         run: |
-          wasm-bindgen target/wasm32-unknown-unknown/release/star_crusher.wasm \
+          wasm-bindgen target/wasm32-unknown-unknown/release/star-crusher.wasm \
             --out-dir dist \
+            --out-name star_crusher \
             --target web \
             --no-typescript
 
-      - name: Copy HTML wrapper
-        run: cp index.html dist/index.html
+      - name: Copy static site files
+        run: |
+          cp index.html dist/index.html
+          cp CNAME dist/CNAME
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
