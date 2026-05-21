@@ -52,7 +52,7 @@
             min-height: 100vh;
             display: grid;
             grid-template-rows: auto 1fr auto;
-            padding: 28px clamp(18px, 4vw, 56px) 24px;
+            padding: clamp(18px, 3vw, 28px) clamp(18px, 4vw, 56px) 24px;
         }
 
         .topbar,
@@ -85,17 +85,18 @@
         }
 
         .hero {
-            width: min(1180px, 100%);
+            width: min(1280px, 100%);
             margin: 0 auto;
             display: grid;
-            grid-template-columns: minmax(0, 1.02fr) minmax(280px, 0.72fr);
-            gap: clamp(28px, 6vw, 72px);
+            grid-template-columns: minmax(0, 0.95fr) minmax(340px, 0.72fr);
+            gap: clamp(34px, 4.5vw, 64px);
             align-items: center;
-            padding: clamp(44px, 8vh, 82px) 0 clamp(28px, 6vh, 54px);
+            padding: clamp(42px, 7vh, 74px) 0 clamp(28px, 6vh, 54px);
         }
 
         .hero-copy {
-            max-width: 760px;
+            min-width: 0;
+            max-width: 720px;
         }
 
         .eyebrow {
@@ -109,17 +110,18 @@
 
         h1 {
             margin: 0;
-            font-size: clamp(4rem, 10vw, 8.75rem);
-            line-height: 0.86;
+            font-size: clamp(4rem, 8.2vw, 7.2rem);
+            line-height: 0.9;
             letter-spacing: 0;
             text-transform: uppercase;
+            overflow-wrap: anywhere;
         }
 
         .subtitle {
             max-width: 620px;
             margin: 24px 0 0;
             color: #d9e5f5;
-            font-size: clamp(1.05rem, 2vw, 1.35rem);
+            font-size: clamp(1.05rem, 1.7vw, 1.3rem);
             line-height: 1.55;
         }
 
@@ -165,11 +167,15 @@
         }
 
         .mission-panel {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            min-width: 0;
             border: 1px solid var(--line);
             background: var(--panel);
             backdrop-filter: blur(16px);
             border-radius: 8px;
-            padding: 22px;
+            padding: clamp(16px, 2.4vw, 22px);
             box-shadow: 0 20px 80px rgba(0, 0, 0, 0.28);
         }
 
@@ -192,21 +198,21 @@
 
         .mode-list li {
             display: grid;
-            grid-template-columns: 42px 1fr;
-            gap: 12px;
+            grid-template-columns: clamp(38px, 4vw, 42px) minmax(0, 1fr);
+            gap: clamp(10px, 2vw, 14px);
             align-items: center;
             min-height: 58px;
             border: 1px solid rgba(255, 255, 255, 0.09);
             border-radius: 8px;
-            padding: 10px 12px;
+            padding: clamp(10px, 2vw, 14px);
             background: rgba(255, 255, 255, 0.045);
         }
 
         .badge {
             display: grid;
             place-items: center;
-            width: 42px;
-            height: 42px;
+            width: clamp(38px, 4vw, 42px);
+            height: clamp(38px, 4vw, 42px);
             border-radius: 8px;
             color: #071018;
             font-weight: 950;
@@ -225,6 +231,7 @@
         .mode-name {
             margin: 0;
             font-weight: 850;
+            overflow-wrap: anywhere;
         }
 
         .mode-detail {
@@ -232,6 +239,7 @@
             color: var(--muted);
             line-height: 1.35;
             font-size: 0.92rem;
+            overflow-wrap: anywhere;
         }
 
         .game-shell {
@@ -257,25 +265,117 @@
             background: #000;
         }
 
+        @media (max-width: 1080px) {
+            .hero {
+                grid-template-columns: 1fr;
+                align-content: start;
+                gap: 34px;
+                padding-top: clamp(34px, 6vh, 56px);
+            }
+
+            .hero-copy {
+                max-width: 820px;
+            }
+
+            h1 {
+                font-size: clamp(3.6rem, 15vw, 7rem);
+            }
+
+            .mission-panel {
+                max-width: 760px;
+            }
+        }
+
         @media (max-width: 820px) {
             .landing {
-                padding-top: 20px;
+                min-height: 100svh;
+                padding: 18px clamp(16px, 5vw, 28px) 20px;
             }
 
             .topbar,
             .footer {
                 align-items: flex-start;
                 flex-direction: column;
+                gap: 8px;
             }
 
             .hero {
-                grid-template-columns: 1fr;
-                align-content: start;
-                padding-top: 42px;
+                gap: 28px;
+                padding: 38px 0 28px;
             }
 
             h1 {
-                font-size: clamp(3.45rem, 18vw, 5.8rem);
+                font-size: clamp(3.05rem, 17vw, 5.1rem);
+                line-height: 0.94;
+            }
+
+            .eyebrow {
+                margin-bottom: 14px;
+                font-size: 0.76rem;
+            }
+
+            .subtitle {
+                margin-top: 18px;
+                font-size: 1.02rem;
+                line-height: 1.48;
+            }
+
+            .actions {
+                align-items: stretch;
+                flex-direction: column;
+                margin-top: 26px;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .status {
+                min-height: 0;
+            }
+
+            .mission-panel {
+                padding: 14px;
+            }
+
+            .mode-list li {
+                min-height: 0;
+            }
+        }
+
+        @media (max-width: 430px) {
+            .brand-mark::before {
+                width: 22px;
+                height: 22px;
+            }
+
+            .topbar {
+                font-size: 0.86rem;
+            }
+
+            .hero {
+                padding-top: 30px;
+            }
+
+            h1 {
+                font-size: clamp(2.35rem, 13vw, 3.05rem);
+            }
+
+            .mode-list li {
+                grid-template-columns: 36px minmax(0, 1fr);
+            }
+
+            .badge {
+                width: 36px;
+                height: 36px;
+            }
+
+            .mode-name {
+                font-size: 0.98rem;
+            }
+
+            .mode-detail {
+                font-size: 0.86rem;
             }
         }
     </style>
