@@ -235,28 +235,35 @@ pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text
 }
 
 fn draw_mobile_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text: Option<&str>) {
-    let fill = Color::new(0.035, 0.06, 0.12, 0.9);
-    let edge = Color::new(0.38, 0.72, 1.0, 0.62);
-    draw_rounded_panel(214.0, 24.0, 676.0, 58.0, 16.0, fill, edge);
+    let fill = Color::new(0.035, 0.06, 0.13, 0.94);
+    let edge = Color::new(0.38, 0.82, 1.0, 0.78);
+    draw_rounded_panel(214.0, 24.0, 724.0, 68.0, 20.0, fill, edge);
 
-    let stat_size = 15;
+    let stat_size = 17;
     draw_text(
-        &format!("{}  |  WAVE {}", grade.display_name(), wave),
-        244.0,
-        60.0,
+        "Math Invaders",
+        248.0,
+        54.0,
+        22.0,
+        Color::new(0.92, 0.98, 1.0, 1.0),
+    );
+    draw_text(
+        &format!("{}  Wave {}", grade.display_name(), wave),
+        248.0,
+        78.0,
         stat_size as f32,
-        Color::new(0.88, 0.94, 1.0, 1.0),
+        Color::new(0.62, 0.88, 1.0, 1.0),
     );
     draw_text(
         &format!("SCORE {}", score),
-        548.0,
-        60.0,
+        644.0,
+        58.0,
         stat_size as f32,
         Color::new(1.0, 0.82, 0.32, 1.0),
     );
 
     for i in 0..lives.min(5) {
-        assets::draw_life_icon(812.0 + (i as f32) * 16.0, 54.0);
+        assets::draw_life_icon(816.0 + (i as f32) * 18.0, 78.0);
     }
 
     if let Some(qtext) = question_text {
@@ -303,21 +310,21 @@ fn draw_question_banner(text: &str) {
 
 fn draw_mobile_question_banner(text: &str) {
     let lines: Vec<&str> = text.lines().collect();
-    let banner_w = 760.0;
+    let banner_w = 828.0;
     let banner_x = CENTER_X - banner_w / 2.0;
-    let banner_y = 96.0;
-    let font_size = if lines.len() > 2 { 16 } else { 20 };
-    let line_h = font_size as f32 + 6.0;
-    let banner_h = (lines.len() as f32 * line_h + 20.0).max(50.0);
+    let banner_y = 112.0;
+    let font_size = if lines.len() > 2 { 18 } else { 24 };
+    let line_h = font_size as f32 + 8.0;
+    let banner_h = (lines.len() as f32 * line_h + 28.0).max(70.0);
 
     draw_rounded_panel(
         banner_x,
         banner_y,
         banner_w,
         banner_h,
-        18.0,
-        Color::new(0.055, 0.075, 0.19, 0.88),
-        Color::new(0.46, 0.5, 1.0, 0.62),
+        22.0,
+        Color::new(0.055, 0.07, 0.17, 0.94),
+        Color::new(1.0, 0.78, 0.28, 0.82),
     );
 
     for (i, line) in lines.iter().enumerate() {
@@ -325,7 +332,7 @@ fn draw_mobile_question_banner(text: &str) {
         draw_text(
             line,
             CENTER_X - tm.w / 2.0,
-            banner_y + 30.0 + (i as f32) * line_h,
+            banner_y + 42.0 + (i as f32) * line_h,
             font_size as f32,
             Color::new(1.0, 0.97, 0.34, 1.0),
         );
@@ -1170,6 +1177,11 @@ fn draw_wrapped_text(text: &str, x: f32, y: f32, max_width: f32, font_size: u16,
 
 /// Draws the question gate screen between waves.
 pub fn draw_question_gate(grade: &Grade, math_topics: &str, show_start_button: bool) {
+    if screen::portrait_layout() {
+        draw_mobile_question_gate(grade, math_topics, show_start_button);
+        return;
+    }
+
     let title_size = screen::mobile_text_size(32);
     let grade_size = screen::mobile_text_size(26);
     let topic_size = screen::mobile_text_size(20);
@@ -1280,8 +1292,66 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str, show_start_button: b
     set_default_color();
 }
 
+fn draw_mobile_question_gate(grade: &Grade, math_topics: &str, show_start_button: bool) {
+    set_color(Color::new(0.01, 0.015, 0.04, 0.86));
+    draw_rectangle(0.0, 0.0, SCREEN_W, SCREEN_H);
+
+    draw_rounded_panel(
+        196.0,
+        98.0,
+        888.0,
+        276.0,
+        24.0,
+        Color::new(0.045, 0.065, 0.15, 0.97),
+        Color::new(0.42, 0.86, 1.0, 0.84),
+    );
+
+    centered_text("Planet Gate", 158.0, 34, Color::new(0.42, 0.92, 1.0, 1.0));
+    centered_text(
+        &format!("Next: {}", grade.display_name()),
+        220.0,
+        28,
+        Color::new(1.0, 0.82, 0.34, 1.0),
+    );
+    draw_wrapped_text(
+        &format!("Topics: {}", math_topics),
+        272.0,
+        270.0,
+        736.0,
+        18,
+        Color::new(0.92, 0.98, 1.0, 1.0),
+    );
+
+    let (line_one, line_two) = if show_start_button {
+        (
+            "Answer the gate question to fly onward.",
+            "Tap START when your crew is ready.",
+        )
+    } else {
+        ("Use the number pad.", "Tap OK to submit your answer.")
+    };
+    centered_text(line_one, 330.0, 19, Color::new(0.74, 1.0, 0.72, 1.0));
+    centered_text(line_two, 354.0, 17, Color::new(0.7, 0.82, 0.94, 1.0));
+
+    if show_start_button {
+        draw_mobile_action_button("START");
+    }
+
+    set_default_color();
+}
+
 /// Draws the game over screen with final score and grade reached.
 pub fn draw_game_over(score: u32, grade_reached: &Grade) {
+    if screen::portrait_layout() {
+        draw_mobile_end_overlay(
+            "GAME OVER",
+            &format!("Final Score: {}", score),
+            &format!("Reached {}", grade_reached.display_name()),
+            Color::new(1.0, 0.36, 0.38, 1.0),
+        );
+        return;
+    }
+
     let title_size = screen::mobile_text_size(48);
     let score_size = screen::mobile_text_size(28);
     let grade_size = screen::mobile_text_size(24);
@@ -1362,6 +1432,16 @@ pub fn draw_game_over(score: u32, grade_reached: &Grade) {
 
 /// Draws the victory screen (completed all grades through 5th).
 pub fn draw_victory_screen(score: u32) {
+    if screen::portrait_layout() {
+        draw_mobile_end_overlay(
+            "VICTORY!",
+            &format!("Final Score: {}", score),
+            "You mastered every planet gate.",
+            Color::new(1.0, 0.82, 0.34, 1.0),
+        );
+        return;
+    }
+
     let title_size = screen::mobile_text_size(48);
     let score_size = screen::mobile_text_size(36);
     let achievement_size = screen::mobile_text_size(20);
@@ -1439,6 +1519,25 @@ pub fn draw_victory_screen(score: u32) {
         );
     }
 
+    set_default_color();
+}
+
+fn draw_mobile_end_overlay(title: &str, score: &str, detail: &str, accent: Color) {
+    set_color(Color::new(0.01, 0.012, 0.035, 0.9));
+    draw_rectangle(0.0, 0.0, SCREEN_W, SCREEN_H);
+    draw_rounded_panel(
+        216.0,
+        176.0,
+        848.0,
+        292.0,
+        26.0,
+        Color::new(0.045, 0.06, 0.14, 0.98),
+        accent,
+    );
+    centered_text(title, 252.0, 42, accent);
+    centered_text(score, 332.0, 28, Color::new(1.0, 0.82, 0.34, 1.0));
+    centered_text(detail, 382.0, 20, Color::new(0.93, 0.98, 1.0, 1.0));
+    draw_mobile_action_button("START");
     set_default_color();
 }
 

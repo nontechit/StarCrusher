@@ -8,14 +8,18 @@ const GRID_H: i32 = 14;
 const CELL: f32 = 27.0;
 const BOARD_X: f32 = 451.0;
 const BOARD_Y: f32 = 148.0;
+const MOBILE_CELL: f32 = 34.0;
+const MOBILE_BOARD_X: f32 = (SCREEN_W - GRID_W as f32 * MOBILE_CELL) / 2.0;
+const MOBILE_BOARD_Y: f32 = 222.0;
 const STEP_SECONDS: f64 = 0.25;
 const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
 const MAX_LIVES: u8 = 9;
 const SWIPE_MIN_DISTANCE: f32 = 46.0;
-const DPAD_X: f32 = 72.0;
-const DPAD_Y: f32 = 488.0;
-const DPAD_KEY: f32 = 58.0;
-const DPAD_GAP: f32 = 8.0;
+const DPAD_X: f32 = 460.0;
+const DPAD_Y: f32 = 616.0;
+const DPAD_KEY_W: f32 = 82.0;
+const DPAD_KEY_H: f32 = 58.0;
+const DPAD_GAP: f32 = 14.0;
 
 const WORDS: &[(&str, &str, &str)] = &[
     ("KEY", "noun", "A small tool used to open a lock."),
@@ -240,7 +244,14 @@ impl ReadingSnake {
     }
 
     pub fn draw(&self) {
-        clear_background(Color::new(0.02, 0.04, 0.03, 1.0));
+        clear_background(if screen::portrait_layout() {
+            Color::new(0.015, 0.025, 0.065, 1.0)
+        } else {
+            Color::new(0.02, 0.04, 0.03, 1.0)
+        });
+        if screen::portrait_layout() {
+            draw_mobile_space_background();
+        }
         self.draw_header();
         self.draw_board();
         self.draw_tiles();
@@ -262,11 +273,21 @@ impl ReadingSnake {
                 "READING SNAKE OVER"
             };
             let title_color = if self.completed { YELLOW } else { RED };
-            centered_text(title, 288.0, 42, title_color);
-            centered_text(&format!("Final Score: {}", self.score), 352.0, 28, YELLOW);
             if screen::portrait_layout() {
+                draw_card(
+                    230.0,
+                    206.0,
+                    820.0,
+                    260.0,
+                    Color::new(0.05, 0.07, 0.16, 0.97),
+                    title_color,
+                );
+                centered_text(title, 282.0, 34, title_color);
+                centered_text(&format!("Final Score: {}", self.score), 352.0, 26, YELLOW);
                 ui::draw_mobile_action_button("START");
             } else {
+                centered_text(title, 288.0, 42, title_color);
+                centered_text(&format!("Final Score: {}", self.score), 352.0, 28, YELLOW);
                 centered_text("Press ENTER to play again", 412.0, 22, WHITE);
                 centered_text("Press ESC for title", 446.0, 18, GRAY);
             }
@@ -313,9 +334,10 @@ impl ReadingSnake {
 
         if let Some(tap) = primary_tap_position() {
             let head = self.snake[0];
+            let (board_x, board_y, cell) = board_metrics();
             let head_center = vec2(
-                BOARD_X + head.x as f32 * CELL + CELL / 2.0,
-                BOARD_Y + head.y as f32 * CELL + CELL / 2.0,
+                board_x + head.x as f32 * cell + cell / 2.0,
+                board_y + head.y as f32 * cell + cell / 2.0,
             );
             let delta = tap - head_center;
             let next = if delta.x.abs() > delta.y.abs() {
@@ -543,6 +565,11 @@ impl ReadingSnake {
     }
 
     fn draw_header(&self) {
+        if screen::portrait_layout() {
+            self.draw_mobile_header();
+            return;
+        }
+
         let title_size = screen::mobile_text_size(36);
         let def_size = screen::mobile_text_size(20);
         let stat_size = screen::mobile_text_size(20);
@@ -581,19 +608,96 @@ impl ReadingSnake {
         );
     }
 
+    fn draw_mobile_header(&self) {
+        let title = if self.nightmare_mode {
+            if self.bonus_round {
+                "Night Word Quest"
+            } else {
+                "Nightmare Reading"
+            }
+        } else {
+            "Reading Snake"
+        };
+        let accent = if self.nightmare_mode {
+            Color::new(1.0, 0.48, 0.72, 1.0)
+        } else {
+            Color::new(0.42, 0.92, 1.0, 1.0)
+        };
+
+        draw_card(
+            214.0,
+            28.0,
+            852.0,
+            74.0,
+            Color::new(0.045, 0.075, 0.16, 0.96),
+            accent,
+        );
+        draw_text(title, 250.0, 72.0, 30.0, Color::new(0.94, 0.98, 1.0, 1.0));
+        draw_text(
+            &format!("Score {}", self.score),
+            716.0,
+            58.0,
+            18.0,
+            Color::new(1.0, 0.82, 0.34, 1.0),
+        );
+        draw_text(
+            &format!("Lives {}", self.lives),
+            716.0,
+            82.0,
+            18.0,
+            Color::new(0.74, 1.0, 0.72, 1.0),
+        );
+
+        draw_card(
+            172.0,
+            118.0,
+            936.0,
+            72.0,
+            Color::new(0.06, 0.055, 0.13, 0.95),
+            Color::new(1.0, 0.82, 0.34, 0.9),
+        );
+        draw_text(
+            "Mission",
+            210.0,
+            148.0,
+            16.0,
+            Color::new(0.6, 0.86, 1.0, 1.0),
+        );
+        draw_wrapped_text(
+            &self.definition,
+            210.0,
+            174.0,
+            860.0,
+            19,
+            Color::new(0.96, 0.98, 1.0, 1.0),
+        );
+    }
+
     fn draw_board(&self) {
+        let (board_x, board_y, cell) = board_metrics();
+        if screen::portrait_layout() {
+            draw_card(
+                board_x - 14.0,
+                board_y - 14.0,
+                GRID_W as f32 * cell + 28.0,
+                GRID_H as f32 * cell + 28.0,
+                Color::new(0.045, 0.08, 0.11, 0.98),
+                Color::new(0.38, 0.9, 0.74, 0.82),
+            );
+        }
+
         for x in 0..GRID_W {
             for y in 0..GRID_H {
                 let color = if (x + y) % 2 == 0 {
-                    Color::new(0.08, 0.16, 0.1, 0.9)
+                    Color::new(0.08, 0.17, 0.13, 0.92)
                 } else {
-                    Color::new(0.06, 0.13, 0.09, 0.9)
+                    Color::new(0.055, 0.125, 0.12, 0.92)
                 };
                 draw_rectangle(
-                    BOARD_X + x as f32 * CELL,
-                    BOARD_Y + y as f32 * CELL,
-                    CELL,
-                    CELL,
+                    board_x + x as f32 * cell,
+                    board_y + y as f32 * cell,
+                    cell,
+                    cell,
                     color,
                 );
             }
@@ -619,35 +723,42 @@ impl ReadingSnake {
     }
 
     fn draw_tile(&self, tile: &LetterTile, color: Color) {
-        let letter_size = 22;
-        let x = BOARD_X + tile.pos.x as f32 * CELL;
-        let y = BOARD_Y + tile.pos.y as f32 * CELL;
-        draw_rectangle(x + 2.0, y + 2.0, CELL - 4.0, CELL - 4.0, color);
+        let (board_x, board_y, cell) = board_metrics();
+        let letter_size = if screen::portrait_layout() { 25 } else { 22 };
+        let x = board_x + tile.pos.x as f32 * cell;
+        let y = board_y + tile.pos.y as f32 * cell;
+        draw_rectangle(x + 3.0, y + 3.0, cell - 6.0, cell - 6.0, color);
         let letter = tile.letter.to_string();
         let metrics = measure_text(&letter, None, letter_size, 1.0);
         draw_text(
             &letter,
-            x + CELL / 2.0 - metrics.width / 2.0,
-            y + CELL / 2.0 + metrics.height / 2.5,
+            x + cell / 2.0 - metrics.width / 2.0,
+            y + cell / 2.0 + metrics.height / 2.5,
             letter_size as f32,
             BLACK,
         );
     }
 
     fn draw_snake(&self) {
+        let (board_x, board_y, cell) = board_metrics();
         for (idx, part) in self.snake.iter().enumerate() {
-            let x = BOARD_X + part.x as f32 * CELL;
-            let y = BOARD_Y + part.y as f32 * CELL;
+            let x = board_x + part.x as f32 * cell;
+            let y = board_y + part.y as f32 * cell;
             let color = if idx == 0 {
                 Color::new(0.45, 1.0, 0.55, 1.0)
             } else {
                 Color::new(0.15, 0.75, 0.35, 1.0)
             };
-            draw_rectangle(x + 3.0, y + 3.0, CELL - 6.0, CELL - 6.0, color);
+            draw_rectangle(x + 4.0, y + 4.0, cell - 8.0, cell - 8.0, color);
         }
     }
 
     fn draw_footer(&self) {
+        if screen::portrait_layout() {
+            self.draw_mobile_footer();
+            return;
+        }
+
         let progress_size = screen::mobile_text_size(26);
         let message_size = screen::mobile_text_size(22);
         let hint_size = screen::mobile_text_size(18);
@@ -670,6 +781,35 @@ impl ReadingSnake {
         centered_text(controls, 642.0, controls_size, GRAY);
     }
 
+    fn draw_mobile_footer(&self) {
+        let progress = format_word_progress(&self.word, self.letter_index);
+        draw_card(
+            214.0,
+            714.0 - 152.0,
+            852.0,
+            48.0,
+            Color::new(0.055, 0.07, 0.15, 0.94),
+            Color::new(1.0, 0.72, 0.34, 0.8),
+        );
+        draw_text("Word", 250.0, 590.0, 15.0, Color::new(0.6, 0.86, 1.0, 1.0));
+        centered_text_in_rect(
+            &progress,
+            360.0,
+            572.0,
+            470.0,
+            30.0,
+            26,
+            Color::new(1.0, 0.85, 0.3, 1.0),
+        );
+        draw_text(
+            self.message,
+            838.0,
+            592.0,
+            17.0,
+            Color::new(0.95, 0.98, 1.0, 1.0),
+        );
+    }
+
     fn draw_mobile_dpad(&self) {
         if !screen::portrait_layout() || self.game_over || self.showing_definition_card {
             return;
@@ -678,53 +818,57 @@ impl ReadingSnake {
         let buttons = [
             (
                 CellPos::new(0, -1),
-                DPAD_X + DPAD_KEY + DPAD_GAP,
+                DPAD_X + DPAD_KEY_W + DPAD_GAP,
                 DPAD_Y,
-                "U",
+                "^",
             ),
             (
                 CellPos::new(-1, 0),
-                DPAD_X,
-                DPAD_Y + DPAD_KEY + DPAD_GAP,
-                "L",
+                DPAD_X - DPAD_KEY_W - DPAD_GAP,
+                DPAD_Y,
+                "<",
             ),
             (
                 CellPos::new(1, 0),
-                DPAD_X + (DPAD_KEY + DPAD_GAP) * 2.0,
-                DPAD_Y + DPAD_KEY + DPAD_GAP,
-                "R",
+                DPAD_X + (DPAD_KEY_W + DPAD_GAP) * 2.0,
+                DPAD_Y,
+                ">",
             ),
-            (
-                CellPos::new(0, 1),
-                DPAD_X + DPAD_KEY + DPAD_GAP,
-                DPAD_Y + (DPAD_KEY + DPAD_GAP) * 2.0,
-                "D",
-            ),
+            (CellPos::new(0, 1), DPAD_X, DPAD_Y, "v"),
         ];
+
+        draw_card(
+            DPAD_X - DPAD_KEY_W - DPAD_GAP - 20.0,
+            DPAD_Y - 16.0,
+            DPAD_KEY_W * 4.0 + DPAD_GAP * 3.0 + 40.0,
+            DPAD_KEY_H + 32.0,
+            Color::new(0.035, 0.055, 0.12, 0.84),
+            Color::new(0.42, 0.9, 1.0, 0.54),
+        );
 
         for (direction, x, y, label) in buttons {
             let active = direction == self.next_dir;
             let fill = if active {
-                Color::new(0.35, 0.9, 0.45, 0.8)
+                Color::new(0.35, 0.95, 0.72, 0.9)
             } else {
-                Color::new(0.05, 0.12, 0.08, 0.72)
+                Color::new(0.08, 0.12, 0.22, 0.9)
             };
-            draw_rectangle(x, y, DPAD_KEY, DPAD_KEY, fill);
+            draw_round_rect(x, y, DPAD_KEY_W, DPAD_KEY_H, 14.0, fill);
             draw_rectangle_lines(
                 x,
                 y,
-                DPAD_KEY,
-                DPAD_KEY,
+                DPAD_KEY_W,
+                DPAD_KEY_H,
                 3.0,
-                Color::new(0.4, 1.0, 0.65, 0.95),
+                Color::new(0.65, 0.95, 1.0, 0.95),
             );
 
-            let font_size = screen::mobile_text_size(16);
+            let font_size = 24;
             let metrics = measure_text(label, None, font_size, 1.0);
             draw_text(
                 label,
-                x + DPAD_KEY / 2.0 - metrics.width / 2.0,
-                y + DPAD_KEY / 2.0 + metrics.height / 2.5,
+                x + DPAD_KEY_W / 2.0 - metrics.width / 2.0,
+                y + DPAD_KEY_H / 2.0 + metrics.height / 2.5,
                 font_size as f32,
                 WHITE,
             );
@@ -732,6 +876,11 @@ impl ReadingSnake {
     }
 
     fn draw_definition_card(&self) {
+        if screen::portrait_layout() {
+            self.draw_mobile_definition_card();
+            return;
+        }
+
         let title_size = screen::mobile_text_size(42);
         let pos_size = screen::mobile_text_size(24);
         let def_size = screen::mobile_text_size(30);
@@ -767,6 +916,49 @@ impl ReadingSnake {
             Color::new(0.4, 1.0, 0.65, 1.0),
         );
         draw_wrapped_centered_text(&self.definition, 360.0, 700.0, def_size, WHITE);
+        ui::draw_mobile_action_button("START");
+    }
+
+    fn draw_mobile_definition_card(&self) {
+        draw_rectangle(
+            0.0,
+            0.0,
+            SCREEN_W,
+            SCREEN_H,
+            Color::new(0.0, 0.0, 0.0, 0.58),
+        );
+        draw_card(
+            190.0,
+            156.0,
+            900.0,
+            382.0,
+            Color::new(0.045, 0.07, 0.15, 0.98),
+            Color::new(1.0, 0.82, 0.34, 0.95),
+        );
+
+        centered_text(
+            self.definition_card_title,
+            216.0,
+            34,
+            Color::new(1.0, 0.82, 0.34, 1.0),
+        );
+        centered_text(
+            &self.word,
+            288.0,
+            54,
+            if self.nightmare_mode {
+                Color::new(1.0, 0.48, 0.72, 1.0)
+            } else {
+                Color::new(0.42, 0.92, 1.0, 1.0)
+            },
+        );
+        centered_text(
+            &format!("{} word", self.part_of_speech),
+            330.0,
+            20,
+            Color::new(0.74, 1.0, 0.72, 1.0),
+        );
+        draw_wrapped_centered_text(&self.definition, 390.0, 760.0, 26, WHITE);
         ui::draw_mobile_action_button("START");
     }
 }
@@ -838,24 +1030,71 @@ fn shuffled_word_order(word_count: usize) -> Vec<usize> {
 
 fn mobile_dpad_direction(point: Vec2) -> Option<CellPos> {
     let buttons = [
-        (CellPos::new(0, -1), DPAD_X + DPAD_KEY + DPAD_GAP, DPAD_Y),
-        (CellPos::new(-1, 0), DPAD_X, DPAD_Y + DPAD_KEY + DPAD_GAP),
+        (CellPos::new(0, -1), DPAD_X + DPAD_KEY_W + DPAD_GAP, DPAD_Y),
+        (CellPos::new(-1, 0), DPAD_X - DPAD_KEY_W - DPAD_GAP, DPAD_Y),
         (
             CellPos::new(1, 0),
-            DPAD_X + (DPAD_KEY + DPAD_GAP) * 2.0,
-            DPAD_Y + DPAD_KEY + DPAD_GAP,
+            DPAD_X + (DPAD_KEY_W + DPAD_GAP) * 2.0,
+            DPAD_Y,
         ),
-        (
-            CellPos::new(0, 1),
-            DPAD_X + DPAD_KEY + DPAD_GAP,
-            DPAD_Y + (DPAD_KEY + DPAD_GAP) * 2.0,
-        ),
+        (CellPos::new(0, 1), DPAD_X, DPAD_Y),
     ];
 
     buttons.into_iter().find_map(|(direction, x, y)| {
-        (point.x >= x && point.x <= x + DPAD_KEY && point.y >= y && point.y <= y + DPAD_KEY)
+        (point.x >= x && point.x <= x + DPAD_KEY_W && point.y >= y && point.y <= y + DPAD_KEY_H)
             .then_some(direction)
     })
+}
+
+fn board_metrics() -> (f32, f32, f32) {
+    if screen::portrait_layout() {
+        (MOBILE_BOARD_X, MOBILE_BOARD_Y, MOBILE_CELL)
+    } else {
+        (BOARD_X, BOARD_Y, CELL)
+    }
+}
+
+fn draw_mobile_space_background() {
+    for i in 0..86 {
+        let x = ((i * 83 + 29) % SCREEN_W as i32) as f32;
+        let y = ((i * 47 + 61) % SCREEN_H as i32) as f32;
+        let radius = if i % 6 == 0 { 2.3 } else { 1.2 };
+        let color = if i % 8 == 0 {
+            Color::new(0.46, 0.9, 1.0, 0.72)
+        } else {
+            Color::new(0.94, 0.96, 0.82, 0.62)
+        };
+        draw_circle(x, y, radius, color);
+    }
+
+    draw_circle(1070.0, 148.0, 72.0, Color::new(1.0, 0.44, 0.7, 0.16));
+    draw_circle(198.0, 612.0, 96.0, Color::new(0.36, 0.92, 0.72, 0.12));
+}
+
+fn draw_card(x: f32, y: f32, w: f32, h: f32, fill: Color, edge: Color) {
+    draw_round_rect(x, y, w, h, 22.0, edge);
+    draw_round_rect(x + 4.0, y + 4.0, w - 8.0, h - 8.0, 18.0, fill);
+}
+
+fn draw_round_rect(x: f32, y: f32, w: f32, h: f32, radius: f32, color: Color) {
+    let r = radius.min(w / 2.0).min(h / 2.0);
+    draw_rectangle(x + r, y, w - r * 2.0, h, color);
+    draw_rectangle(x, y + r, w, h - r * 2.0, color);
+    draw_circle(x + r, y + r, r, color);
+    draw_circle(x + w - r, y + r, r, color);
+    draw_circle(x + r, y + h - r, r, color);
+    draw_circle(x + w - r, y + h - r, r, color);
+}
+
+fn centered_text_in_rect(text: &str, x: f32, y: f32, w: f32, h: f32, font_size: u16, color: Color) {
+    let metrics = measure_text(text, None, font_size, 1.0);
+    draw_text(
+        text,
+        x + w / 2.0 - metrics.width / 2.0,
+        y + h / 2.0 + metrics.height / 2.5,
+        font_size as f32,
+        color,
+    );
 }
 
 fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
@@ -891,6 +1130,31 @@ fn draw_wrapped_centered_text(text: &str, y: f32, max_width: f32, font_size: u16
 
     if !line.is_empty() {
         centered_text(&line, line_y, font_size, color);
+    }
+}
+
+fn draw_wrapped_text(text: &str, x: f32, y: f32, max_width: f32, font_size: u16, color: Color) {
+    let mut line = String::new();
+    let mut line_y = y;
+
+    for word in text.split_whitespace() {
+        let next = if line.is_empty() {
+            word.to_string()
+        } else {
+            format!("{} {}", line, word)
+        };
+
+        if measure_text(&next, None, font_size, 1.0).width > max_width && !line.is_empty() {
+            draw_text(&line, x, line_y, font_size as f32, color);
+            line = word.to_string();
+            line_y += font_size as f32 + 8.0;
+        } else {
+            line = next;
+        }
+    }
+
+    if !line.is_empty() {
+        draw_text(&line, x, line_y, font_size as f32, color);
     }
 }
 
