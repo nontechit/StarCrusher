@@ -2,12 +2,12 @@ use crate::random;
 use crate::screen::{SCREEN_H, SCREEN_W};
 use macroquad::prelude::*;
 
-const GRID_W: i32 = 34;
-const GRID_H: i32 = 21;
-const CELL: f32 = 24.0;
-const BOARD_X: f32 = 104.0;
+const GRID_W: i32 = 24;
+const GRID_H: i32 = 24;
+const CELL: f32 = 28.0;
+const BOARD_X: f32 = 212.0;
 const BOARD_Y: f32 = 110.0;
-const STEP_SECONDS: f64 = 0.18;
+const STEP_SECONDS: f64 = 0.25;
 const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
 const MAX_LIVES: u8 = 9;
 
@@ -473,6 +473,11 @@ impl ReadingSnake {
     }
 
     fn draw_header(&self) {
+        let portrait = screen_height() > screen_width() * 1.15;
+        let title_size = if portrait { 28 } else { 18 };
+        let def_size = if portrait { 56 } else { 40 };
+        let stat_size = if portrait { 34 } else { 22 };
+
         let title = if self.nightmare_mode {
             if self.bonus_round {
                 "READING SNAKE BONUS NIGHTMARE"
@@ -482,11 +487,11 @@ impl ReadingSnake {
         } else {
             "READING SNAKE"
         };
-        centered_text(title, 38.0, 18, Color::new(0.4, 1.0, 0.65, 1.0));
-        centered_text(&format!("Definition: {}", self.definition), 88.0, 40, WHITE);
+        centered_text(title, 38.0, title_size, Color::new(0.4, 1.0, 0.65, 1.0));
+        centered_text(&format!("Definition: {}", self.definition), 88.0, def_size, WHITE);
 
-        draw_text(&format!("Score: {}", self.score), 28.0, 40.0, 22.0, YELLOW);
-        draw_text(&format!("Lives: {}", self.lives), 870.0, 40.0, 22.0, WHITE);
+        draw_text(&format!("Score: {}", self.score), 28.0, 40.0, stat_size as f32, YELLOW);
+        draw_text(&format!("Lives: {}", self.lives), 870.0, 40.0, stat_size as f32, WHITE);
     }
 
     fn draw_board(&self) {
@@ -543,16 +548,18 @@ impl ReadingSnake {
     }
 
     fn draw_tile(&self, tile: &LetterTile, color: Color) {
+        let portrait = screen_height() > screen_width() * 1.15;
+        let letter_size = if portrait { 34 } else { 22 };
         let x = BOARD_X + tile.pos.x as f32 * CELL;
         let y = BOARD_Y + tile.pos.y as f32 * CELL;
         draw_rectangle(x + 2.0, y + 2.0, CELL - 4.0, CELL - 4.0, color);
         let letter = tile.letter.to_string();
-        let metrics = measure_text(&letter, None, 22, 1.0);
+        let metrics = measure_text(&letter, None, letter_size, 1.0);
         draw_text(
             &letter,
             x + CELL / 2.0 - metrics.width / 2.0,
             y + CELL / 2.0 + metrics.height / 2.5,
-            22.0,
+            letter_size as f32,
             BLACK,
         );
     }
@@ -571,24 +578,35 @@ impl ReadingSnake {
     }
 
     fn draw_footer(&self) {
+        let portrait = screen_height() > screen_width() * 1.15;
+        let word_size = if portrait { 46 } else { 30 };
+        let meaning_size = if portrait { 28 } else { 18 };
+        let message_size = if portrait { 28 } else { 18 };
+        let controls_size = if portrait { 24 } else { 16 };
+
         let progress = format_word_progress(&self.word, self.letter_index);
-        centered_text(&format!("Word: {}", progress), 675.0, 30, YELLOW);
+        centered_text(&format!("Word: {}", progress), 675.0, word_size, YELLOW);
         centered_text(
             "Meaning: Read the card, then spell the word.",
             710.0,
-            18,
+            meaning_size,
             WHITE,
         );
-        centered_text(self.message, 735.0, 18, WHITE);
+        centered_text(self.message, 735.0, message_size, WHITE);
         let controls = if self.nightmare_mode {
             "Nightmare: all letters look alike   ESC returns to title"
         } else {
             "Arrow Keys / WASD to move   ESC returns to title"
         };
-        centered_text(controls, 760.0, 16, GRAY);
+        centered_text(controls, 760.0, controls_size, GRAY);
     }
 
     fn draw_definition_card(&self) {
+        let portrait = screen_height() > screen_width() * 1.15;
+        let title_size = if portrait { 60 } else { 40 };
+        let pos_size = if portrait { 42 } else { 28 };
+        let def_size = if portrait { 60 } else { 40 };
+
         draw_rectangle(
             0.0,
             0.0,
@@ -612,15 +630,14 @@ impl ReadingSnake {
             Color::new(0.4, 1.0, 0.65, 1.0),
         );
 
-        centered_text(self.definition_card_title, 245.0, 40, YELLOW);
+        centered_text(self.definition_card_title, 245.0, title_size, YELLOW);
         centered_text(
             &format!("Part of speech: {}", self.part_of_speech),
             310.0,
-            28,
+            pos_size,
             Color::new(0.4, 1.0, 0.65, 1.0),
         );
-        draw_wrapped_centered_text(&self.definition, 382.0, 610.0, 40, WHITE);
-        centered_text("Press SPACE or ENTER when ready", 520.0, 20, GRAY);
+        draw_wrapped_centered_text(&self.definition, 382.0, 610.0, def_size, WHITE);
     }
 }
 
