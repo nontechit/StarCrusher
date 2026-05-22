@@ -238,7 +238,7 @@ checksum = "703d5c7ef118737c72f1af64ad2f6f8c5e1921f818cdcb97b8fe6fc69bf66214"
 
 [[package]]
 name = "star-crusher"
-version = "1.5.4"
+version = "1.5.6"
 dependencies = [
  "macroquad",
 ]

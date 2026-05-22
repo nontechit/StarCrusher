@@ -2,7 +2,7 @@
 
 Star Crusher is an educational arcade collection about two young space travelers flying between dungeon planets. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.5.5`
+Current build: `1.5.6`
 
 ## Latest Mobile Release
 
