@@ -500,6 +500,21 @@
         const glcanvas = document.getElementById('glcanvas');
         const particles = [];
         let loaderStarted = false;
+        let gameInputState = 'site';
+
+        const virtualScreen = { w: 1280, h: 720 };
+        const mobileTitleRows = {
+            x: 160,
+            y: 318,
+            w: 960,
+            h: 78,
+            gap: 16
+        };
+        const mobileBack = { x: 24, y: 24, w: 170, h: 68 };
+        const mobileAction = { x: 428, y: 640, w: 424, h: 56 };
+        const spellingPlay = { x: 390, y: 536, w: 220, h: 74 };
+        const spellingNight = { x: 670, y: 536, w: 220, h: 74 };
+        const mobileKeypad = { x: 930, y: 404, key: 64, gap: 8 };
 
         function resizeStars() {
             const scale = Math.min(window.devicePixelRatio || 1, 2);
@@ -535,12 +550,183 @@
             requestAnimationFrame(drawStars);
         }
 
+        function sendGameKey(key, code) {
+            const keyCodeMap = {
+                Enter: 13,
+                Escape: 27,
+                Backspace: 8
+            };
+            const keyCode = keyCodeMap[key] || (key.length === 1 ? key.toUpperCase().charCodeAt(0) : 0);
+            const eventInit = {
+                key,
+                code,
+                keyCode,
+                which: keyCode,
+                bubbles: true,
+                cancelable: true
+            };
+            const targets = [glcanvas, document, window];
+
+            for (const target of targets) {
+                target.dispatchEvent(new KeyboardEvent('keydown', eventInit));
+            }
+            for (const target of targets) {
+                target.dispatchEvent(new KeyboardEvent('keyup', eventInit));
+            }
+        }
+
+        function sendLetter(letter) {
+            sendGameKey(letter.toLowerCase(), `Key${letter.toUpperCase()}`);
+        }
+
+        function sendEnter() {
+            sendGameKey('Enter', 'Enter');
+        }
+
+        function sendEscape() {
+            sendGameKey('Escape', 'Escape');
+        }
+
+        function sendBackspace() {
+            sendGameKey('Backspace', 'Backspace');
+        }
+
+        function sendDigit(digit) {
+            sendGameKey(digit, `Digit${digit}`);
+        }
+
+        function contains(rect, point) {
+            return point.x >= rect.x
+                && point.x <= rect.x + rect.w
+                && point.y >= rect.y
+                && point.y <= rect.y + rect.h;
+        }
+
+        function canvasPointToVirtual(clientX, clientY) {
+            const rect = glcanvas.getBoundingClientRect();
+            return {
+                x: ((clientX - rect.left) / Math.max(rect.width, 1)) * virtualScreen.w,
+                y: ((clientY - rect.top) / Math.max(rect.height, 1)) * virtualScreen.h
+            };
+        }
+
+        function titleRowAt(point) {
+            if (point.x < mobileTitleRows.x || point.x > mobileTitleRows.x + mobileTitleRows.w) {
+                return -1;
+            }
+
+            for (let index = 0; index < 3; index += 1) {
+                const rowY = mobileTitleRows.y + index * (mobileTitleRows.h + mobileTitleRows.gap);
+                if (point.y >= rowY && point.y <= rowY + mobileTitleRows.h) {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
+
+        function keypadKeyAt(point) {
+            const labels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'del', '0', 'ok'];
+
+            for (let index = 0; index < labels.length; index += 1) {
+                const col = index % 3;
+                const row = Math.floor(index / 3);
+                const rect = {
+                    x: mobileKeypad.x + col * (mobileKeypad.key + mobileKeypad.gap),
+                    y: mobileKeypad.y + row * (mobileKeypad.key + mobileKeypad.gap),
+                    w: mobileKeypad.key,
+                    h: mobileKeypad.key
+                };
+                if (contains(rect, point)) {
+                    return labels[index];
+                }
+            }
+
+            return '';
+        }
+
+        function bridgeCanvasTap(clientX, clientY) {
+            if (!shell.classList.contains('active')) {
+                return false;
+            }
+
+            glcanvas.focus();
+            const point = canvasPointToVirtual(clientX, clientY);
+
+            if (contains(mobileBack, point)) {
+                sendEscape();
+                gameInputState = gameInputState === 'title-mini' ? 'title-main' : 'title-main';
+                return true;
+            }
+
+            if (gameInputState === 'title-main' || gameInputState === 'title-mini') {
+                const row = titleRowAt(point);
+                if (row >= 0) {
+                    if (gameInputState === 'title-main') {
+                        if (row === 0) {
+                            sendEnter();
+                            gameInputState = 'game';
+                        } else if (row === 1) {
+                            sendLetter('p');
+                            gameInputState = 'title-mini';
+                        } else {
+                            sendLetter('l');
+                            gameInputState = 'spelling';
+                        }
+                    } else if (row === 0) {
+                        sendLetter('r');
+                        gameInputState = 'game';
+                    } else if (row === 1) {
+                        sendLetter('p');
+                        gameInputState = 'game';
+                    } else {
+                        sendLetter('n');
+                        gameInputState = 'game';
+                    }
+                    return true;
+                }
+            }
+
+            if (gameInputState === 'spelling') {
+                if (contains(spellingPlay, point)) {
+                    sendEnter();
+                    gameInputState = 'game';
+                    return true;
+                }
+                if (contains(spellingNight, point)) {
+                    sendLetter('n');
+                    gameInputState = 'game';
+                    return true;
+                }
+            }
+
+            const keypadKey = keypadKeyAt(point);
+            if (keypadKey) {
+                if (keypadKey === 'del') {
+                    sendBackspace();
+                } else if (keypadKey === 'ok') {
+                    sendEnter();
+                } else {
+                    sendDigit(keypadKey);
+                }
+                return true;
+            }
+
+            if (contains(mobileAction, point)) {
+                sendEnter();
+                return true;
+            }
+
+            return false;
+        }
+
         function launchGame(game) {
             if (loaderStarted) {
                 return;
             }
 
             loaderStarted = true;
+            gameInputState = game ? 'game' : 'title-main';
             launch.disabled = true;
             status.textContent = 'Preparing launch...';
             landing.style.display = 'none';
@@ -565,9 +751,7 @@
                         const key = keyMap[game];
                         if (key) {
                             setTimeout(() => {
-                                const opts = { key: key, code: 'Key' + key.toUpperCase(), bubbles: true };
-                                document.dispatchEvent(new KeyboardEvent('keydown', opts));
-                                document.dispatchEvent(new KeyboardEvent('keyup', opts));
+                                sendLetter(key);
                             }, 3000);
                         }
                     }
@@ -588,6 +772,7 @@
             document.body.style.overflow = '';
             launch.disabled = false;
             loaderStarted = false;
+            gameInputState = 'site';
             status.textContent = 'Launch failed. Please refresh and try again.';
         }
 
@@ -597,6 +782,19 @@
                 event.preventDefault();
             }
         }, { passive: false });
+        glcanvas.addEventListener('touchstart', (event) => {
+            if (!shell.classList.contains('active')) {
+                return;
+            }
+
+            const touch = event.changedTouches[0];
+            if (touch && bridgeCanvasTap(touch.clientX, touch.clientY)) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+        glcanvas.addEventListener('click', (event) => {
+            bridgeCanvasTap(event.clientX, event.clientY);
+        });
         launch.addEventListener('click', () => launchGame(''));
         document.querySelectorAll('.mode-item').forEach(item => {
             item.addEventListener('click', () => {
