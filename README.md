@@ -2,7 +2,7 @@
 
 Star Crusher is an educational arcade collection wrapped in a light kid-friendly dungeon adventure menu. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.4.6`
+Current build: `1.4.7`
 
 ## Features
 
@@ -15,13 +15,16 @@ Current build: `1.4.6`
 - Kindergarten number-recognition prompts use words, such as `Shoot number three`, while targets remain numeric.
 - Question gates between waves that require typed answers to advance.
 - Question gate prompts and answer input are spaced to avoid overlapping the wave-complete instructions.
+- Question gates use larger portrait-mode number pad targets for phone play.
 - Math Pong mode for launching a straight ball into randomly placed numbered targets.
 - Reading Snake mini game for letter order, word recognition, and definition practice, with randomized default or custom spelling lists and Nightmare mode.
 - Reading Snake shows definition cards, keeps the active definition visible above the board, and keeps new letter tiles away from the snake head.
+- Reading Snake supports swipe steering and a portrait-mode thumb D-pad on mobile.
 - Reading Snake definition cards show part of speech and use larger definition text for easier reading.
 - Completing the standard Reading Snake list starts a bonus Nightmare round using the same words in the same randomized order.
 - In Start Adventure, completing normal Reading Snake advances directly to Math Pong instead of the standalone bonus round.
 - RPG-style title menu with procedural stone paneling, dungeon glyphs, a focused main adventure menu, and a Play Mini Games submenu.
+- Portrait mobile screens show an in-canvas `TITLE` / `BACK` button for touch navigation.
 - Game over and victory stat panels are centered with their score and progress text.
 - Procedural graphics only; no external assets or fonts required.
 - Launches in a 1920x1080 fullscreen window with a fixed 1024x768 virtual playfield.
@@ -44,6 +47,8 @@ Title menu controls:
 - Direct shortcut for Reading Snake: `R`
 - Direct shortcut for Reading Snake Nightmare: `N`
 - Direct shortcut for Custom Spelling List: `L`
+- On mobile, tap menu rows directly.
+- On mobile, tap the in-canvas `BACK` button to return from Play Mini Games to the main menu.
 
 Math Invaders controls:
 
@@ -53,6 +58,9 @@ Math Invaders controls:
 - Return from mini games to title: `Esc`
 - Type gate answers with number keys, then press `Enter`
 - Delete typed answer characters with `Backspace`
+- On mobile, hold or drag in the lower play area to move and fire.
+- On mobile, tap `TITLE` to return to the title menu.
+- On mobile, use the enlarged gate number pad and `OK` button to submit answers.
 
 Reading Snake controls:
 
@@ -60,6 +68,9 @@ Reading Snake controls:
 - Start spelling after a definition card: `Enter` or `Space`
 - Restart after game over: `Enter` or `Space`
 - Return to title: `Esc`
+- On mobile, swipe in the desired direction or tap the portrait thumb D-pad.
+- On mobile, tap definition cards and game-over screens to continue.
+- On mobile, tap `TITLE` to return to the title menu.
 
 Reading Snake layout and safety:
 
@@ -83,6 +94,9 @@ Spelling-list entry controls:
 - Delete typed characters with `Backspace`
 - Leave the list blank and press `Enter` to use the default words
 - Return to title without starting: `Esc`
+- On mobile, tap `PLAY` to start normal Reading Snake with the typed list.
+- On mobile, tap `NIGHT` to start Nightmare Snake with the typed list.
+- On mobile, tap `TITLE` to return to the title menu.
 
 Math Pong controls:
 
@@ -90,6 +104,9 @@ Math Pong controls:
 - Launch ball: `Space` or `Enter`
 - Restart after game over: `Enter` or `Space`
 - Return to title: `Esc`
+- On mobile, drag or hold near the lower play area to move the paddle.
+- On mobile, release touch to launch the ball.
+- On mobile, tap `TITLE` to return to the title menu.
 
 ## Requirements
 
@@ -129,8 +146,10 @@ src/math_pong.rs     Math Pong number target mini game
 src/reading_snake.rs Reading Snake mini game
 src/enemy.rs         Numbered Math Invaders targets, movement, explosions
 src/player.rs        Player ship, player bullets, enemy bullets
-src/ui.rs            HUD, title, game over, victory, and question gate UI
+src/ui.rs            HUD, title, mobile touch buttons, game over, victory, and question gate UI
 src/assets.rs        Procedural drawing helpers for ships, enemies, stars, effects
+star-crusher.wasm    Checked-in WASM artifact used by the static landing page
+index.html           Static landing page and Macroquad WASM loader
 ```
 
 ## Architecture
@@ -329,10 +348,16 @@ The site is configured for the custom domain **www.boohw.com**. To complete setu
 ```bash
 rustup target add wasm32-unknown-unknown
 cargo build --target wasm32-unknown-unknown --release
-# Output: target/wasm32-unknown-unknown/release/star_crusher.wasm
+# Output: target/wasm32-unknown-unknown/release/star-crusher.wasm
 ```
 
-Then open `index.html` in a browser (requires a local server due to WASM module loading):
+To update the static landing-page artifact after a local WASM build:
+
+```powershell
+Copy-Item -LiteralPath target\wasm32-unknown-unknown\release\star-crusher.wasm -Destination star-crusher.wasm
+```
+
+Then open `index.html` in a browser through a local server because WASM module loading is restricted from direct file URLs:
 
 ```bash
 python3 -m http.server 8080
