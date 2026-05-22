@@ -16,7 +16,10 @@ use math_pong::{MathPong, MathPongAction};
 use player::{Bullet, EnemyBullet, Player};
 use question::{generate_question, Question};
 use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
-use screen::{enter_fullscreen, use_virtual_screen, window_conf, SCREEN_H, SCREEN_W};
+use screen::{
+    enter_fullscreen, primary_pointer_position, primary_tap_position, use_virtual_screen,
+    window_conf, SCREEN_H, SCREEN_W,
+};
 
 const MAX_GATE_ANSWER_LEN: usize = 8;
 const MAX_SPELLING_INPUT_CHARS: usize = 2_000;
@@ -602,17 +605,21 @@ impl Game {
     }
 
     fn update_touch_player(&mut self) -> bool {
+        let ship_w = self.player.effective_width();
+        let move_threshold = if screen::portrait_layout() { 540.0 } else { 520.0 };
+        let fire_threshold = if screen::portrait_layout() { 500.0 } else { 470.0 };
+
         if let Some(pointer) = primary_pointer_position() {
-            if pointer.y > 520.0 {
-                self.player.x = (pointer.x - self.player.width / 2.0)
-                    .clamp(8.0, SCREEN_W - self.player.width - 8.0);
+            if pointer.y > move_threshold {
+                self.player.x = (pointer.x - ship_w / 2.0)
+                    .clamp(8.0, SCREEN_W - ship_w - 8.0);
             }
         }
 
         if screen::portrait_layout() {
-            primary_pointer_position().is_some_and(|pointer| pointer.y > 470.0)
+            primary_pointer_position().is_some_and(|pointer| pointer.y > fire_threshold)
         } else {
-            primary_tap_position().is_some_and(|tap| tap.y > 470.0)
+            primary_tap_position().is_some_and(|tap| tap.y > fire_threshold)
         }
     }
 
@@ -781,46 +788,6 @@ fn gate_key_at(point: Vec2) -> Option<GateKey> {
     None
 }
 
-fn primary_tap_position() -> Option<Vec2> {
-    for touch in touches() {
-        if touch.phase == TouchPhase::Started {
-            return Some(to_virtual_position(touch.position));
-        }
-    }
-
-    if is_mouse_button_pressed(MouseButton::Left) {
-        let (x, y) = mouse_position();
-        return Some(to_virtual_position(vec2(x, y)));
-    }
-
-    None
-}
-
-fn primary_pointer_position() -> Option<Vec2> {
-    for touch in touches() {
-        if matches!(
-            touch.phase,
-            TouchPhase::Started | TouchPhase::Stationary | TouchPhase::Moved
-        ) {
-            return Some(to_virtual_position(touch.position));
-        }
-    }
-
-    if is_mouse_button_down(MouseButton::Left) {
-        let (x, y) = mouse_position();
-        return Some(to_virtual_position(vec2(x, y)));
-    }
-
-    None
-}
-
-fn to_virtual_position(position: Vec2) -> Vec2 {
-    vec2(
-        position.x * SCREEN_W / screen_width().max(1.0),
-        position.y * SCREEN_H / screen_height().max(1.0),
-    )
-}
-
 fn draw_starfield() {
     for i in 0..90 {
         let x = ((i * 73 + 19) % SCREEN_W as i32) as f32;
@@ -834,6 +801,7 @@ async fn main() {
     enter_fullscreen();
     next_frame().await;
     enter_fullscreen();
+    use_virtual_screen();
 
     let mut game = Game::new();
 

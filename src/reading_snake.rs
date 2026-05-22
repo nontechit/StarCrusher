@@ -1,5 +1,7 @@
 use crate::random;
-use crate::screen::{self, SCREEN_H, SCREEN_W};
+use crate::screen::{
+    self, primary_tap_position, SCREEN_H, SCREEN_W,
+};
 use crate::ui;
 use macroquad::prelude::*;
 
@@ -9,18 +11,13 @@ const CELL: f32 = 27.0;
 const BOARD_X: f32 = 451.0;
 const BOARD_Y: f32 = 148.0;
 const MOBILE_CELL_W: f32 = 62.0;
-const MOBILE_CELL_H: f32 = 20.0;
+const MOBILE_CELL_H: f32 = 25.0;
 const MOBILE_BOARD_X: f32 = (SCREEN_W - GRID_W as f32 * MOBILE_CELL_W) / 2.0;
-const MOBILE_BOARD_Y: f32 = 250.0;
+const MOBILE_BOARD_Y: f32 = 170.0;
+const MOBILE_HEADER_BOTTOM: f32 = 152.0;
 const STEP_SECONDS: f64 = 0.25;
 const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
 const MAX_LIVES: u8 = 9;
-const SWIPE_MIN_DISTANCE: f32 = 46.0;
-const DPAD_X: f32 = 392.0;
-const DPAD_Y: f32 = 628.0;
-const DPAD_KEY_W: f32 = 112.0;
-const DPAD_KEY_H: f32 = 48.0;
-const DPAD_GAP: f32 = 16.0;
 
 const MAX_CUSTOM_WORDS: usize = 64;
 const WORDS: &[(&str, &str, &str)] = &[
@@ -113,7 +110,6 @@ pub struct ReadingSnake {
     start_bonus_on_complete: bool,
     completion_returns_action: bool,
     last_step: f64,
-    touch_start: Option<Vec2>,
     game_over: bool,
     completed: bool,
     showing_definition_card: bool,
@@ -181,7 +177,6 @@ impl ReadingSnake {
             start_bonus_on_complete: true,
             completion_returns_action: false,
             last_step: get_time(),
-            touch_start: None,
             game_over: false,
             completed: false,
             showing_definition_card: false,
@@ -260,7 +255,6 @@ impl ReadingSnake {
         self.draw_tiles();
         self.draw_snake();
         self.draw_footer();
-        self.draw_mobile_dpad();
 
         if self.game_over {
             draw_rectangle(
@@ -328,67 +322,52 @@ impl ReadingSnake {
             self.next_dir = CellPos::new(1, 0);
         }
 
-        if screen::portrait_layout() {
-            self.handle_mobile_direction_input();
-            return;
-        }
-
         if let Some(tap) = primary_tap_position() {
-            let head = self.snake[0];
-            let (board_x, board_y, cell_w, cell_h) = board_metrics();
-            let head_center = vec2(
-                board_x + head.x as f32 * cell_w + cell_w / 2.0,
-                board_y + head.y as f32 * cell_h + cell_h / 2.0,
-            );
-            let delta = tap - head_center;
-            let next = if delta.x.abs() > delta.y.abs() {
-                CellPos::new(delta.x.signum() as i32, 0)
-            } else {
-                CellPos::new(0, delta.y.signum() as i32)
-            };
-
-            self.set_next_dir(next);
+            if screen::portrait_layout() && self.tap_in_ui_chrome(tap) {
+                return;
+            }
+            self.steer_from_tap(tap);
         }
     }
 
-    fn handle_mobile_direction_input(&mut self) {
-        for touch in touches() {
-            let point = to_virtual_position(touch.position);
-            match touch.phase {
-                TouchPhase::Started => {
-                    if let Some(direction) = mobile_dpad_direction(point) {
-                        self.set_next_dir(direction);
-                        self.touch_start = None;
-                    } else {
-                        self.touch_start = Some(point);
-                    }
-                }
-                TouchPhase::Moved | TouchPhase::Ended => {
-                    if let Some(start) = self.touch_start {
-                        let delta = point - start;
-                        if delta.length() >= SWIPE_MIN_DISTANCE {
-                            let direction = if delta.x.abs() > delta.y.abs() {
-                                CellPos::new(delta.x.signum() as i32, 0)
-                            } else {
-                                CellPos::new(0, delta.y.signum() as i32)
-                            };
-                            self.set_next_dir(direction);
-                            self.touch_start = Some(point);
-                        }
-                    }
-                    if touch.phase == TouchPhase::Ended {
-                        self.touch_start = None;
-                    }
-                }
-                TouchPhase::Stationary | TouchPhase::Cancelled => {}
-            }
+    fn tap_in_ui_chrome(&self, tap: Vec2) -> bool {
+        ui::mobile_back_button_contains(tap)
+            || ui::mobile_action_button_contains(tap)
+            || tap.y < MOBILE_HEADER_BOTTOM
+            || tap.y > mobile_footer_top()
+    }
+
+    fn steer_from_tap(&mut self, tap: Vec2) {
+        let (board_x, board_y, cell_w, cell_h) = board_metrics();
+        let board_w = GRID_W as f32 * cell_w;
+        let board_h = GRID_H as f32 * cell_h;
+
+        if screen::portrait_layout()
+            && (tap.x < board_x
+                || tap.x > board_x + board_w
+                || tap.y < board_y
+                || tap.y > board_y + board_h)
+        {
+            return;
         }
 
-        if let Some(tap) = primary_tap_position() {
-            if let Some(direction) = mobile_dpad_direction(tap) {
-                self.set_next_dir(direction);
-            }
+        let head = self.snake[0];
+        let head_center = vec2(
+            board_x + head.x as f32 * cell_w + cell_w / 2.0,
+            board_y + head.y as f32 * cell_h + cell_h / 2.0,
+        );
+        let delta = tap - head_center;
+        if delta.length_squared() < 4.0 {
+            return;
         }
+
+        let next = if delta.x.abs() > delta.y.abs() {
+            CellPos::new(delta.x.signum() as i32, 0)
+        } else {
+            CellPos::new(0, delta.y.signum() as i32)
+        };
+
+        self.set_next_dir(next);
     }
 
     fn set_next_dir(&mut self, next: CellPos) {
@@ -620,18 +599,12 @@ impl ReadingSnake {
             "Reading Snake"
         };
 
-        draw_text(title, 170.0, 78.0, 54.0, soft_white());
-        draw_text(
-            "Collect the letters in order",
-            174.0,
-            116.0,
-            23.0,
-            muted_text(),
-        );
+        let title_size = screen::mobile_text_size(28);
+        centered_text(title, 38.0, title_size, soft_white());
 
         draw_stat_chip(
             82.0,
-            138.0,
+            58.0,
             210.0,
             "Score",
             &self.score.to_string(),
@@ -639,7 +612,7 @@ impl ReadingSnake {
         );
         draw_stat_chip(
             318.0,
-            138.0,
+            58.0,
             184.0,
             "Lives",
             &self.lives.to_string(),
@@ -647,16 +620,16 @@ impl ReadingSnake {
         );
         draw_stat_chip(
             528.0,
-            138.0,
+            58.0,
             298.0,
             "Mode",
             if self.nightmare_mode { "Night" } else { "Read" },
             planet_pink(),
         );
 
-        draw_surface_card(82.0, 178.0, 1116.0, 54.0, 24.0, surface());
-        draw_text("Mission", 120.0, 211.0, 18.0, muted_text());
-        draw_wrapped_text(&self.definition, 266.0, 211.0, 872.0, 22, soft_white());
+        draw_surface_card(82.0, 96.0, 1116.0, 44.0, 20.0, surface());
+        draw_text("Mission", 112.0, 122.0, 15.0, muted_text());
+        draw_wrapped_text(&self.definition, 228.0, 122.0, 930.0, 18, soft_white());
     }
 
     fn draw_board(&self) {
@@ -788,79 +761,27 @@ impl ReadingSnake {
     }
 
     fn draw_mobile_footer(&self) {
+        let (_, board_y, _, cell_h) = board_metrics();
+        let footer_y = board_y + GRID_H as f32 * cell_h + 28.0;
         let progress = format_word_progress(&self.word, self.letter_index);
+
         draw_surface_card(
             82.0,
-            552.0,
+            footer_y,
             1116.0,
             52.0,
             24.0,
             Color::new(0.07, 0.07, 0.09, 0.96),
         );
-        draw_text("Word", 122.0, 585.0, 18.0, muted_text());
-        centered_text_in_rect(&progress, 292.0, 560.0, 360.0, 36.0, 30, star_yellow());
-        draw_text(self.message, 716.0, 585.0, 18.0, soft_white());
-    }
-
-    fn draw_mobile_dpad(&self) {
-        if !screen::portrait_layout() || self.game_over || self.showing_definition_card {
-            return;
-        }
-
-        let buttons = [
-            (
-                CellPos::new(0, -1),
-                DPAD_X + DPAD_KEY_W + DPAD_GAP,
-                DPAD_Y,
-                "^",
-            ),
-            (
-                CellPos::new(-1, 0),
-                DPAD_X - DPAD_KEY_W - DPAD_GAP,
-                DPAD_Y,
-                "<",
-            ),
-            (
-                CellPos::new(1, 0),
-                DPAD_X + (DPAD_KEY_W + DPAD_GAP) * 2.0,
-                DPAD_Y,
-                ">",
-            ),
-            (CellPos::new(0, 1), DPAD_X, DPAD_Y, "v"),
-        ];
-
-        draw_surface_card(
-            244.0,
-            616.0,
-            792.0,
-            76.0,
-            26.0,
-            Color::new(0.07, 0.075, 0.1, 0.96),
+        draw_text("Word", 122.0, footer_y + 33.0, 16.0, muted_text());
+        centered_text_in_rect(&progress, 292.0, footer_y + 8.0, 360.0, 36.0, 28, star_yellow());
+        draw_text(self.message, 716.0, footer_y + 33.0, 16.0, soft_white());
+        centered_text(
+            "Tap the board to steer",
+            footer_y + 62.0,
+            14,
+            muted_text(),
         );
-
-        for (direction, x, y, label) in buttons {
-            let active = direction == self.next_dir;
-            let fill = if active {
-                mint()
-            } else {
-                Color::new(0.09, 0.105, 0.145, 1.0)
-            };
-            draw_round_rect(x, y, DPAD_KEY_W, DPAD_KEY_H, 14.0, fill);
-
-            let font_size = 26;
-            let metrics = measure_text(label, None, font_size, 1.0);
-            draw_text(
-                label,
-                x + DPAD_KEY_W / 2.0 - metrics.width / 2.0,
-                y + DPAD_KEY_H / 2.0 + metrics.height / 2.5,
-                font_size as f32,
-                if active {
-                    Color::new(0.02, 0.03, 0.03, 1.0)
-                } else {
-                    soft_white()
-                },
-            );
-        }
     }
 
     fn draw_definition_card(&self) {
@@ -1015,30 +936,17 @@ fn shuffled_word_order(word_count: usize) -> Vec<usize> {
     order
 }
 
-fn mobile_dpad_direction(point: Vec2) -> Option<CellPos> {
-    let buttons = [
-        (CellPos::new(0, -1), DPAD_X + DPAD_KEY_W + DPAD_GAP, DPAD_Y),
-        (CellPos::new(-1, 0), DPAD_X - DPAD_KEY_W - DPAD_GAP, DPAD_Y),
-        (
-            CellPos::new(1, 0),
-            DPAD_X + (DPAD_KEY_W + DPAD_GAP) * 2.0,
-            DPAD_Y,
-        ),
-        (CellPos::new(0, 1), DPAD_X, DPAD_Y),
-    ];
-
-    buttons.into_iter().find_map(|(direction, x, y)| {
-        (point.x >= x && point.x <= x + DPAD_KEY_W && point.y >= y && point.y <= y + DPAD_KEY_H)
-            .then_some(direction)
-    })
-}
-
 fn board_metrics() -> (f32, f32, f32, f32) {
     if screen::portrait_layout() {
         (MOBILE_BOARD_X, MOBILE_BOARD_Y, MOBILE_CELL_W, MOBILE_CELL_H)
     } else {
         (BOARD_X, BOARD_Y, CELL, CELL)
     }
+}
+
+fn mobile_footer_top() -> f32 {
+    let (_, board_y, _, cell_h) = board_metrics();
+    board_y + GRID_H as f32 * cell_h + 24.0
 }
 
 fn draw_mobile_space_background() {
@@ -1187,28 +1095,6 @@ fn draw_wrapped_text(text: &str, x: f32, y: f32, max_width: f32, font_size: u16,
     }
 }
 
-fn primary_tap_position() -> Option<Vec2> {
-    for touch in touches() {
-        if touch.phase == TouchPhase::Started {
-            return Some(to_virtual_position(touch.position));
-        }
-    }
-
-    if is_mouse_button_pressed(MouseButton::Left) {
-        let (x, y) = mouse_position();
-        return Some(to_virtual_position(vec2(x, y)));
-    }
-
-    None
-}
-
-fn to_virtual_position(position: Vec2) -> Vec2 {
-    vec2(
-        position.x * SCREEN_W / screen_width().max(1.0),
-        position.y * SCREEN_H / screen_height().max(1.0),
-    )
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1242,7 +1128,6 @@ mod tests {
             start_bonus_on_complete: true,
             completion_returns_action: false,
             last_step: 0.0,
-            touch_start: None,
             game_over: false,
             completed: false,
             showing_definition_card: false,
