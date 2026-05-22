@@ -276,6 +276,11 @@ impl MathPong {
     }
 
     fn draw_header(&self) {
+        if portrait_layout() {
+            self.draw_mobile_header();
+            return;
+        }
+
         let title_size = screen::mobile_text_size(34);
         let meta_size = screen::mobile_text_size(18);
         let stat_size = screen::mobile_text_size(22);
@@ -309,6 +314,50 @@ impl MathPong {
             36.0,
             stat_size as f32,
             WHITE,
+        );
+    }
+
+    fn draw_mobile_header(&self) {
+        draw_card(
+            214.0,
+            24.0,
+            852.0,
+            78.0,
+            Color::new(0.04, 0.06, 0.15, 0.96),
+            Color::new(0.42, 0.86, 1.0, 0.82),
+        );
+        draw_text(
+            "Math Pong",
+            252.0,
+            70.0,
+            32.0,
+            Color::new(0.92, 0.98, 1.0, 1.0),
+        );
+        draw_text(
+            &format!(
+                "{}  Question {}/{}",
+                self.grade.display_name(),
+                self.questions_cleared + 1,
+                QUESTIONS_PER_GRADE
+            ),
+            538.0,
+            56.0,
+            17.0,
+            Color::new(0.62, 0.88, 1.0, 1.0),
+        );
+        draw_text(
+            &format!("Score {}", self.score),
+            538.0,
+            82.0,
+            17.0,
+            Color::new(1.0, 0.82, 0.34, 1.0),
+        );
+        draw_text(
+            &format!("Lives {}", self.lives),
+            780.0,
+            82.0,
+            17.0,
+            Color::new(0.74, 1.0, 0.72, 1.0),
         );
     }
 
@@ -370,6 +419,11 @@ impl MathPong {
     }
 
     fn draw_footer(&self) {
+        if portrait_layout() {
+            self.draw_mobile_footer();
+            return;
+        }
+
         let lines: Vec<&str> = self.question.text.lines().collect();
         let mobile = portrait_layout();
         let question_size = screen::mobile_text_size(22);
@@ -426,6 +480,45 @@ impl MathPong {
             GRAY,
         );
         if mobile && !self.ball_launched {
+            ui::draw_mobile_action_button("START");
+        }
+    }
+
+    fn draw_mobile_footer(&self) {
+        let lines: Vec<&str> = self.question.text.lines().collect();
+        let question_gap = 34.0;
+        let box_h = 112.0 + (lines.len().saturating_sub(1) as f32 * question_gap);
+        draw_card(
+            198.0,
+            396.0,
+            884.0,
+            box_h,
+            Color::new(0.045, 0.06, 0.15, 0.95),
+            Color::new(1.0, 0.78, 0.28, 0.82),
+        );
+
+        for (idx, line) in lines.iter().enumerate() {
+            centered_text(
+                line,
+                442.0 + idx as f32 * question_gap,
+                25,
+                Color::new(1.0, 0.9, 0.34, 1.0),
+            );
+        }
+        centered_text(
+            self.message,
+            524.0 + (lines.len().saturating_sub(1) as f32 * question_gap),
+            18,
+            Color::new(0.94, 0.98, 1.0, 1.0),
+        );
+        centered_text(
+            "Drag the paddle, then tap START.",
+            554.0 + (lines.len().saturating_sub(1) as f32 * question_gap),
+            15,
+            Color::new(0.68, 0.78, 0.9, 1.0),
+        );
+
+        if !self.ball_launched {
             ui::draw_mobile_action_button("START");
         }
     }
@@ -541,6 +634,21 @@ fn draw_starfield() {
             Color::new(brightness, brightness, 1.0, 0.75),
         );
     }
+}
+
+fn draw_card(x: f32, y: f32, w: f32, h: f32, fill: Color, edge: Color) {
+    draw_round_rect(x, y, w, h, 22.0, edge);
+    draw_round_rect(x + 4.0, y + 4.0, w - 8.0, h - 8.0, 18.0, fill);
+}
+
+fn draw_round_rect(x: f32, y: f32, w: f32, h: f32, radius: f32, color: Color) {
+    let r = radius.min(w / 2.0).min(h / 2.0);
+    draw_rectangle(x + r, y, w - r * 2.0, h, color);
+    draw_rectangle(x, y + r, w, h - r * 2.0, color);
+    draw_circle(x + r, y + r, r, color);
+    draw_circle(x + w - r, y + r, r, color);
+    draw_circle(x + r, y + h - r, r, color);
+    draw_circle(x + w - r, y + h - r, r, color);
 }
 
 fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
