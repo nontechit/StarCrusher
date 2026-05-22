@@ -473,9 +473,9 @@ impl ReadingSnake {
     }
 
     fn draw_header(&self) {
-        let title_size = screen::mobile_text_size(38);
-        let def_size = screen::mobile_text_size(32);
-        let stat_size = screen::mobile_text_size(22);
+        let title_size = screen::mobile_text_size(36);
+        let def_size = screen::mobile_text_size(20);
+        let stat_size = screen::mobile_text_size(20);
 
         let title = if self.nightmare_mode {
             if self.bonus_round {
@@ -486,11 +486,12 @@ impl ReadingSnake {
         } else {
             "READING SNAKE"
         };
-        centered_text(title, 42.0, title_size, Color::new(0.4, 1.0, 0.65, 1.0));
-        centered_text(&format!("Definition: {}", self.definition), 72.0, def_size, WHITE);
+        centered_text(title, 40.0, title_size, Color::new(0.4, 1.0, 0.65, 1.0));
 
-        draw_text(&format!("Score: {}", self.score), 24.0, 36.0, stat_size as f32, YELLOW);
-        draw_text(&format!("Lives: {}", self.lives), 680.0, 36.0, stat_size as f32, WHITE);
+        draw_text(&format!("Score: {}", self.score), 24.0, 72.0, stat_size as f32, YELLOW);
+        draw_text(&format!("Lives: {}", self.lives), 680.0, 72.0, stat_size as f32, WHITE);
+
+        centered_text(&format!("Definition: {}", self.definition), 100.0, def_size, WHITE);
     }
 
     fn draw_board(&self) {
@@ -560,23 +561,26 @@ impl ReadingSnake {
     }
 
     fn draw_footer(&self) {
-        let footer_size = screen::mobile_text_size(28);
+        let progress_size = screen::mobile_text_size(26);
+        let message_size = screen::mobile_text_size(22);
+        let hint_size = screen::mobile_text_size(18);
+        let controls_size = screen::mobile_text_size(16);
 
         let progress = format_word_progress(&self.word, self.letter_index);
-        centered_text(&format!("Word: {}", progress), 675.0, footer_size, YELLOW);
+        centered_text(&format!("Word: {}", progress), 580.0, progress_size, YELLOW);
+        centered_text(self.message, 618.0, message_size, WHITE);
         centered_text(
             "Meaning: Read the card, then spell the word.",
-            710.0,
-            footer_size,
+            652.0,
+            hint_size,
             WHITE,
         );
-        centered_text(self.message, 735.0, footer_size, WHITE);
         let controls = if self.nightmare_mode {
             "Nightmare: all letters look alike   ESC returns to title"
         } else {
             "Arrow Keys / WASD to move   ESC returns to title"
         };
-        centered_text(controls, 760.0, footer_size, GRAY);
+        centered_text(controls, 684.0, controls_size, GRAY);
     }
 
     fn draw_definition_card(&self) {

@@ -66,7 +66,7 @@ pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text
     draw_text(
         format!("GRADE: {}", grade.display_name()).as_str(),
         10.0,
-        740.0,
+        18.0,
         font_size as f32,
         WHITE,
     );
@@ -77,18 +77,19 @@ pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text
     draw_text(
         &score_txt,
         CENTER_X - tm.w / 2.0,
-        740.0,
+        18.0,
         font_size as f32,
         YELLOW,
     );
 
     // Wave number (top-right)
     let wave_txt = format!("WAVE: {}", wave);
-    draw_text(&wave_txt, 930.0, 740.0, font_size as f32, WHITE);
+    let tm_w = measure_text(&wave_txt, None, font_size as u16, 1.0);
+    draw_text(&wave_txt, SCREEN_W - tm_w.w - 10.0, 18.0, font_size as f32, WHITE);
 
-    // Lives display (bottom-left corner area)
+    // Lives display (below grade, top-left)
     for i in 0..lives {
-        assets::draw_life_icon(10.0 + (i as f32) * 20.0, 748.0);
+        assets::draw_life_icon(10.0 + (i as f32) * 20.0, 28.0);
     }
 
     // Active question text at bottom of screen (above player ship zone)
@@ -104,7 +105,7 @@ fn draw_question_banner(text: &str) {
     let lines: Vec<&str> = text.lines().collect();
     let banner_w = 760.0;
     let banner_x = CENTER_X - banner_w / 2.0;
-    let banner_y = 28.0;
+    let banner_y = 44.0;
     let base_font_size = if lines.len() > 2 { 22 } else { 28 };
     let font_size = screen::mobile_text_size(base_font_size);
     let line_h = font_size as f32 + 8.0;
