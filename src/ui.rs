@@ -60,7 +60,7 @@ fn hsl_to_rgb(h: f32, s: f32, l: f32) -> Color {
 /// Draws the heads-up display (HUD) at top of screen.
 pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text: Option<&str>) {
     let portrait = screen_height() > screen_width() * 1.15;
-    let font_size = if portrait { 42 } else { 16 };
+    let font_size = if portrait { 64 } else { 16 };
 
     // Grade level indicator (top-left)
     set_color(WHITE);
@@ -108,7 +108,7 @@ fn draw_question_banner(text: &str) {
     let banner_x = CENTER_X - banner_w / 2.0;
     let banner_y = 28.0;
     let base_font_size = if lines.len() > 2 { 22 } else { 28 };
-    let font_size = if portrait { (base_font_size as f32 * 2.5) as u16 } else { base_font_size };
+    let font_size = if portrait { (base_font_size as f32 * 4.0) as u16 } else { base_font_size };
     let line_h = font_size as f32 + 8.0;
     let banner_h = (lines.len() as f32 * line_h + 22.0).max(62.0);
 
@@ -146,10 +146,10 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
     let parchment = Color::new(0.82, 0.86, 0.72, 1.0);
     let torch = Color::new(0.95, 0.75, 0.28, 1.0);
 
-    let title_size = if portrait { 72 } else { 48 };
-    let subtitle_size = if portrait { 40 } else { 26 };
-    let hint_size = if portrait { 28 } else { 18 };
-    let shortcut_size = if portrait { 24 } else { 16 };
+    let title_size = if portrait { 110 } else { 48 };
+    let subtitle_size = if portrait { 60 } else { 26 };
+    let hint_size = if portrait { 44 } else { 18 };
+    let shortcut_size = if portrait { 40 } else { 16 };
 
     clear_background(Color::new(0.12, 0.15, 0.14, 1.0));
     draw_dungeon_tiles(stone_dark, ink);
@@ -444,11 +444,11 @@ pub fn draw_adventure_intro(page: usize) {
         );
     }
 
-    let title_size = if portrait { 40 } else { 26 };
-    let page_size = if portrait { 24 } else { 16 };
-    let line1_size = if page == 0 { if portrait { 52 } else { 34 } } else { if portrait { 36 } else { 24 } };
-    let line2_size = if page == 0 { if portrait { 34 } else { 22 } } else { if portrait { 30 } else { 20 } };
-    let hint_size = if portrait { 26 } else { 18 };
+    let title_size = if portrait { 72 } else { 26 };
+    let page_size = if portrait { 44 } else { 16 };
+    let line1_size = if page == 0 { if portrait { 90 } else { 34 } } else { if portrait { 64 } else { 24 } };
+    let line2_size = if page == 0 { if portrait { 60 } else { 22 } } else { if portrait { 52 } else { 20 } };
+    let hint_size = if portrait { 44 } else { 18 };
 
     centered_text("START ADVENTURE", 104.0, title_size, parchment);
     centered_text_in(
@@ -602,10 +602,10 @@ fn draw_wrapped_text(text: &str, x: f32, y: f32, max_width: f32, font_size: u16,
 /// Draws the question gate screen between waves.
 pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
     let portrait = screen_height() > screen_width() * 1.15;
-    let title_size = if portrait { 48 } else { 32 };
-    let grade_size = if portrait { 40 } else { 26 };
-    let topic_size = if portrait { 32 } else { 20 };
-    let instr_size = if portrait { 26 } else { 16 };
+    let title_size = if portrait { 88 } else { 32 };
+    let grade_size = if portrait { 72 } else { 26 };
+    let topic_size = if portrait { 58 } else { 20 };
+    let instr_size = if portrait { 48 } else { 16 };
 
     let box_w = 640.0;
     let box_h = 280.0;
@@ -687,10 +687,10 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
 /// Draws the game over screen with final score and grade reached.
 pub fn draw_game_over(score: u32, grade_reached: &Grade) {
     let portrait = screen_height() > screen_width() * 1.15;
-    let title_size = if portrait { 100 } else { 48 };
-    let score_size = if portrait { 60 } else { 28 };
-    let grade_size = if portrait { 50 } else { 24 };
-    let restart_size = if portrait { 42 } else { 20 };
+    let title_size = if portrait { 144 } else { 48 };
+    let score_size = if portrait { 90 } else { 28 };
+    let grade_size = if portrait { 76 } else { 24 };
+    let restart_size = if portrait { 64 } else { 20 };
 
     // Dark overlay
     set_color(Color::new(0.1, 0.05, 0.05, 0.9));
@@ -764,10 +764,10 @@ pub fn draw_game_over(score: u32, grade_reached: &Grade) {
 /// Draws the victory screen (completed all grades through 5th).
 pub fn draw_victory_screen(score: u32) {
     let portrait = screen_height() > screen_width() * 1.15;
-    let title_size = if portrait { 100 } else { 48 };
-    let score_size = if portrait { 80 } else { 36 };
-    let achievement_size = if portrait { 48 } else { 20 };
-    let restart_size = if portrait { 42 } else { 18 };
+    let title_size = if portrait { 144 } else { 48 };
+    let score_size = if portrait { 110 } else { 36 };
+    let achievement_size = if portrait { 72 } else { 20 };
+    let restart_size = if portrait { 64 } else { 18 };
 
     // Celebration overlay with gradient-like effect
     set_color(Color::new(0.1, 0.1, 0.2, 0.9));
@@ -842,6 +842,7 @@ pub fn draw_victory_screen(score: u32) {
 
 /// Draws the current answer input display during question gates.
 pub fn draw_answer_input(current_input: &str) {
+    let portrait = screen_height() > screen_width() * 1.15;
     let input_w = 240.0;
     let input_h = 50.0;
     let input_x = CENTER_X - input_w / 2.0;
@@ -856,13 +857,14 @@ pub fn draw_answer_input(current_input: &str) {
     draw_rectangle_lines(input_x, input_y, input_w, input_h);
 
     // Current typed answer (centered)
+    let input_font = if portrait { 48 } else { 24 };
     set_color(WHITE);
-    let tm = measure_text(current_input, None, 24, 1.0);
+    let tm = measure_text(current_input, None, input_font, 1.0);
     draw_text(
         current_input,
         CENTER_X - tm.w / 2.0,
         input_y + 32.0,
-        24.0,
+        input_font as f32,
         WHITE,
     );
 
@@ -886,20 +888,23 @@ pub fn draw_answer_input(current_input: &str) {
 
 /// Draws feedback for correct/incorrect gate answers.
 pub fn draw_answer_feedback(is_correct: bool) {
+    let portrait = screen_height() > screen_width() * 1.15;
     let (color, text) = if is_correct {
         (GREEN, "CORRECT!")
     } else {
         (RED, "INCORRECT - Try Again")
     };
 
+    let feedback_font = if portrait { 48 } else { 28 };
     set_color(color);
-    let tm = measure_text(text, None, 28, 1.0);
-    draw_text(text, CENTER_X - tm.w / 2.0, 630.0, 28.0, color);
+    let tm = measure_text(text, None, feedback_font, 1.0);
+    draw_text(text, CENTER_X - tm.w / 2.0, 630.0, feedback_font as f32, color);
 
     set_default_color();
 }
 
 fn draw_number_pad() {
+    let portrait = screen_height() > screen_width() * 1.15;
     let labels = [
         "1", "2", "3", "4", "5", "6", "7", "8", "9", "DEL", "0", "OK",
     ];
@@ -924,7 +929,7 @@ fn draw_number_pad() {
         });
         draw_rectangle_lines(x, y, KEYPAD_KEY, KEYPAD_KEY);
 
-        let font_size = if label.len() > 1 { 16 } else { 24 };
+        let font_size = if portrait { if label.len() > 1 { 28 } else { 48 } } else { if label.len() > 1 { 16 } else { 24 } };
         let tm = measure_text(label, None, font_size, 1.0);
         draw_text(
             label,
