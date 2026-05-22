@@ -563,26 +563,23 @@ impl ReadingSnake {
 
     fn draw_footer(&self) {
         let portrait = screen_height() > screen_width() * 1.15;
-        let word_size = if portrait { 64 } else { 48 };
-        let meaning_size = if portrait { 40 } else { 28 };
-        let message_size = if portrait { 40 } else { 28 };
-        let controls_size = if portrait { 36 } else { 24 };
+        let footer_size = if portrait { 48 } else { 32 };
 
         let progress = format_word_progress(&self.word, self.letter_index);
-        centered_text(&format!("Word: {}", progress), 675.0, word_size, YELLOW);
+        centered_text(&format!("Word: {}", progress), 675.0, footer_size, YELLOW);
         centered_text(
             "Meaning: Read the card, then spell the word.",
             710.0,
-            meaning_size,
+            footer_size,
             WHITE,
         );
-        centered_text(self.message, 735.0, message_size, WHITE);
+        centered_text(self.message, 735.0, footer_size, WHITE);
         let controls = if self.nightmare_mode {
             "Nightmare: all letters look alike   ESC returns to title"
         } else {
             "Arrow Keys / WASD to move   ESC returns to title"
         };
-        centered_text(controls, 760.0, controls_size, GRAY);
+        centered_text(controls, 760.0, footer_size, GRAY);
     }
 
     fn draw_definition_card(&self) {
