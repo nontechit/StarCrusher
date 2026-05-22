@@ -141,7 +141,7 @@ impl MathPong {
             self.ball_pos = vec2(self.paddle_x + self.paddle_w / 2.0, PADDLE_Y - 14.0);
             if is_key_pressed(KeyCode::Space)
                 || is_key_pressed(KeyCode::Enter)
-                || primary_tap_position().is_some()
+                || primary_release_position().is_some()
             {
                 let grade_speed = 4.8 + self.grade.index() as f32 * 0.35;
                 self.ball_vel = vec2(0.0, -grade_speed);
@@ -357,9 +357,9 @@ impl MathPong {
         }
         centered_text(self.message, 506.0, 18, WHITE);
         centered_text(
-            "Move: Arrow Keys / A,D or touch   Launch: Space/Enter or tap   ESC: Title",
+            "Move: Arrow Keys / A,D or touch   Launch: Space/Enter or release touch   ESC: Title",
             586.0,
-            15,
+            14,
             GRAY,
         );
     }
@@ -391,6 +391,21 @@ fn primary_pointer_position() -> Option<Vec2> {
     }
 
     if is_mouse_button_down(MouseButton::Left) {
+        let (x, y) = mouse_position();
+        return Some(to_virtual_position(vec2(x, y)));
+    }
+
+    None
+}
+
+fn primary_release_position() -> Option<Vec2> {
+    for touch in touches() {
+        if touch.phase == TouchPhase::Ended {
+            return Some(to_virtual_position(touch.position));
+        }
+    }
+
+    if is_mouse_button_released(MouseButton::Left) {
         let (x, y) = mouse_position();
         return Some(to_virtual_position(vec2(x, y)));
     }
