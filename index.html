@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
     <title>StarCrusher</title>
     <style>
         :root {
@@ -738,7 +739,7 @@
             glcanvas.focus();
 
             const script = document.createElement('script');
-            script.src = 'https://not-fl3.github.io/miniquad-samples/mq_js_bundle.js';
+            script.src = 'mq_js_bundle.js';
             script.async = true;
             script.onload = () => {
                 try {

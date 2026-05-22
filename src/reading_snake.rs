@@ -22,6 +22,7 @@ const DPAD_KEY_W: f32 = 112.0;
 const DPAD_KEY_H: f32 = 48.0;
 const DPAD_GAP: f32 = 16.0;
 
+const MAX_CUSTOM_WORDS: usize = 64;
 const WORDS: &[(&str, &str, &str)] = &[
     ("KEY", "noun", "A small tool used to open a lock."),
     ("BUMPY", "adjective", "Not smooth; full of bumps."),
@@ -50,6 +51,7 @@ const WORDS: &[(&str, &str, &str)] = &[
 ];
 
 const MAX_CUSTOM_WORD_LEN: usize = 12;
+const MAX_CUSTOM_DEFINITION_LEN: usize = 180;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct CellPos {
@@ -953,10 +955,11 @@ pub fn custom_words_from_input(input: &str) -> Vec<WordEntry> {
                     if definition.is_empty() {
                         WordEntry::default_definition(&word)
                     } else {
-                        definition.to_string()
+                        clamp_definition(definition)
                     },
                 ))
             })
+            .take(MAX_CUSTOM_WORDS)
             .collect()
     } else {
         input
@@ -970,8 +973,16 @@ pub fn custom_words_from_input(input: &str) -> Vec<WordEntry> {
                     definition,
                 ))
             })
+            .take(MAX_CUSTOM_WORDS)
             .collect()
     }
+}
+
+fn clamp_definition(definition: &str) -> String {
+    definition
+        .chars()
+        .take(MAX_CUSTOM_DEFINITION_LEN)
+        .collect::<String>()
 }
 
 fn normalize_word(word: &str) -> Option<String> {
@@ -1305,6 +1316,20 @@ mod tests {
                 ),
             ]
         );
+    }
+
+    #[test]
+    fn caps_custom_word_count_and_definition_length() {
+        let input = (0..80)
+            .map(|idx| format!("word{}: {}", idx, "long ".repeat(80)))
+            .collect::<Vec<String>>()
+            .join(";");
+        let words = custom_words_from_input(&input);
+
+        assert_eq!(words.len(), MAX_CUSTOM_WORDS);
+        assert!(words
+            .iter()
+            .all(|word| word.definition.chars().count() <= MAX_CUSTOM_DEFINITION_LEN));
     }
 
     #[test]
