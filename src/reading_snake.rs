@@ -8,18 +8,19 @@ const GRID_H: i32 = 14;
 const CELL: f32 = 27.0;
 const BOARD_X: f32 = 451.0;
 const BOARD_Y: f32 = 148.0;
-const MOBILE_CELL: f32 = 34.0;
-const MOBILE_BOARD_X: f32 = (SCREEN_W - GRID_W as f32 * MOBILE_CELL) / 2.0;
-const MOBILE_BOARD_Y: f32 = 222.0;
+const MOBILE_CELL_W: f32 = 62.0;
+const MOBILE_CELL_H: f32 = 20.0;
+const MOBILE_BOARD_X: f32 = (SCREEN_W - GRID_W as f32 * MOBILE_CELL_W) / 2.0;
+const MOBILE_BOARD_Y: f32 = 250.0;
 const STEP_SECONDS: f64 = 0.25;
 const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
 const MAX_LIVES: u8 = 9;
 const SWIPE_MIN_DISTANCE: f32 = 46.0;
-const DPAD_X: f32 = 460.0;
-const DPAD_Y: f32 = 616.0;
-const DPAD_KEY_W: f32 = 82.0;
-const DPAD_KEY_H: f32 = 58.0;
-const DPAD_GAP: f32 = 14.0;
+const DPAD_X: f32 = 392.0;
+const DPAD_Y: f32 = 628.0;
+const DPAD_KEY_W: f32 = 112.0;
+const DPAD_KEY_H: f32 = 48.0;
+const DPAD_GAP: f32 = 16.0;
 
 const WORDS: &[(&str, &str, &str)] = &[
     ("KEY", "noun", "A small tool used to open a lock."),
@@ -245,7 +246,7 @@ impl ReadingSnake {
 
     pub fn draw(&self) {
         clear_background(if screen::portrait_layout() {
-            Color::new(0.015, 0.025, 0.065, 1.0)
+            Color::new(0.018, 0.02, 0.028, 1.0)
         } else {
             Color::new(0.02, 0.04, 0.03, 1.0)
         });
@@ -274,16 +275,14 @@ impl ReadingSnake {
             };
             let title_color = if self.completed { YELLOW } else { RED };
             if screen::portrait_layout() {
-                draw_card(
-                    230.0,
-                    206.0,
-                    820.0,
-                    260.0,
-                    Color::new(0.05, 0.07, 0.16, 0.97),
-                    title_color,
+                draw_surface_card(150.0, 194.0, 980.0, 278.0, 34.0, surface());
+                centered_text(title, 286.0, 44, title_color);
+                centered_text(
+                    &format!("Final Score: {}", self.score),
+                    360.0,
+                    28,
+                    soft_white(),
                 );
-                centered_text(title, 282.0, 34, title_color);
-                centered_text(&format!("Final Score: {}", self.score), 352.0, 26, YELLOW);
                 ui::draw_mobile_action_button("START");
             } else {
                 centered_text(title, 288.0, 42, title_color);
@@ -334,10 +333,10 @@ impl ReadingSnake {
 
         if let Some(tap) = primary_tap_position() {
             let head = self.snake[0];
-            let (board_x, board_y, cell) = board_metrics();
+            let (board_x, board_y, cell_w, cell_h) = board_metrics();
             let head_center = vec2(
-                board_x + head.x as f32 * cell + cell / 2.0,
-                board_y + head.y as f32 * cell + cell / 2.0,
+                board_x + head.x as f32 * cell_w + cell_w / 2.0,
+                board_y + head.y as f32 * cell_h + cell_h / 2.0,
             );
             let delta = tap - head_center;
             let next = if delta.x.abs() > delta.y.abs() {
@@ -618,71 +617,56 @@ impl ReadingSnake {
         } else {
             "Reading Snake"
         };
-        let accent = if self.nightmare_mode {
-            Color::new(1.0, 0.48, 0.72, 1.0)
-        } else {
-            Color::new(0.42, 0.92, 1.0, 1.0)
-        };
 
-        draw_card(
-            214.0,
-            28.0,
-            852.0,
-            74.0,
-            Color::new(0.045, 0.075, 0.16, 0.96),
-            accent,
-        );
-        draw_text(title, 250.0, 72.0, 30.0, Color::new(0.94, 0.98, 1.0, 1.0));
+        draw_text(title, 170.0, 78.0, 54.0, soft_white());
         draw_text(
-            &format!("Score {}", self.score),
-            716.0,
-            58.0,
-            18.0,
-            Color::new(1.0, 0.82, 0.34, 1.0),
-        );
-        draw_text(
-            &format!("Lives {}", self.lives),
-            716.0,
-            82.0,
-            18.0,
-            Color::new(0.74, 1.0, 0.72, 1.0),
-        );
-
-        draw_card(
-            172.0,
-            118.0,
-            936.0,
-            72.0,
-            Color::new(0.06, 0.055, 0.13, 0.95),
-            Color::new(1.0, 0.82, 0.34, 0.9),
-        );
-        draw_text(
-            "Mission",
-            210.0,
-            148.0,
-            16.0,
-            Color::new(0.6, 0.86, 1.0, 1.0),
-        );
-        draw_wrapped_text(
-            &self.definition,
-            210.0,
+            "Collect the letters in order",
             174.0,
-            860.0,
-            19,
-            Color::new(0.96, 0.98, 1.0, 1.0),
+            116.0,
+            23.0,
+            muted_text(),
         );
+
+        draw_stat_chip(
+            82.0,
+            138.0,
+            210.0,
+            "Score",
+            &self.score.to_string(),
+            star_yellow(),
+        );
+        draw_stat_chip(
+            318.0,
+            138.0,
+            184.0,
+            "Lives",
+            &self.lives.to_string(),
+            mint(),
+        );
+        draw_stat_chip(
+            528.0,
+            138.0,
+            298.0,
+            "Mode",
+            if self.nightmare_mode { "Night" } else { "Read" },
+            planet_pink(),
+        );
+
+        draw_surface_card(82.0, 178.0, 1116.0, 54.0, 24.0, surface());
+        draw_text("Mission", 120.0, 211.0, 18.0, muted_text());
+        draw_wrapped_text(&self.definition, 266.0, 211.0, 872.0, 22, soft_white());
     }
 
     fn draw_board(&self) {
-        let (board_x, board_y, cell) = board_metrics();
+        let (board_x, board_y, cell_w, cell_h) = board_metrics();
         if screen::portrait_layout() {
-            draw_card(
-                board_x - 14.0,
-                board_y - 14.0,
-                GRID_W as f32 * cell + 28.0,
-                GRID_H as f32 * cell + 28.0,
-                Color::new(0.045, 0.08, 0.11, 0.98),
-                Color::new(0.38, 0.9, 0.74, 0.82),
+            draw_surface_card(
+                board_x - 20.0,
+                board_y - 18.0,
+                GRID_W as f32 * cell_w + 40.0,
+                GRID_H as f32 * cell_h + 36.0,
+                30.0,
+                Color::new(0.045, 0.065, 0.06, 0.98),
             );
         }
 
@@ -694,10 +678,10 @@ impl ReadingSnake {
                     Color::new(0.055, 0.125, 0.12, 0.92)
                 };
                 draw_rectangle(
-                    board_x + x as f32 * cell,
-                    board_y + y as f32 * cell,
-                    cell,
-                    cell,
+                    board_x + x as f32 * cell_w,
+                    board_y + y as f32 * cell_h,
+                    cell_w,
+                    cell_h,
                     color,
                 );
             }
@@ -723,33 +707,53 @@ impl ReadingSnake {
     }
 
     fn draw_tile(&self, tile: &LetterTile, color: Color) {
-        let (board_x, board_y, cell) = board_metrics();
-        let letter_size = if screen::portrait_layout() { 25 } else { 22 };
-        let x = board_x + tile.pos.x as f32 * cell;
-        let y = board_y + tile.pos.y as f32 * cell;
-        draw_rectangle(x + 3.0, y + 3.0, cell - 6.0, cell - 6.0, color);
+        let (board_x, board_y, cell_w, cell_h) = board_metrics();
+        let mobile = screen::portrait_layout();
+        let letter_size = if mobile { 18 } else { 22 };
+        let x = board_x + tile.pos.x as f32 * cell_w;
+        let y = board_y + tile.pos.y as f32 * cell_h;
+        let inset_x = if mobile { 9.0 } else { 2.0 };
+        let inset_y = if mobile { 2.0 } else { 2.0 };
+        draw_round_rect(
+            x + inset_x,
+            y + inset_y,
+            cell_w - inset_x * 2.0,
+            cell_h - inset_y * 2.0,
+            if mobile { 5.0 } else { 0.0 },
+            color,
+        );
         let letter = tile.letter.to_string();
         let metrics = measure_text(&letter, None, letter_size, 1.0);
         draw_text(
             &letter,
-            x + cell / 2.0 - metrics.width / 2.0,
-            y + cell / 2.0 + metrics.height / 2.5,
+            x + cell_w / 2.0 - metrics.width / 2.0,
+            y + cell_h / 2.0 + metrics.height / 2.5,
             letter_size as f32,
             BLACK,
         );
     }
 
     fn draw_snake(&self) {
-        let (board_x, board_y, cell) = board_metrics();
+        let (board_x, board_y, cell_w, cell_h) = board_metrics();
+        let mobile = screen::portrait_layout();
         for (idx, part) in self.snake.iter().enumerate() {
-            let x = board_x + part.x as f32 * cell;
-            let y = board_y + part.y as f32 * cell;
+            let x = board_x + part.x as f32 * cell_w;
+            let y = board_y + part.y as f32 * cell_h;
             let color = if idx == 0 {
-                Color::new(0.45, 1.0, 0.55, 1.0)
+                mint()
             } else {
-                Color::new(0.15, 0.75, 0.35, 1.0)
+                Color::new(0.22, 0.82, 0.42, 1.0)
             };
-            draw_rectangle(x + 4.0, y + 4.0, cell - 8.0, cell - 8.0, color);
+            let inset_x = if mobile { 8.0 } else { 3.0 };
+            let inset_y = if mobile { 3.0 } else { 3.0 };
+            draw_round_rect(
+                x + inset_x,
+                y + inset_y,
+                cell_w - inset_x * 2.0,
+                cell_h - inset_y * 2.0,
+                if mobile { 6.0 } else { 0.0 },
+                color,
+            );
         }
     }
 
@@ -783,31 +787,17 @@ impl ReadingSnake {
 
     fn draw_mobile_footer(&self) {
         let progress = format_word_progress(&self.word, self.letter_index);
-        draw_card(
-            214.0,
-            714.0 - 152.0,
-            852.0,
-            48.0,
-            Color::new(0.055, 0.07, 0.15, 0.94),
-            Color::new(1.0, 0.72, 0.34, 0.8),
+        draw_surface_card(
+            82.0,
+            552.0,
+            1116.0,
+            52.0,
+            24.0,
+            Color::new(0.07, 0.07, 0.09, 0.96),
         );
-        draw_text("Word", 250.0, 590.0, 15.0, Color::new(0.6, 0.86, 1.0, 1.0));
-        centered_text_in_rect(
-            &progress,
-            360.0,
-            572.0,
-            470.0,
-            30.0,
-            26,
-            Color::new(1.0, 0.85, 0.3, 1.0),
-        );
-        draw_text(
-            self.message,
-            838.0,
-            592.0,
-            17.0,
-            Color::new(0.95, 0.98, 1.0, 1.0),
-        );
+        draw_text("Word", 122.0, 585.0, 18.0, muted_text());
+        centered_text_in_rect(&progress, 292.0, 560.0, 360.0, 36.0, 30, star_yellow());
+        draw_text(self.message, 716.0, 585.0, 18.0, soft_white());
     }
 
     fn draw_mobile_dpad(&self) {
@@ -837,40 +827,36 @@ impl ReadingSnake {
             (CellPos::new(0, 1), DPAD_X, DPAD_Y, "v"),
         ];
 
-        draw_card(
-            DPAD_X - DPAD_KEY_W - DPAD_GAP - 20.0,
-            DPAD_Y - 16.0,
-            DPAD_KEY_W * 4.0 + DPAD_GAP * 3.0 + 40.0,
-            DPAD_KEY_H + 32.0,
-            Color::new(0.035, 0.055, 0.12, 0.84),
-            Color::new(0.42, 0.9, 1.0, 0.54),
+        draw_surface_card(
+            244.0,
+            616.0,
+            792.0,
+            76.0,
+            26.0,
+            Color::new(0.07, 0.075, 0.1, 0.96),
         );
 
         for (direction, x, y, label) in buttons {
             let active = direction == self.next_dir;
             let fill = if active {
-                Color::new(0.35, 0.95, 0.72, 0.9)
+                mint()
             } else {
-                Color::new(0.08, 0.12, 0.22, 0.9)
+                Color::new(0.09, 0.105, 0.145, 1.0)
             };
             draw_round_rect(x, y, DPAD_KEY_W, DPAD_KEY_H, 14.0, fill);
-            draw_rectangle_lines(
-                x,
-                y,
-                DPAD_KEY_W,
-                DPAD_KEY_H,
-                3.0,
-                Color::new(0.65, 0.95, 1.0, 0.95),
-            );
 
-            let font_size = 24;
+            let font_size = 26;
             let metrics = measure_text(label, None, font_size, 1.0);
             draw_text(
                 label,
                 x + DPAD_KEY_W / 2.0 - metrics.width / 2.0,
                 y + DPAD_KEY_H / 2.0 + metrics.height / 2.5,
                 font_size as f32,
-                WHITE,
+                if active {
+                    Color::new(0.02, 0.03, 0.03, 1.0)
+                } else {
+                    soft_white()
+                },
             );
         }
     }
@@ -925,40 +911,30 @@ impl ReadingSnake {
             0.0,
             SCREEN_W,
             SCREEN_H,
-            Color::new(0.0, 0.0, 0.0, 0.58),
+            Color::new(0.0, 0.0, 0.0, 0.68),
         );
-        draw_card(
-            190.0,
-            156.0,
-            900.0,
-            382.0,
-            Color::new(0.045, 0.07, 0.15, 0.98),
-            Color::new(1.0, 0.82, 0.34, 0.95),
-        );
+        draw_surface_card(112.0, 128.0, 1056.0, 420.0, 38.0, surface());
 
-        centered_text(
-            self.definition_card_title,
-            216.0,
-            34,
-            Color::new(1.0, 0.82, 0.34, 1.0),
-        );
-        centered_text(
+        draw_text(self.definition_card_title, 176.0, 202.0, 34.0, muted_text());
+        draw_text(
             &self.word,
-            288.0,
-            54,
+            176.0,
+            292.0,
+            72.0,
             if self.nightmare_mode {
-                Color::new(1.0, 0.48, 0.72, 1.0)
+                planet_pink()
             } else {
-                Color::new(0.42, 0.92, 1.0, 1.0)
+                soft_cyan()
             },
         );
-        centered_text(
+        draw_text(
             &format!("{} word", self.part_of_speech),
-            330.0,
-            20,
-            Color::new(0.74, 1.0, 0.72, 1.0),
+            182.0,
+            336.0,
+            24.0,
+            mint(),
         );
-        draw_wrapped_centered_text(&self.definition, 390.0, 760.0, 26, WHITE);
+        draw_wrapped_text(&self.definition, 178.0, 400.0, 900.0, 30, soft_white());
         ui::draw_mobile_action_button("START");
     }
 }
@@ -1046,34 +1022,41 @@ fn mobile_dpad_direction(point: Vec2) -> Option<CellPos> {
     })
 }
 
-fn board_metrics() -> (f32, f32, f32) {
+fn board_metrics() -> (f32, f32, f32, f32) {
     if screen::portrait_layout() {
-        (MOBILE_BOARD_X, MOBILE_BOARD_Y, MOBILE_CELL)
+        (MOBILE_BOARD_X, MOBILE_BOARD_Y, MOBILE_CELL_W, MOBILE_CELL_H)
     } else {
-        (BOARD_X, BOARD_Y, CELL)
+        (BOARD_X, BOARD_Y, CELL, CELL)
     }
 }
 
 fn draw_mobile_space_background() {
-    for i in 0..86 {
+    for i in 0..42 {
         let x = ((i * 83 + 29) % SCREEN_W as i32) as f32;
         let y = ((i * 47 + 61) % SCREEN_H as i32) as f32;
-        let radius = if i % 6 == 0 { 2.3 } else { 1.2 };
+        let radius = if i % 6 == 0 { 1.8 } else { 0.9 };
         let color = if i % 8 == 0 {
-            Color::new(0.46, 0.9, 1.0, 0.72)
+            Color::new(0.46, 0.9, 1.0, 0.38)
         } else {
-            Color::new(0.94, 0.96, 0.82, 0.62)
+            Color::new(0.94, 0.96, 0.82, 0.32)
         };
         draw_circle(x, y, radius, color);
     }
 
-    draw_circle(1070.0, 148.0, 72.0, Color::new(1.0, 0.44, 0.7, 0.16));
-    draw_circle(198.0, 612.0, 96.0, Color::new(0.36, 0.92, 0.72, 0.12));
+    draw_circle(1088.0, 282.0, 84.0, Color::new(1.0, 0.44, 0.7, 0.08));
+    draw_circle(150.0, 602.0, 96.0, Color::new(0.36, 0.92, 0.72, 0.06));
 }
 
-fn draw_card(x: f32, y: f32, w: f32, h: f32, fill: Color, edge: Color) {
-    draw_round_rect(x, y, w, h, 22.0, edge);
-    draw_round_rect(x + 4.0, y + 4.0, w - 8.0, h - 8.0, 18.0, fill);
+fn draw_surface_card(x: f32, y: f32, w: f32, h: f32, radius: f32, fill: Color) {
+    draw_round_rect(x, y, w, h, radius, fill);
+    draw_round_rect(
+        x,
+        y,
+        w,
+        (h * 0.34).max(18.0),
+        radius,
+        Color::new(1.0, 1.0, 1.0, 0.025),
+    );
 }
 
 fn draw_round_rect(x: f32, y: f32, w: f32, h: f32, radius: f32, color: Color) {
@@ -1095,6 +1078,41 @@ fn centered_text_in_rect(text: &str, x: f32, y: f32, w: f32, h: f32, font_size: 
         font_size as f32,
         color,
     );
+}
+
+fn draw_stat_chip(x: f32, y: f32, w: f32, label: &str, value: &str, accent: Color) {
+    draw_round_rect(x, y, w, 30.0, 15.0, Color::new(0.09, 0.1, 0.13, 0.96));
+    draw_circle(x + 22.0, y + 15.0, 6.0, accent);
+    draw_text(label, x + 40.0, y + 20.0, 15.0, muted_text());
+    draw_text(value, x + w - 58.0, y + 21.0, 18.0, soft_white());
+}
+
+fn surface() -> Color {
+    Color::new(0.07, 0.075, 0.105, 0.97)
+}
+
+fn soft_white() -> Color {
+    Color::new(0.92, 0.92, 0.94, 1.0)
+}
+
+fn muted_text() -> Color {
+    Color::new(0.6, 0.61, 0.66, 1.0)
+}
+
+fn soft_cyan() -> Color {
+    Color::new(0.5, 0.72, 1.0, 1.0)
+}
+
+fn star_yellow() -> Color {
+    Color::new(1.0, 0.82, 0.34, 1.0)
+}
+
+fn planet_pink() -> Color {
+    Color::new(1.0, 0.42, 0.68, 1.0)
+}
+
+fn mint() -> Color {
+    Color::new(0.48, 0.95, 0.68, 1.0)
 }
 
 fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {

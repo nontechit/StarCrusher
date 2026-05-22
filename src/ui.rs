@@ -23,10 +23,10 @@ pub const GATE_QUESTION_X: f32 = 210.0;
 pub const GATE_QUESTION_Y: f32 = 438.0;
 pub const GATE_QUESTION_W: f32 = 620.0;
 pub const GATE_QUESTION_LINE_GAP: f32 = 34.0;
-pub const MOBILE_BACK_X: f32 = 24.0;
-pub const MOBILE_BACK_Y: f32 = 24.0;
-pub const MOBILE_BACK_W: f32 = 170.0;
-pub const MOBILE_BACK_H: f32 = 68.0;
+pub const MOBILE_BACK_X: f32 = 54.0;
+pub const MOBILE_BACK_Y: f32 = 28.0;
+pub const MOBILE_BACK_W: f32 = 82.0;
+pub const MOBILE_BACK_H: f32 = 58.0;
 pub const MOBILE_ACTION_X: f32 = 428.0;
 pub const MOBILE_ACTION_Y: f32 = 640.0;
 pub const MOBILE_ACTION_W: f32 = 424.0;
@@ -134,24 +134,22 @@ pub fn draw_mobile_back_button(label: &str) {
         return;
     }
 
-    draw_rounded_panel(
+    draw_rounded_rect(
         MOBILE_BACK_X,
         MOBILE_BACK_Y,
         MOBILE_BACK_W,
         MOBILE_BACK_H,
-        16.0,
-        Color::new(0.035, 0.06, 0.11, 0.94),
-        Color::new(0.55, 0.78, 1.0, 0.7),
+        28.0,
+        Color::new(0.11, 0.115, 0.13, 0.92),
     );
-
-    let font_size = screen::mobile_text_size(13);
+    let shown = if label == "BACK" { "<" } else { "X" };
     centered_text_in(
-        label,
+        shown,
         MOBILE_BACK_X,
-        MOBILE_BACK_Y + 46.0,
+        MOBILE_BACK_Y + 38.0,
         MOBILE_BACK_W,
-        font_size,
-        WHITE,
+        24,
+        Color::new(0.92, 0.92, 0.94, 1.0),
     );
 }
 
@@ -160,14 +158,13 @@ pub fn draw_mobile_action_button(label: &str) {
         return;
     }
 
-    draw_rounded_panel(
+    draw_rounded_rect(
         MOBILE_ACTION_X,
         MOBILE_ACTION_Y,
         MOBILE_ACTION_W,
         MOBILE_ACTION_H,
-        18.0,
-        Color::new(0.06, 0.11, 0.19, 0.96),
-        Color::new(1.0, 0.74, 0.28, 0.95),
+        24.0,
+        Color::new(0.15, 0.2, 0.32, 0.98),
     );
 
     centered_text_in(
@@ -176,7 +173,7 @@ pub fn draw_mobile_action_button(label: &str) {
         MOBILE_ACTION_Y + 38.0,
         MOBILE_ACTION_W,
         24,
-        WHITE,
+        Color::new(0.5, 0.72, 1.0, 1.0),
     );
 }
 
