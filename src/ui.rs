@@ -59,7 +59,8 @@ fn hsl_to_rgb(h: f32, s: f32, l: f32) -> Color {
 
 /// Draws the heads-up display (HUD) at top of screen.
 pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text: Option<&str>) {
-    let font_size = 16;
+    let portrait = screen_height() > screen_width() * 1.15;
+    let font_size = if portrait { 28 } else { 16 };
 
     // Grade level indicator (top-left)
     set_color(WHITE);
@@ -101,11 +102,13 @@ pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text
 
 /// Draws a semi-transparent banner with the current math question.
 fn draw_question_banner(text: &str) {
+    let portrait = screen_height() > screen_width() * 1.15;
     let lines: Vec<&str> = text.lines().collect();
     let banner_w = 760.0;
     let banner_x = CENTER_X - banner_w / 2.0;
     let banner_y = 28.0;
-    let font_size = if lines.len() > 2 { 22 } else { 28 };
+    let base_font_size = if lines.len() > 2 { 22 } else { 28 };
+    let font_size = if portrait { (base_font_size as f32 * 1.5) as u16 } else { base_font_size };
     let line_h = font_size as f32 + 8.0;
     let banner_h = (lines.len() as f32 * line_h + 22.0).max(62.0);
 
@@ -135,6 +138,7 @@ fn draw_question_banner(text: &str) {
 
 /// Draws the RPG-style title screen and adventure menu.
 pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
+    let portrait = screen_height() > screen_width() * 1.15;
     let ink = Color::new(0.08, 0.1, 0.11, 1.0);
     let stone_dark = Color::new(0.2, 0.24, 0.24, 1.0);
     let stone = Color::new(0.46, 0.51, 0.48, 1.0);
@@ -142,16 +146,21 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
     let parchment = Color::new(0.82, 0.86, 0.72, 1.0);
     let torch = Color::new(0.95, 0.75, 0.28, 1.0);
 
+    let title_size = if portrait { 72 } else { 48 };
+    let subtitle_size = if portrait { 40 } else { 26 };
+    let hint_size = if portrait { 28 } else { 18 };
+    let shortcut_size = if portrait { 24 } else { 16 };
+
     clear_background(Color::new(0.12, 0.15, 0.14, 1.0));
     draw_dungeon_tiles(stone_dark, ink);
     draw_stone_frame(54.0, 42.0, 916.0, 684.0, stone, stone_light, ink);
 
-    centered_text("STAR CRUSHER", 116.0, 48, stone_light);
-    centered_text("DUNGEON DWELLERS", 154.0, 26, parchment);
+    centered_text("STAR CRUSHER", 116.0, title_size, stone_light);
+    centered_text("DUNGEON DWELLERS", 154.0, subtitle_size, parchment);
     centered_text(
         "Choose a path, then press ENTER or SPACE.",
         654.0,
-        18,
+        hint_size,
         stone_light,
     );
     let shortcuts = if showing_mini_games {
@@ -159,7 +168,7 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
     } else {
         "Shortcuts: M Math Invaders   P Mini Games   L Custom Spelling List"
     };
-    centered_text(shortcuts, 680.0, 16, parchment);
+    centered_text(shortcuts, 680.0, shortcut_size, parchment);
 
     draw_title_scene(
         112.0,
@@ -405,6 +414,7 @@ pub fn adventure_intro_page_count() -> usize {
 
 /// Draws the lightweight RPG intro before Start Adventure enters Math Invaders.
 pub fn draw_adventure_intro(page: usize) {
+    let portrait = screen_height() > screen_width() * 1.15;
     let ink = Color::new(0.07, 0.08, 0.1, 1.0);
     let stone_dark = Color::new(0.16, 0.18, 0.2, 1.0);
     let stone = Color::new(0.38, 0.42, 0.43, 1.0);
@@ -434,13 +444,19 @@ pub fn draw_adventure_intro(page: usize) {
         );
     }
 
-    centered_text("START ADVENTURE", 104.0, 26, parchment);
+    let title_size = if portrait { 40 } else { 26 };
+    let page_size = if portrait { 24 } else { 16 };
+    let line1_size = if page == 0 { if portrait { 52 } else { 34 } } else { if portrait { 36 } else { 24 } };
+    let line2_size = if page == 0 { if portrait { 34 } else { 22 } } else { if portrait { 30 } else { 20 } };
+    let hint_size = if portrait { 26 } else { 18 };
+
+    centered_text("START ADVENTURE", 104.0, title_size, parchment);
     centered_text_in(
         &format!("PAGE {} / {}", page + 1, ADVENTURE_INTRO_PAGES.len()),
         722.0,
         106.0,
         170.0,
-        16,
+        page_size,
         stone_light,
     );
 
@@ -449,13 +465,13 @@ pub fn draw_adventure_intro(page: usize) {
     set_color(parchment);
     draw_rectangle_lines(112.0, 552.0, 800.0, 116.0);
 
-    let title_card = page == 0;
+    let _title_card = page == 0;
     centered_text_in(
         line_one,
         142.0,
         596.0,
         740.0,
-        if title_card { 34 } else { 24 },
+        line1_size,
         parchment,
     );
     centered_text_in(
@@ -463,13 +479,13 @@ pub fn draw_adventure_intro(page: usize) {
         142.0,
         632.0,
         740.0,
-        if title_card { 22 } else { 20 },
+        line2_size,
         WHITE,
     );
     centered_text(
         "ENTER / SPACE: continue     ESC: return to title",
         716.0,
-        18,
+        hint_size,
         stone_light,
     );
 
@@ -585,6 +601,12 @@ fn draw_wrapped_text(text: &str, x: f32, y: f32, max_width: f32, font_size: u16,
 
 /// Draws the question gate screen between waves.
 pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
+    let portrait = screen_height() > screen_width() * 1.15;
+    let title_size = if portrait { 48 } else { 32 };
+    let grade_size = if portrait { 40 } else { 26 };
+    let topic_size = if portrait { 32 } else { 20 };
+    let instr_size = if portrait { 26 } else { 16 };
+
     let box_w = 640.0;
     let box_h = 280.0;
     let box_x = CENTER_X - box_w / 2.0;
@@ -597,12 +619,12 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
     // Gate title
     let gate_title = "WAVE COMPLETE!";
     set_color(GREEN);
-    let tm_gt = measure_text(gate_title, None, 32, 1.0);
+    let tm_gt = measure_text(gate_title, None, title_size, 1.0);
     draw_text(
         gate_title,
         CENTER_X - tm_gt.w / 2.0,
         80.0,
-        32.0,
+        title_size as f32,
         current_color(),
     );
 
@@ -617,24 +639,24 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
     // Grade name
     set_color(WHITE);
     let grade_txt = format!("Next: {}", grade.display_name());
-    let tm_gn = measure_text(&grade_txt, None, 26, 1.0);
+    let tm_gn = measure_text(&grade_txt, None, grade_size, 1.0);
     draw_text(
         &grade_txt,
         CENTER_X - tm_gn.w / 2.0,
         180.0,
-        26.0,
+        grade_size as f32,
         current_color(),
     );
 
     // Math topics for this grade
     set_color(Color::new(0.7, 0.9, 1.0, 1.0));
     let topic_txt = format!("Topics: {}", math_topics);
-    let tm_tp = measure_text(&topic_txt, None, 20, 1.0);
+    let tm_tp = measure_text(&topic_txt, None, topic_size, 1.0);
     draw_text(
         &topic_txt,
         CENTER_X - tm_tp.w / 2.0,
         230.0,
-        20.0,
+        topic_size as f32,
         current_color(),
     );
 
@@ -649,12 +671,12 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
 
     set_color(WHITE);
     for (i, line) in instructions.iter().enumerate() {
-        let tm = measure_text(line, None, 16, 1.0);
+        let tm = measure_text(line, None, instr_size, 1.0);
         draw_text(
             line,
             CENTER_X - tm.w / 2.0,
             300.0 + (i as f32) * 28.0,
-            16.0,
+            instr_size as f32,
             WHITE,
         );
     }
@@ -664,6 +686,12 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
 
 /// Draws the game over screen with final score and grade reached.
 pub fn draw_game_over(score: u32, grade_reached: &Grade) {
+    let portrait = screen_height() > screen_width() * 1.15;
+    let title_size = if portrait { 72 } else { 48 };
+    let score_size = if portrait { 42 } else { 28 };
+    let grade_size = if portrait { 36 } else { 24 };
+    let restart_size = if portrait { 30 } else { 20 };
+
     // Dark overlay
     set_color(Color::new(0.1, 0.05, 0.05, 0.9));
     draw_rectangle(0.0, 0.0, SCREEN_W, SCREEN_H);
@@ -673,12 +701,12 @@ pub fn draw_game_over(score: u32, grade_reached: &Grade) {
     set_color(Color::new(1.0, 0.2, 0.2, pulse));
 
     let go_title = "GAME OVER";
-    let tm_go = measure_text(go_title, None, 48, 1.0);
+    let tm_go = measure_text(go_title, None, title_size, 1.0);
     draw_text(
         go_title,
         CENTER_X - tm_go.w / 2.0,
         150.0,
-        48.0,
+        title_size as f32,
         current_color(),
     );
 
@@ -697,36 +725,36 @@ pub fn draw_game_over(score: u32, grade_reached: &Grade) {
     // Final score
     set_color(YELLOW);
     let score_txt = format!("Final Score: {}", score);
-    let tm_sc = measure_text(&score_txt, None, 28, 1.0);
+    let tm_sc = measure_text(&score_txt, None, score_size, 1.0);
     draw_text(
         &score_txt,
         CENTER_X - tm_sc.w / 2.0,
         260.0,
-        28.0,
+        score_size as f32,
         current_color(),
     );
 
     // Grade reached
     set_color(WHITE);
     let grade_txt = format!("Grade Reached: {}", grade_reached.display_name());
-    let tm_gr = measure_text(&grade_txt, None, 24, 1.0);
+    let tm_gr = measure_text(&grade_txt, None, grade_size, 1.0);
     draw_text(
         &grade_txt,
         CENTER_X - tm_gr.w / 2.0,
         320.0,
-        24.0,
+        grade_size as f32,
         current_color(),
     );
 
     // Restart prompt
     set_color(WHITE);
     let restart = "Press ENTER to Play Again";
-    let tm_rs = measure_text(restart, None, 20, 1.0);
+    let tm_rs = measure_text(restart, None, restart_size, 1.0);
     draw_text(
         restart,
         CENTER_X - tm_rs.w / 2.0,
         450.0,
-        20.0,
+        restart_size as f32,
         current_color(),
     );
 
@@ -735,6 +763,12 @@ pub fn draw_game_over(score: u32, grade_reached: &Grade) {
 
 /// Draws the victory screen (completed all grades through 5th).
 pub fn draw_victory_screen(score: u32) {
+    let portrait = screen_height() > screen_width() * 1.15;
+    let title_size = if portrait { 72 } else { 48 };
+    let score_size = if portrait { 54 } else { 36 };
+    let achievement_size = if portrait { 30 } else { 20 };
+    let restart_size = if portrait { 28 } else { 18 };
+
     // Celebration overlay with gradient-like effect
     set_color(Color::new(0.1, 0.1, 0.2, 0.9));
     draw_rectangle(0.0, 0.0, SCREEN_W, SCREEN_H);
@@ -744,12 +778,12 @@ pub fn draw_victory_screen(score: u32) {
     set_color(hsl_to_rgb(hue, 0.8, 0.7));
 
     let vic_title = "★ VICTORY! ★";
-    let tm_vt = measure_text(vic_title, None, 48, 1.0);
+    let tm_vt = measure_text(vic_title, None, title_size, 1.0);
     draw_text(
         vic_title,
         CENTER_X - tm_vt.w / 2.0,
         150.0,
-        48.0,
+        title_size as f32,
         current_color(),
     );
 
@@ -767,13 +801,13 @@ pub fn draw_victory_screen(score: u32) {
 
     // Final score (large)
     let score_txt = format!("Final Score: {}", score);
-    let tm_sc = measure_text(&score_txt, None, 36, 1.0);
+    let tm_sc = measure_text(&score_txt, None, score_size, 1.0);
     set_color(YELLOW);
     draw_text(
         &score_txt,
         CENTER_X - tm_sc.w / 2.0,
         280.0,
-        36.0,
+        score_size as f32,
         current_color(),
     );
 
@@ -781,12 +815,12 @@ pub fn draw_victory_screen(score: u32) {
     let achievement = "You've mastered math from Preschool through 5th Grade!";
     set_color(WHITE);
     for (i, line) in achievement.lines().enumerate() {
-        let tm = measure_text(line, None, 20, 1.0);
+        let tm = measure_text(line, None, achievement_size, 1.0);
         draw_text(
             line,
             CENTER_X - tm.w / 2.0,
             340.0 + (i as f32) * 25.0,
-            20.0,
+            achievement_size as f32,
             WHITE,
         );
     }
@@ -794,12 +828,12 @@ pub fn draw_victory_screen(score: u32) {
     // Restart prompt
     let restart = "Press ENTER to Play Again";
     set_color(WHITE);
-    let tm_rs = measure_text(restart, None, 18, 1.0);
+    let tm_rs = measure_text(restart, None, restart_size, 1.0);
     draw_text(
         restart,
         CENTER_X - tm_rs.w / 2.0,
         500.0,
-        18.0,
+        restart_size as f32,
         current_color(),
     );
 
