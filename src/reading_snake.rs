@@ -2,11 +2,11 @@ use crate::random;
 use crate::screen::{SCREEN_H, SCREEN_W};
 use macroquad::prelude::*;
 
-const GRID_W: i32 = 20;
-const GRID_H: i32 = 20;
-const CELL: f32 = 22.0;
-const BOARD_X: f32 = 292.0;
-const BOARD_Y: f32 = 154.0;
+const GRID_W: i32 = 14;
+const GRID_H: i32 = 14;
+const CELL: f32 = 20.0;
+const BOARD_X: f32 = 312.0;
+const BOARD_Y: f32 = 190.0;
 const STEP_SECONDS: f64 = 0.25;
 const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
 const MAX_LIVES: u8 = 9;
@@ -474,9 +474,9 @@ impl ReadingSnake {
 
     fn draw_header(&self) {
         let portrait = screen_height() > screen_width() * 1.15;
-        let title_size = if portrait { 36 } else { 24 };
-        let def_size = if portrait { 64 } else { 48 };
-        let stat_size = if portrait { 40 } else { 26 };
+        let title_size = if portrait { 48 } else { 36 };
+        let def_size = if portrait { 80 } else { 56 };
+        let stat_size = if portrait { 48 } else { 32 };
 
         let title = if self.nightmare_mode {
             if self.bonus_round {
@@ -549,7 +549,7 @@ impl ReadingSnake {
 
     fn draw_tile(&self, tile: &LetterTile, color: Color) {
         let portrait = screen_height() > screen_width() * 1.15;
-        let letter_size = if portrait { 40 } else { 26 };
+        let letter_size = if portrait { 52 } else { 36 };
         let x = BOARD_X + tile.pos.x as f32 * CELL;
         let y = BOARD_Y + tile.pos.y as f32 * CELL;
         draw_rectangle(x + 2.0, y + 2.0, CELL - 4.0, CELL - 4.0, color);
@@ -579,10 +579,10 @@ impl ReadingSnake {
 
     fn draw_footer(&self) {
         let portrait = screen_height() > screen_width() * 1.15;
-        let word_size = if portrait { 52 } else { 36 };
-        let meaning_size = if portrait { 32 } else { 22 };
-        let message_size = if portrait { 32 } else { 22 };
-        let controls_size = if portrait { 28 } else { 18 };
+        let word_size = if portrait { 64 } else { 48 };
+        let meaning_size = if portrait { 40 } else { 28 };
+        let message_size = if portrait { 40 } else { 28 };
+        let controls_size = if portrait { 36 } else { 24 };
 
         let progress = format_word_progress(&self.word, self.letter_index);
         centered_text(&format!("Word: {}", progress), 675.0, word_size, YELLOW);
@@ -603,9 +603,9 @@ impl ReadingSnake {
 
     fn draw_definition_card(&self) {
         let portrait = screen_height() > screen_width() * 1.15;
-        let title_size = if portrait { 72 } else { 48 };
-        let pos_size = if portrait { 48 } else { 32 };
-        let def_size = if portrait { 72 } else { 48 };
+        let title_size = if portrait { 88 } else { 60 };
+        let pos_size = if portrait { 56 } else { 40 };
+        let def_size = if portrait { 88 } else { 60 };
 
         draw_rectangle(
             0.0,
