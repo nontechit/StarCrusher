@@ -4,9 +4,9 @@ use macroquad::prelude::*;
 
 const GRID_W: i32 = 14;
 const GRID_H: i32 = 14;
-const CELL: f32 = 20.0;
-const BOARD_X: f32 = 312.0;
-const BOARD_Y: f32 = 190.0;
+const CELL: f32 = 23.0;
+const BOARD_X: f32 = 343.0;
+const BOARD_Y: f32 = 215.0;
 const STEP_SECONDS: f64 = 0.25;
 const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
 const MAX_LIVES: u8 = 9;
