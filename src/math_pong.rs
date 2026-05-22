@@ -74,7 +74,10 @@ impl MathPong {
         }
 
         if self.game_over || self.victory {
-            if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+            if is_key_pressed(KeyCode::Enter)
+                || is_key_pressed(KeyCode::Space)
+                || primary_tap_position().is_some()
+            {
                 *self = Self::new();
             }
             return MathPongAction::None;
@@ -126,12 +129,20 @@ impl MathPong {
         if is_key_down(KeyCode::Right) || is_key_down(KeyCode::D) {
             self.paddle_x += speed;
         }
+        if let Some(pointer) = primary_pointer_position() {
+            if pointer.y > 420.0 {
+                self.paddle_x = pointer.x - self.paddle_w / 2.0;
+            }
+        }
 
         self.paddle_x = self.paddle_x.clamp(12.0, SCREEN_W - self.paddle_w - 12.0);
 
         if !self.ball_launched {
             self.ball_pos = vec2(self.paddle_x + self.paddle_w / 2.0, PADDLE_Y - 14.0);
-            if is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Enter) {
+            if is_key_pressed(KeyCode::Space)
+                || is_key_pressed(KeyCode::Enter)
+                || primary_tap_position().is_some()
+            {
                 let grade_speed = 4.8 + self.grade.index() as f32 * 0.35;
                 self.ball_vel = vec2(0.0, -grade_speed);
                 self.ball_launched = true;
@@ -346,12 +357,52 @@ impl MathPong {
         }
         centered_text(self.message, 506.0, 18, WHITE);
         centered_text(
-            "Move: Arrow Keys / A,D   Launch: Space/Enter   ESC: Title",
+            "Move: Arrow Keys / A,D or touch   Launch: Space/Enter or tap   ESC: Title",
             586.0,
-            16,
+            15,
             GRAY,
         );
     }
+}
+
+fn primary_tap_position() -> Option<Vec2> {
+    for touch in touches() {
+        if touch.phase == TouchPhase::Started {
+            return Some(to_virtual_position(touch.position));
+        }
+    }
+
+    if is_mouse_button_pressed(MouseButton::Left) {
+        let (x, y) = mouse_position();
+        return Some(to_virtual_position(vec2(x, y)));
+    }
+
+    None
+}
+
+fn primary_pointer_position() -> Option<Vec2> {
+    for touch in touches() {
+        if matches!(
+            touch.phase,
+            TouchPhase::Started | TouchPhase::Stationary | TouchPhase::Moved
+        ) {
+            return Some(to_virtual_position(touch.position));
+        }
+    }
+
+    if is_mouse_button_down(MouseButton::Left) {
+        let (x, y) = mouse_position();
+        return Some(to_virtual_position(vec2(x, y)));
+    }
+
+    None
+}
+
+fn to_virtual_position(position: Vec2) -> Vec2 {
+    vec2(
+        position.x * SCREEN_W / screen_width().max(1.0),
+        position.y * SCREEN_H / screen_height().max(1.0),
+    )
 }
 
 fn build_answer_choices(question: &Question, count: usize) -> Vec<i64> {

@@ -190,14 +190,20 @@ impl ReadingSnake {
             if self.completed && self.completion_returns_action {
                 return ReadingSnakeAction::Completed;
             }
-            if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+            if is_key_pressed(KeyCode::Enter)
+                || is_key_pressed(KeyCode::Space)
+                || primary_tap_position().is_some()
+            {
                 *self = Self::new_with_mode(self.custom_words.clone(), self.nightmare_mode);
             }
             return ReadingSnakeAction::None;
         }
 
         if self.showing_definition_card {
-            if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+            if is_key_pressed(KeyCode::Enter)
+                || is_key_pressed(KeyCode::Space)
+                || primary_tap_position().is_some()
+            {
                 self.showing_definition_card = false;
                 self.place_letters();
                 self.last_step = get_time();
@@ -277,6 +283,24 @@ impl ReadingSnake {
         }
         if (is_key_pressed(KeyCode::Right) || is_key_pressed(KeyCode::D)) && self.dir.x != -1 {
             self.next_dir = CellPos::new(1, 0);
+        }
+
+        if let Some(tap) = primary_tap_position() {
+            let head = self.snake[0];
+            let head_center = vec2(
+                BOARD_X + head.x as f32 * CELL + CELL / 2.0,
+                BOARD_Y + head.y as f32 * CELL + CELL / 2.0,
+            );
+            let delta = tap - head_center;
+            let next = if delta.x.abs() > delta.y.abs() {
+                CellPos::new(delta.x.signum() as i32, 0)
+            } else {
+                CellPos::new(0, delta.y.signum() as i32)
+            };
+
+            if next.x != -self.dir.x || next.y != -self.dir.y {
+                self.next_dir = next;
+            }
         }
     }
 
@@ -701,6 +725,28 @@ fn draw_wrapped_centered_text(text: &str, y: f32, max_width: f32, font_size: u16
     }
 }
 
+fn primary_tap_position() -> Option<Vec2> {
+    for touch in touches() {
+        if touch.phase == TouchPhase::Started {
+            return Some(to_virtual_position(touch.position));
+        }
+    }
+
+    if is_mouse_button_pressed(MouseButton::Left) {
+        let (x, y) = mouse_position();
+        return Some(to_virtual_position(vec2(x, y)));
+    }
+
+    None
+}
+
+fn to_virtual_position(position: Vec2) -> Vec2 {
+    vec2(
+        position.x * SCREEN_W / screen_width().max(1.0),
+        position.y * SCREEN_H / screen_height().max(1.0),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -814,7 +860,10 @@ mod tests {
         let order = shuffled_word_order(WORDS.len());
 
         assert_eq!(order.len(), WORDS.len());
-        assert_eq!(sorted_order(order), (0..WORDS.len()).collect::<Vec<usize>>());
+        assert_eq!(
+            sorted_order(order),
+            (0..WORDS.len()).collect::<Vec<usize>>()
+        );
     }
 
     #[test]

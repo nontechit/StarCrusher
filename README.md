@@ -119,17 +119,131 @@ cargo check
 ## Project Structure
 
 ```text
-run-game         Convenience launcher that loads rustup environment and runs Cargo
-src/main.rs      Game state machine and update/draw loop
-src/screen.rs    Window configuration, fullscreen launch, and virtual screen camera
-src/levels.rs    Grade progression and difficulty configuration
-src/question.rs  Grade-specific math question generation
-src/math_pong.rs Math Pong number target mini game
+run-game             Convenience launcher that loads rustup environment and runs Cargo
+src/main.rs          Game state machine and update/draw loop
+src/screen.rs        Window configuration, fullscreen launch, and virtual screen camera
+src/levels.rs        Grade progression and difficulty configuration
+src/question.rs      Grade-specific math question generation
+src/random.rs        Shared randomization helpers
+src/math_pong.rs     Math Pong number target mini game
 src/reading_snake.rs Reading Snake mini game
-src/enemy.rs     Numbered Math Invaders targets, movement, explosions
-src/player.rs    Player ship, player bullets, enemy bullets
-src/ui.rs        HUD, title, game over, victory, and question gate UI
-src/assets.rs    Procedural drawing helpers for ships, enemies, stars, effects
+src/enemy.rs         Numbered Math Invaders targets, movement, explosions
+src/player.rs        Player ship, player bullets, enemy bullets
+src/ui.rs            HUD, title, game over, victory, and question gate UI
+src/assets.rs        Procedural drawing helpers for ships, enemies, stars, effects
+```
+
+## Architecture
+
+Single binary crate (`star-crusher`) on **macroquad**. `main.rs` owns the update/draw loop and `GameMode` state machine; all other logic lives in flat `src/` modules.
+
+### Module dependencies
+
+```mermaid
+flowchart TB
+    subgraph runtime["Runtime"]
+        mq["macroquad"]
+    end
+
+    subgraph core["Core loop"]
+        mainRs["main.rs"]
+        screenRs["screen.rs"]
+    end
+
+    subgraph shared["Shared services"]
+        levelsRs["levels.rs"]
+        questionRs["question.rs"]
+        randomRs["random.rs"]
+        assetsRs["assets.rs"]
+        uiRs["ui.rs"]
+    end
+
+    subgraph mathInvaders["Math Invaders"]
+        playerRs["player.rs"]
+        enemyRs["enemy.rs"]
+    end
+
+    subgraph miniGames["Mini-games"]
+        mathPongRs["math_pong.rs"]
+        readingSnakeRs["reading_snake.rs"]
+    end
+
+    mq --> mainRs
+    mainRs --> screenRs
+    mainRs --> uiRs
+    mainRs --> levelsRs
+    mainRs --> playerRs
+    mainRs --> enemyRs
+    mainRs --> mathPongRs
+    mainRs --> readingSnakeRs
+
+    levelsRs --> questionRs
+    levelsRs --> enemyRs
+    questionRs --> randomRs
+    enemyRs --> questionRs
+    enemyRs --> assetsRs
+    enemyRs --> randomRs
+    playerRs --> assetsRs
+    mathPongRs --> questionRs
+    mathPongRs --> levelsRs
+    mathPongRs --> randomRs
+    readingSnakeRs --> randomRs
+    uiRs --> assetsRs
+    uiRs --> levelsRs
+```
+
+### Game modes and Start Adventure flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> Title
+
+    Title --> AdventureIntro: Start Adventure
+    Title --> Playing: Math Invaders
+    Title --> ReadingSnake: Reading Snake
+    Title --> MathPong: Math Pong
+    Title --> SpellingList: Custom list
+
+    AdventureIntro --> Playing: Begin wave 1
+
+    Playing --> ReadingSnake: Wave cleared
+    ReadingSnake --> MathPong: List complete
+    MathPong --> ReadingSnake: Pong complete
+    ReadingSnake --> Playing: Nightmare done
+
+    Playing --> GateIntro: Wave complete
+    GateIntro --> GateQuestion
+    GateQuestion --> Playing: Correct gate answer
+    GateQuestion --> GameOver: Wrong or no lives
+
+    Playing --> GameOver: Lives exhausted
+    Playing --> Victory: 5th grade complete
+
+    GameOver --> Title
+    Victory --> Title
+    ReadingSnake --> Title: Esc
+    MathPong --> Title: Esc
+    SpellingList --> Title: Esc
+```
+
+### Build and deploy
+
+```mermaid
+flowchart LR
+    srcDir["src modules"]
+    cargo["cargo build"]
+    native["Native binary"]
+    wasm["wasm32 release"]
+    dist["dist + index.html"]
+    gha["pages.yml"]
+    pages["GitHub Pages"]
+
+    srcDir --> cargo
+    cargo --> native
+    cargo --> wasm
+    wasm --> dist
+    dist --> gha
+    gha --> pages
 ```
 
 ## Gameplay Loop

@@ -25,6 +25,9 @@ pub fn use_virtual_screen() {
 }
 
 pub fn enter_fullscreen() {
-    request_new_screen_size(WINDOW_W as f32, WINDOW_H as f32);
-    set_fullscreen(true);
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        request_new_screen_size(WINDOW_W as f32, WINDOW_H as f32);
+        set_fullscreen(true);
+    }
 }

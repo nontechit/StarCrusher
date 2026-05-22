@@ -18,6 +18,9 @@ use question::{generate_question, Question};
 use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
 use screen::{enter_fullscreen, use_virtual_screen, window_conf, SCREEN_H, SCREEN_W};
 
+const TITLE_MENU_ROW_LEFT: f32 = ui::TITLE_MENU_X + 22.0;
+const TITLE_MENU_ROW_RIGHT: f32 = ui::TITLE_MENU_X + ui::TITLE_MENU_W - 22.0;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum GameMode {
     Title,
@@ -64,11 +67,7 @@ impl TitleMenuOption {
         Self::PlayMiniGames,
         Self::SpellingList,
     ];
-    const MINI_GAMES: [Self; 3] = [
-        Self::ReadingSnake,
-        Self::MathPong,
-        Self::NightmareSnake,
-    ];
+    const MINI_GAMES: [Self; 3] = [Self::ReadingSnake, Self::MathPong, Self::NightmareSnake];
 
     fn menu_len(page: TitleMenuPage) -> usize {
         match page {
@@ -219,6 +218,17 @@ impl Game {
         match self.mode {
             GameMode::Title => {
                 let menu_len = TitleMenuOption::menu_len(self.title_menu_page);
+                if let Some(tap) = primary_tap_position() {
+                    if let Some(index) = title_menu_index_at(tap, menu_len) {
+                        self.title_selection = index;
+                        self.launch_title_option(TitleMenuOption::from_index(
+                            self.title_menu_page,
+                            self.title_selection,
+                        ));
+                        return;
+                    }
+                }
+
                 if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
                     self.title_selection = (self.title_selection + menu_len - 1) % menu_len;
                 } else if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
@@ -253,31 +263,30 @@ impl Game {
             }
             GameMode::Playing => self.update_playing(),
             GameMode::GateIntro => {
-                if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+                if is_key_pressed(KeyCode::Enter)
+                    || is_key_pressed(KeyCode::Space)
+                    || primary_tap_position().is_some()
+                {
                     self.mode = GameMode::GateQuestion;
                 }
             }
             GameMode::GateQuestion => self.update_gate_question(),
             GameMode::GameOver | GameMode::Victory => {
-                if is_key_pressed(KeyCode::Enter) {
+                if is_key_pressed(KeyCode::Enter) || primary_tap_position().is_some() {
                     self.reset();
                 }
             }
-            GameMode::ReadingSnake => {
-                match self.reading_snake.update() {
-                    ReadingSnakeAction::None => {}
-                    ReadingSnakeAction::ExitToTitle => self.exit_to_title(),
-                    ReadingSnakeAction::Completed => self.complete_reading_snake(),
-                }
-            }
+            GameMode::ReadingSnake => match self.reading_snake.update() {
+                ReadingSnakeAction::None => {}
+                ReadingSnakeAction::ExitToTitle => self.exit_to_title(),
+                ReadingSnakeAction::Completed => self.complete_reading_snake(),
+            },
             GameMode::SpellingList => self.update_spelling_list(),
-            GameMode::MathPong => {
-                match self.math_pong.update() {
-                    MathPongAction::None => {}
-                    MathPongAction::ExitToTitle => self.exit_to_title(),
-                    MathPongAction::Completed => self.complete_math_pong(),
-                }
-            }
+            GameMode::MathPong => match self.math_pong.update() {
+                MathPongAction::None => {}
+                MathPongAction::ExitToTitle => self.exit_to_title(),
+                MathPongAction::Completed => self.complete_math_pong(),
+            },
             GameMode::AdventureIntro => self.update_adventure_intro(),
         }
     }
@@ -285,7 +294,8 @@ impl Game {
     fn update_playing(&mut self) {
         self.player.update(SCREEN_W);
 
-        if is_key_pressed(KeyCode::Space) && self.player_bullets.len() < 3 {
+        let touch_fire = self.update_touch_player();
+        if (is_key_pressed(KeyCode::Space) || touch_fire) && self.player_bullets.len() < 3 {
             self.player_bullets
                 .push(Bullet::new(self.player.center_x(), self.player.top_y()));
         }
@@ -414,6 +424,8 @@ impl Game {
     }
 
     fn update_gate_question(&mut self) {
+        let mut submit_answer = false;
+
         while let Some(ch) = get_char_pressed() {
             if ch.is_ascii_digit() || (ch == '-' && self.gate_answer.is_empty()) {
                 self.gate_answer.push(ch);
@@ -424,7 +436,22 @@ impl Game {
             self.gate_answer.pop();
         }
 
-        if is_key_pressed(KeyCode::Enter) && !self.gate_answer.is_empty() {
+        if let Some(tap) = primary_tap_position() {
+            match gate_key_at(tap) {
+                Some(GateKey::Digit(digit)) => self.gate_answer.push(digit),
+                Some(GateKey::Delete) => {
+                    self.gate_answer.pop();
+                }
+                Some(GateKey::Submit) => submit_answer = true,
+                None => {}
+            }
+        }
+
+        if is_key_pressed(KeyCode::Enter) {
+            submit_answer = true;
+        }
+
+        if submit_answer && !self.gate_answer.is_empty() {
             let answer = self.gate_answer.parse::<i64>().ok();
             let is_correct = answer == Some(self.gate_question.correct_answer);
             self.gate_feedback = Some((is_correct, get_time()));
@@ -470,7 +497,10 @@ impl Game {
             self.spelling_input.pop();
         }
 
-        if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::N) {
+        if is_key_pressed(KeyCode::Enter)
+            || is_key_pressed(KeyCode::N)
+            || primary_tap_position().is_some()
+        {
             let custom_words = custom_words_from_input(&self.spelling_input);
             self.reading_snake = if is_key_pressed(KeyCode::N) {
                 ReadingSnake::new_nightmare_with_words(custom_words)
@@ -484,7 +514,10 @@ impl Game {
     fn update_adventure_intro(&mut self) {
         let total_pages = ui::adventure_intro_page_count();
 
-        if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+        if is_key_pressed(KeyCode::Enter)
+            || is_key_pressed(KeyCode::Space)
+            || primary_tap_position().is_some()
+        {
             if self.intro_page + 1 >= total_pages {
                 self.start_adventure_math_invaders();
             } else {
@@ -493,6 +526,17 @@ impl Game {
         } else if is_key_pressed(KeyCode::Escape) {
             self.exit_to_title();
         }
+    }
+
+    fn update_touch_player(&mut self) -> bool {
+        if let Some(pointer) = primary_pointer_position() {
+            if pointer.y > 520.0 {
+                self.player.x = (pointer.x - self.player.width / 2.0)
+                    .clamp(8.0, SCREEN_W - self.player.width - 8.0);
+            }
+        }
+
+        primary_tap_position().is_some_and(|tap| tap.y > 470.0)
     }
 
     fn start_adventure_math_invaders(&mut self) {
@@ -589,6 +633,97 @@ impl Game {
             ui::draw_answer_feedback(is_correct);
         }
     }
+}
+
+enum GateKey {
+    Digit(char),
+    Delete,
+    Submit,
+}
+
+fn title_menu_index_at(point: Vec2, menu_len: usize) -> Option<usize> {
+    if point.x < TITLE_MENU_ROW_LEFT || point.x > TITLE_MENU_ROW_RIGHT {
+        return None;
+    }
+
+    (0..menu_len).find(|index| {
+        let row_top = ui::TITLE_MENU_ROW_TOP
+            + *index as f32 * (ui::TITLE_MENU_ROW_H + ui::TITLE_MENU_ROW_GAP);
+        point.y >= row_top && point.y <= row_top + ui::TITLE_MENU_ROW_H
+    })
+}
+
+fn gate_key_at(point: Vec2) -> Option<GateKey> {
+    let labels = [
+        GateKey::Digit('1'),
+        GateKey::Digit('2'),
+        GateKey::Digit('3'),
+        GateKey::Digit('4'),
+        GateKey::Digit('5'),
+        GateKey::Digit('6'),
+        GateKey::Digit('7'),
+        GateKey::Digit('8'),
+        GateKey::Digit('9'),
+        GateKey::Delete,
+        GateKey::Digit('0'),
+        GateKey::Submit,
+    ];
+
+    for (index, key) in labels.into_iter().enumerate() {
+        let col = index % 3;
+        let row = index / 3;
+        let x = ui::KEYPAD_X + col as f32 * (ui::KEYPAD_KEY + ui::KEYPAD_GAP);
+        let y = ui::KEYPAD_Y + row as f32 * (ui::KEYPAD_KEY + ui::KEYPAD_GAP);
+        if point.x >= x
+            && point.x <= x + ui::KEYPAD_KEY
+            && point.y >= y
+            && point.y <= y + ui::KEYPAD_KEY
+        {
+            return Some(key);
+        }
+    }
+
+    None
+}
+
+fn primary_tap_position() -> Option<Vec2> {
+    for touch in touches() {
+        if touch.phase == TouchPhase::Started {
+            return Some(to_virtual_position(touch.position));
+        }
+    }
+
+    if is_mouse_button_pressed(MouseButton::Left) {
+        let (x, y) = mouse_position();
+        return Some(to_virtual_position(vec2(x, y)));
+    }
+
+    None
+}
+
+fn primary_pointer_position() -> Option<Vec2> {
+    for touch in touches() {
+        if matches!(
+            touch.phase,
+            TouchPhase::Started | TouchPhase::Stationary | TouchPhase::Moved
+        ) {
+            return Some(to_virtual_position(touch.position));
+        }
+    }
+
+    if is_mouse_button_down(MouseButton::Left) {
+        let (x, y) = mouse_position();
+        return Some(to_virtual_position(vec2(x, y)));
+    }
+
+    None
+}
+
+fn to_virtual_position(position: Vec2) -> Vec2 {
+    vec2(
+        position.x * SCREEN_W / screen_width().max(1.0),
+        position.y * SCREEN_H / screen_height().max(1.0),
+    )
 }
 
 fn draw_starfield() {

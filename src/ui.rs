@@ -4,6 +4,16 @@ use crate::screen::{SCREEN_H, SCREEN_W};
 use macroquad::prelude::*;
 
 const CENTER_X: f32 = SCREEN_W / 2.0;
+pub const TITLE_MENU_X: f32 = 552.0;
+pub const TITLE_MENU_Y: f32 = 206.0;
+pub const TITLE_MENU_W: f32 = 332.0;
+pub const TITLE_MENU_ROW_TOP: f32 = 276.0;
+pub const TITLE_MENU_ROW_H: f32 = 54.0;
+pub const TITLE_MENU_ROW_GAP: f32 = 18.0;
+pub const KEYPAD_X: f32 = 704.0;
+pub const KEYPAD_Y: f32 = 438.0;
+pub const KEYPAD_KEY: f32 = 54.0;
+pub const KEYPAD_GAP: f32 = 8.0;
 
 thread_local! {
     static CURRENT_COLOR: std::cell::Cell<Color> = const { std::cell::Cell::new(WHITE) };
@@ -149,12 +159,7 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
     } else {
         "Shortcuts: M Math Invaders   P Mini Games   L Custom Spelling List"
     };
-    centered_text(
-        shortcuts,
-        680.0,
-        16,
-        parchment,
-    );
+    centered_text(shortcuts, 680.0, 16, parchment);
 
     draw_title_scene(
         112.0,
@@ -168,9 +173,9 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
         torch,
     );
     draw_adventure_menu(
-        552.0,
-        206.0,
-        332.0,
+        TITLE_MENU_X,
+        TITLE_MENU_Y,
+        TITLE_MENU_W,
         showing_mini_games,
         selected_index,
         ink,
@@ -298,20 +303,22 @@ fn draw_adventure_menu(
     centered_text_in(title, x, y + 42.0, w, 24, parchment);
 
     for (index, (label, detail)) in options.iter().enumerate() {
-        let row_y = y + 110.0 + index as f32 * 62.0;
+        let row_top = TITLE_MENU_ROW_TOP + index as f32 * (TITLE_MENU_ROW_H + TITLE_MENU_ROW_GAP);
+        let label_y = row_top + 24.0;
+        let detail_y = row_top + 43.0;
         let selected = selected_index % options.len() == index;
         if selected {
             set_color(parchment);
-            draw_rectangle(x + 22.0, row_y - 30.0, w - 44.0, 46.0);
+            draw_rectangle(x + 22.0, row_top, w - 44.0, TITLE_MENU_ROW_H);
             set_color(ink);
-            draw_rectangle(x + 32.0, row_y - 10.0, 10.0, 10.0);
-            draw_text(label, x + 54.0, row_y, 22.0, ink);
-            draw_text(detail, x + 54.0, row_y + 18.0, 13.0, ink);
+            draw_rectangle(x + 32.0, row_top + 20.0, 10.0, 10.0);
+            draw_text(label, x + 54.0, label_y, 20.0, ink);
+            draw_text(detail, x + 54.0, detail_y, 12.0, ink);
         } else {
             set_color(stone);
-            draw_rectangle_lines(x + 22.0, row_y - 30.0, w - 44.0, 46.0);
-            draw_text(label, x + 54.0, row_y, 22.0, stone_light);
-            draw_text(detail, x + 54.0, row_y + 18.0, 13.0, parchment);
+            draw_rectangle_lines(x + 22.0, row_top, w - 44.0, TITLE_MENU_ROW_H);
+            draw_text(label, x + 54.0, label_y, 20.0, stone_light);
+            draw_text(detail, x + 54.0, detail_y, 12.0, parchment);
         }
     }
 
@@ -490,7 +497,12 @@ pub fn draw_spelling_list_screen(input: &str) {
         WHITE,
     );
     centered_text("Plain word lists still work too.", 176.0, 18, GRAY);
-    centered_text("ENTER plays Reading Snake   N starts Nightmare", 218.0, 20, WHITE);
+    centered_text(
+        "ENTER plays Reading Snake   N starts Nightmare",
+        218.0,
+        20,
+        WHITE,
+    );
 
     let input_w = 760.0;
     let input_h = 118.0;
@@ -512,7 +524,14 @@ pub fn draw_spelling_list_screen(input: &str) {
     } else {
         WHITE
     };
-    draw_wrapped_text(shown_input, input_x + 26.0, input_y + 48.0, input_w - 52.0, 22, color);
+    draw_wrapped_text(
+        shown_input,
+        input_x + 26.0,
+        input_y + 48.0,
+        input_w - 52.0,
+        22,
+        color,
+    );
 
     let blink = if (get_time() as f32 * 3.0).fract() > 0.5 {
         1.0
@@ -805,7 +824,13 @@ pub fn draw_answer_input(current_input: &str) {
     // Current typed answer (centered)
     set_color(WHITE);
     let tm = measure_text(current_input, None, 24, 1.0);
-    draw_text(current_input, CENTER_X - tm.w / 2.0, input_y + 32.0, 24.0, WHITE);
+    draw_text(
+        current_input,
+        CENTER_X - tm.w / 2.0,
+        input_y + 32.0,
+        24.0,
+        WHITE,
+    );
 
     // Blinking cursor effect
     let blink = if (get_time() as f32 * 3.0).fract() > 0.5 {
@@ -821,6 +846,7 @@ pub fn draw_answer_input(current_input: &str) {
     };
     draw_rectangle(cursor_x, input_y + 10.0, 2.0, 28.0);
 
+    draw_number_pad();
     set_default_color();
 }
 
@@ -837,4 +863,41 @@ pub fn draw_answer_feedback(is_correct: bool) {
     draw_text(text, CENTER_X - tm.w / 2.0, 630.0, 28.0, color);
 
     set_default_color();
+}
+
+fn draw_number_pad() {
+    let labels = [
+        "1", "2", "3", "4", "5", "6", "7", "8", "9", "DEL", "0", "OK",
+    ];
+
+    for (index, label) in labels.iter().enumerate() {
+        let col = index % 3;
+        let row = index / 3;
+        let x = KEYPAD_X + col as f32 * (KEYPAD_KEY + KEYPAD_GAP);
+        let y = KEYPAD_Y + row as f32 * (KEYPAD_KEY + KEYPAD_GAP);
+        let accent = *label == "OK";
+
+        set_color(if accent {
+            Color::new(0.2, 0.78, 0.65, 0.92)
+        } else {
+            Color::new(0.16, 0.18, 0.28, 0.92)
+        });
+        draw_rectangle(x, y, KEYPAD_KEY, KEYPAD_KEY);
+        set_color(if accent {
+            WHITE
+        } else {
+            Color::new(0.5, 0.9, 1.0, 1.0)
+        });
+        draw_rectangle_lines(x, y, KEYPAD_KEY, KEYPAD_KEY);
+
+        let font_size = if label.len() > 1 { 16 } else { 24 };
+        let tm = measure_text(label, None, font_size, 1.0);
+        draw_text(
+            label,
+            x + KEYPAD_KEY / 2.0 - tm.w / 2.0,
+            y + KEYPAD_KEY / 2.0 + font_size as f32 / 3.0,
+            font_size as f32,
+            current_color(),
+        );
+    }
 }
