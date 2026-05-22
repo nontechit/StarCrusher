@@ -18,6 +18,15 @@ pub const GATE_QUESTION_X: f32 = 104.0;
 pub const GATE_QUESTION_Y: f32 = 454.0;
 pub const GATE_QUESTION_W: f32 = 540.0;
 pub const GATE_QUESTION_LINE_GAP: f32 = 34.0;
+pub const MOBILE_BACK_X: f32 = 24.0;
+pub const MOBILE_BACK_Y: f32 = 24.0;
+pub const MOBILE_BACK_W: f32 = 170.0;
+pub const MOBILE_BACK_H: f32 = 68.0;
+pub const SPELLING_PLAY_X: f32 = 270.0;
+pub const SPELLING_NIGHTMARE_X: f32 = 534.0;
+pub const SPELLING_ACTION_Y: f32 = 548.0;
+pub const SPELLING_ACTION_W: f32 = 220.0;
+pub const SPELLING_ACTION_H: f32 = 74.0;
 
 thread_local! {
     static CURRENT_COLOR: std::cell::Cell<Color> = const { std::cell::Cell::new(WHITE) };
@@ -59,6 +68,49 @@ fn hsl_to_rgb(h: f32, s: f32, l: f32) -> Color {
         l - a * (k - 3.0).min(9.0 - k).clamp(-1.0, 1.0)
     };
     Color::new(channel(0.0), channel(8.0), channel(4.0), 1.0)
+}
+
+pub fn mobile_back_button_contains(point: Vec2) -> bool {
+    screen::portrait_layout()
+        && point.x >= MOBILE_BACK_X
+        && point.x <= MOBILE_BACK_X + MOBILE_BACK_W
+        && point.y >= MOBILE_BACK_Y
+        && point.y <= MOBILE_BACK_Y + MOBILE_BACK_H
+}
+
+pub fn spelling_play_button_contains(point: Vec2) -> bool {
+    point.x >= SPELLING_PLAY_X
+        && point.x <= SPELLING_PLAY_X + SPELLING_ACTION_W
+        && point.y >= SPELLING_ACTION_Y
+        && point.y <= SPELLING_ACTION_Y + SPELLING_ACTION_H
+}
+
+pub fn spelling_nightmare_button_contains(point: Vec2) -> bool {
+    point.x >= SPELLING_NIGHTMARE_X
+        && point.x <= SPELLING_NIGHTMARE_X + SPELLING_ACTION_W
+        && point.y >= SPELLING_ACTION_Y
+        && point.y <= SPELLING_ACTION_Y + SPELLING_ACTION_H
+}
+
+pub fn draw_mobile_back_button(label: &str) {
+    if !screen::portrait_layout() {
+        return;
+    }
+
+    set_color(Color::new(0.05, 0.08, 0.14, 0.86));
+    draw_rectangle(MOBILE_BACK_X, MOBILE_BACK_Y, MOBILE_BACK_W, MOBILE_BACK_H);
+    set_color(Color::new(0.55, 0.85, 1.0, 0.95));
+    draw_rectangle_lines(MOBILE_BACK_X, MOBILE_BACK_Y, MOBILE_BACK_W, MOBILE_BACK_H);
+
+    let font_size = screen::mobile_text_size(13);
+    centered_text_in(
+        label,
+        MOBILE_BACK_X,
+        MOBILE_BACK_Y + 46.0,
+        MOBILE_BACK_W,
+        font_size,
+        WHITE,
+    );
 }
 
 /// Draws the heads-up display (HUD) at top of screen.
@@ -559,7 +611,33 @@ pub fn draw_spelling_list_screen(input: &str) {
         YELLOW,
     );
     centered_text("Backspace deletes   ESC returns to title", 504.0, 18, GRAY);
+    draw_spelling_action_button(SPELLING_PLAY_X, "PLAY", Color::new(0.25, 0.75, 0.4, 1.0));
+    draw_spelling_action_button(
+        SPELLING_NIGHTMARE_X,
+        "NIGHT",
+        Color::new(0.55, 0.35, 0.95, 1.0),
+    );
     set_default_color();
+}
+
+fn draw_spelling_action_button(x: f32, label: &str, color: Color) {
+    set_color(Color::new(
+        color.r * 0.35,
+        color.g * 0.35,
+        color.b * 0.35,
+        0.9,
+    ));
+    draw_rectangle(x, SPELLING_ACTION_Y, SPELLING_ACTION_W, SPELLING_ACTION_H);
+    set_color(color);
+    draw_rectangle_lines(x, SPELLING_ACTION_Y, SPELLING_ACTION_W, SPELLING_ACTION_H);
+    centered_text_in(
+        label,
+        x,
+        SPELLING_ACTION_Y + 48.0,
+        SPELLING_ACTION_W,
+        screen::mobile_text_size(16),
+        WHITE,
+    );
 }
 
 fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
@@ -569,6 +647,23 @@ fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
 
 pub fn gate_question_text_size() -> u16 {
     screen::mobile_text_size(26)
+}
+
+pub fn keypad_button_rect(index: usize) -> Rect {
+    let col = index % 3;
+    let row = index / 3;
+    let (key, gap, x, y) = if screen::portrait_layout() {
+        (118.0, 14.0, 608.0, 384.0)
+    } else {
+        (KEYPAD_KEY, KEYPAD_GAP, KEYPAD_X, KEYPAD_Y)
+    };
+
+    Rect::new(
+        x + col as f32 * (key + gap),
+        y + row as f32 * (key + gap),
+        key,
+        key,
+    )
 }
 
 fn draw_wrapped_text(text: &str, x: f32, y: f32, max_width: f32, font_size: u16, color: Color) {
@@ -906,10 +1001,7 @@ fn draw_number_pad() {
     ];
 
     for (index, label) in labels.iter().enumerate() {
-        let col = index % 3;
-        let row = index / 3;
-        let x = KEYPAD_X + col as f32 * (KEYPAD_KEY + KEYPAD_GAP);
-        let y = KEYPAD_Y + row as f32 * (KEYPAD_KEY + KEYPAD_GAP);
+        let rect = keypad_button_rect(index);
         let accent = *label == "OK";
 
         set_color(if accent {
@@ -917,20 +1009,20 @@ fn draw_number_pad() {
         } else {
             Color::new(0.16, 0.18, 0.28, 0.92)
         });
-        draw_rectangle(x, y, KEYPAD_KEY, KEYPAD_KEY);
+        draw_rectangle(rect.x, rect.y, rect.w, rect.h);
         set_color(if accent {
             WHITE
         } else {
             Color::new(0.5, 0.9, 1.0, 1.0)
         });
-        draw_rectangle_lines(x, y, KEYPAD_KEY, KEYPAD_KEY);
+        draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h);
 
         let font_size = screen::mobile_text_size(if label.len() > 1 { 16 } else { 24 });
         let tm = measure_text(label, None, font_size, 1.0);
         draw_text(
             label,
-            x + KEYPAD_KEY / 2.0 - tm.w / 2.0,
-            y + KEYPAD_KEY / 2.0 + font_size as f32 / 3.0,
+            rect.x + rect.w / 2.0 - tm.w / 2.0,
+            rect.y + rect.h / 2.0 + font_size as f32 / 3.0,
             font_size as f32,
             current_color(),
         );

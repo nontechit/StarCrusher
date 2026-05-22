@@ -10,6 +10,11 @@ const BOARD_Y: f32 = 160.0;
 const STEP_SECONDS: f64 = 0.25;
 const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
 const MAX_LIVES: u8 = 9;
+const SWIPE_MIN_DISTANCE: f32 = 46.0;
+const DPAD_X: f32 = 42.0;
+const DPAD_Y: f32 = 558.0;
+const DPAD_KEY: f32 = 62.0;
+const DPAD_GAP: f32 = 8.0;
 
 const WORDS: &[(&str, &str, &str)] = &[
     ("KEY", "noun", "A small tool used to open a lock."),
@@ -100,6 +105,7 @@ pub struct ReadingSnake {
     start_bonus_on_complete: bool,
     completion_returns_action: bool,
     last_step: f64,
+    touch_start: Option<Vec2>,
     game_over: bool,
     completed: bool,
     showing_definition_card: bool,
@@ -167,6 +173,7 @@ impl ReadingSnake {
             start_bonus_on_complete: true,
             completion_returns_action: false,
             last_step: get_time(),
+            touch_start: None,
             game_over: false,
             completed: false,
             showing_definition_card: false,
@@ -230,6 +237,7 @@ impl ReadingSnake {
         self.draw_tiles();
         self.draw_snake();
         self.draw_footer();
+        self.draw_mobile_dpad();
 
         if self.game_over {
             draw_rectangle(
@@ -285,6 +293,11 @@ impl ReadingSnake {
             self.next_dir = CellPos::new(1, 0);
         }
 
+        if screen::portrait_layout() {
+            self.handle_mobile_direction_input();
+            return;
+        }
+
         if let Some(tap) = primary_tap_position() {
             let head = self.snake[0];
             let head_center = vec2(
@@ -298,9 +311,53 @@ impl ReadingSnake {
                 CellPos::new(0, delta.y.signum() as i32)
             };
 
-            if next.x != -self.dir.x || next.y != -self.dir.y {
-                self.next_dir = next;
+            self.set_next_dir(next);
+        }
+    }
+
+    fn handle_mobile_direction_input(&mut self) {
+        for touch in touches() {
+            let point = to_virtual_position(touch.position);
+            match touch.phase {
+                TouchPhase::Started => {
+                    if let Some(direction) = mobile_dpad_direction(point) {
+                        self.set_next_dir(direction);
+                        self.touch_start = None;
+                    } else {
+                        self.touch_start = Some(point);
+                    }
+                }
+                TouchPhase::Moved | TouchPhase::Ended => {
+                    if let Some(start) = self.touch_start {
+                        let delta = point - start;
+                        if delta.length() >= SWIPE_MIN_DISTANCE {
+                            let direction = if delta.x.abs() > delta.y.abs() {
+                                CellPos::new(delta.x.signum() as i32, 0)
+                            } else {
+                                CellPos::new(0, delta.y.signum() as i32)
+                            };
+                            self.set_next_dir(direction);
+                            self.touch_start = Some(point);
+                        }
+                    }
+                    if touch.phase == TouchPhase::Ended {
+                        self.touch_start = None;
+                    }
+                }
+                TouchPhase::Stationary | TouchPhase::Cancelled => {}
             }
+        }
+
+        if let Some(tap) = primary_tap_position() {
+            if let Some(direction) = mobile_dpad_direction(tap) {
+                self.set_next_dir(direction);
+            }
+        }
+    }
+
+    fn set_next_dir(&mut self, next: CellPos) {
+        if next.x != -self.dir.x || next.y != -self.dir.y {
+            self.next_dir = next;
         }
     }
 
@@ -600,6 +657,67 @@ impl ReadingSnake {
         centered_text(controls, 660.0, controls_size, GRAY);
     }
 
+    fn draw_mobile_dpad(&self) {
+        if !screen::portrait_layout() || self.game_over || self.showing_definition_card {
+            return;
+        }
+
+        let buttons = [
+            (
+                CellPos::new(0, -1),
+                DPAD_X + DPAD_KEY + DPAD_GAP,
+                DPAD_Y,
+                "U",
+            ),
+            (
+                CellPos::new(-1, 0),
+                DPAD_X,
+                DPAD_Y + DPAD_KEY + DPAD_GAP,
+                "L",
+            ),
+            (
+                CellPos::new(1, 0),
+                DPAD_X + (DPAD_KEY + DPAD_GAP) * 2.0,
+                DPAD_Y + DPAD_KEY + DPAD_GAP,
+                "R",
+            ),
+            (
+                CellPos::new(0, 1),
+                DPAD_X + DPAD_KEY + DPAD_GAP,
+                DPAD_Y + (DPAD_KEY + DPAD_GAP) * 2.0,
+                "D",
+            ),
+        ];
+
+        for (direction, x, y, label) in buttons {
+            let active = direction == self.next_dir;
+            let fill = if active {
+                Color::new(0.35, 0.9, 0.45, 0.8)
+            } else {
+                Color::new(0.05, 0.12, 0.08, 0.72)
+            };
+            draw_rectangle(x, y, DPAD_KEY, DPAD_KEY, fill);
+            draw_rectangle_lines(
+                x,
+                y,
+                DPAD_KEY,
+                DPAD_KEY,
+                3.0,
+                Color::new(0.4, 1.0, 0.65, 0.95),
+            );
+
+            let font_size = screen::mobile_text_size(16);
+            let metrics = measure_text(label, None, font_size, 1.0);
+            draw_text(
+                label,
+                x + DPAD_KEY / 2.0 - metrics.width / 2.0,
+                y + DPAD_KEY / 2.0 + metrics.height / 2.5,
+                font_size as f32,
+                WHITE,
+            );
+        }
+    }
+
     fn draw_definition_card(&self) {
         let title_size = screen::mobile_text_size(60);
         let pos_size = screen::mobile_text_size(40);
@@ -704,6 +822,28 @@ fn shuffled_word_order(word_count: usize) -> Vec<usize> {
     order
 }
 
+fn mobile_dpad_direction(point: Vec2) -> Option<CellPos> {
+    let buttons = [
+        (CellPos::new(0, -1), DPAD_X + DPAD_KEY + DPAD_GAP, DPAD_Y),
+        (CellPos::new(-1, 0), DPAD_X, DPAD_Y + DPAD_KEY + DPAD_GAP),
+        (
+            CellPos::new(1, 0),
+            DPAD_X + (DPAD_KEY + DPAD_GAP) * 2.0,
+            DPAD_Y + DPAD_KEY + DPAD_GAP,
+        ),
+        (
+            CellPos::new(0, 1),
+            DPAD_X + DPAD_KEY + DPAD_GAP,
+            DPAD_Y + (DPAD_KEY + DPAD_GAP) * 2.0,
+        ),
+    ];
+
+    buttons.into_iter().find_map(|(direction, x, y)| {
+        (point.x >= x && point.x <= x + DPAD_KEY && point.y >= y && point.y <= y + DPAD_KEY)
+            .then_some(direction)
+    })
+}
+
 fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
     let metrics = measure_text(text, None, font_size, 1.0);
     draw_text(
@@ -795,6 +935,7 @@ mod tests {
             start_bonus_on_complete: true,
             completion_returns_action: false,
             last_step: 0.0,
+            touch_start: None,
             game_over: false,
             completed: false,
             showing_definition_card: false,

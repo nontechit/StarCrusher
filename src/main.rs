@@ -217,6 +217,10 @@ impl Game {
     }
 
     fn update(&mut self) {
+        if self.update_mobile_navigation() {
+            return;
+        }
+
         match self.mode {
             GameMode::Title => {
                 let menu_len = TitleMenuOption::menu_len(self.title_menu_page);
@@ -290,6 +294,29 @@ impl Game {
                 MathPongAction::Completed => self.complete_math_pong(),
             },
             GameMode::AdventureIntro => self.update_adventure_intro(),
+        }
+    }
+
+    fn update_mobile_navigation(&mut self) -> bool {
+        let Some(tap) = primary_tap_position() else {
+            return false;
+        };
+
+        if !ui::mobile_back_button_contains(tap) {
+            return false;
+        }
+
+        match self.mode {
+            GameMode::Title if self.title_menu_page == TitleMenuPage::MiniGames => {
+                self.title_menu_page = TitleMenuPage::Main;
+                self.title_selection = 1;
+                true
+            }
+            GameMode::Title => false,
+            _ => {
+                self.exit_to_title();
+                true
+            }
         }
     }
 
@@ -517,12 +544,21 @@ impl Game {
             self.spelling_input.pop();
         }
 
-        if is_key_pressed(KeyCode::Enter)
-            || is_key_pressed(KeyCode::N)
-            || primary_tap_position().is_some()
-        {
+        let mut start_nightmare = is_key_pressed(KeyCode::N);
+        let mut start_reading = is_key_pressed(KeyCode::Enter) || start_nightmare;
+
+        if let Some(tap) = primary_tap_position() {
+            if ui::spelling_nightmare_button_contains(tap) {
+                start_nightmare = true;
+                start_reading = true;
+            } else if ui::spelling_play_button_contains(tap) {
+                start_reading = true;
+            }
+        }
+
+        if start_reading {
             let custom_words = custom_words_from_input(&self.spelling_input);
-            self.reading_snake = if is_key_pressed(KeyCode::N) {
+            self.reading_snake = if start_nightmare {
                 ReadingSnake::new_nightmare_with_words(custom_words)
             } else {
                 ReadingSnake::new_with_words(custom_words)
@@ -556,7 +592,11 @@ impl Game {
             }
         }
 
-        primary_tap_position().is_some_and(|tap| tap.y > 470.0)
+        if screen::portrait_layout() {
+            primary_pointer_position().is_some_and(|pointer| pointer.y > 470.0)
+        } else {
+            primary_tap_position().is_some_and(|tap| tap.y > 470.0)
+        }
     }
 
     fn start_adventure_math_invaders(&mut self) {
@@ -602,6 +642,14 @@ impl Game {
             GameMode::SpellingList => ui::draw_spelling_list_screen(&self.spelling_input),
             GameMode::MathPong => self.math_pong.draw(),
             GameMode::AdventureIntro => ui::draw_adventure_intro(self.intro_page),
+        }
+
+        match self.mode {
+            GameMode::Title if self.title_menu_page == TitleMenuPage::MiniGames => {
+                ui::draw_mobile_back_button("BACK");
+            }
+            GameMode::Title => {}
+            _ => ui::draw_mobile_back_button("TITLE"),
         }
     }
 
@@ -691,15 +739,7 @@ fn gate_key_at(point: Vec2) -> Option<GateKey> {
     ];
 
     for (index, key) in labels.into_iter().enumerate() {
-        let col = index % 3;
-        let row = index / 3;
-        let x = ui::KEYPAD_X + col as f32 * (ui::KEYPAD_KEY + ui::KEYPAD_GAP);
-        let y = ui::KEYPAD_Y + row as f32 * (ui::KEYPAD_KEY + ui::KEYPAD_GAP);
-        if point.x >= x
-            && point.x <= x + ui::KEYPAD_KEY
-            && point.y >= y
-            && point.y <= y + ui::KEYPAD_KEY
-        {
+        if ui::keypad_button_rect(index).contains(point) {
             return Some(key);
         }
     }
