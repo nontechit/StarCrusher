@@ -1,5 +1,5 @@
 use crate::random;
-use crate::screen::{SCREEN_H, SCREEN_W};
+use crate::screen::{self, SCREEN_H, SCREEN_W};
 use macroquad::prelude::*;
 
 const GRID_W: i32 = 14;
@@ -473,10 +473,9 @@ impl ReadingSnake {
     }
 
     fn draw_header(&self) {
-        let portrait = screen_height() > screen_width() * 1.15;
-        let title_size = if portrait { 96 } else { 38 };
-        let def_size = if portrait { 130 } else { 32 };
-        let stat_size = if portrait { 80 } else { 22 };
+        let title_size = screen::mobile_text_size(38);
+        let def_size = screen::mobile_text_size(32);
+        let stat_size = screen::mobile_text_size(22);
 
         let title = if self.nightmare_mode {
             if self.bonus_round {
@@ -532,8 +531,7 @@ impl ReadingSnake {
     }
 
     fn draw_tile(&self, tile: &LetterTile, color: Color) {
-        let portrait = screen_height() > screen_width() * 1.15;
-        let letter_size = if portrait { 100 } else { 36 };
+        let letter_size = screen::mobile_text_size(36);
         let x = BOARD_X + tile.pos.x as f32 * CELL;
         let y = BOARD_Y + tile.pos.y as f32 * CELL;
         draw_rectangle(x + 2.0, y + 2.0, CELL - 4.0, CELL - 4.0, color);
@@ -562,8 +560,7 @@ impl ReadingSnake {
     }
 
     fn draw_footer(&self) {
-        let portrait = screen_height() > screen_width() * 1.15;
-        let footer_size = if portrait { 80 } else { 28 };
+        let footer_size = screen::mobile_text_size(28);
 
         let progress = format_word_progress(&self.word, self.letter_index);
         centered_text(&format!("Word: {}", progress), 675.0, footer_size, YELLOW);
@@ -583,10 +580,9 @@ impl ReadingSnake {
     }
 
     fn draw_definition_card(&self) {
-        let portrait = screen_height() > screen_width() * 1.15;
-        let title_size = if portrait { 160 } else { 60 };
-        let pos_size = if portrait { 110 } else { 40 };
-        let def_size = if portrait { 160 } else { 60 };
+        let title_size = screen::mobile_text_size(60);
+        let pos_size = screen::mobile_text_size(40);
+        let def_size = screen::mobile_text_size(60);
 
         draw_rectangle(
             0.0,

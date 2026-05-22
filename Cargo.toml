@@ -6,3 +6,6 @@ description = "An educational arcade collection with K-5 math and reading games"
 
 [dependencies]
 macroquad = "0.4"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"

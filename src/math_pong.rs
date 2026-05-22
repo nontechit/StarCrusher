@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 use crate::levels::Grade;
 use crate::question::{generate_question, Question};
 use crate::random;
-use crate::screen::{SCREEN_H, SCREEN_W};
+use crate::screen::{self, SCREEN_H, SCREEN_W};
 
 const PADDLE_Y: f32 = 708.0;
 const TARGET_Y: f32 = 120.0;
@@ -268,9 +268,9 @@ impl MathPong {
     }
 
     fn draw_header(&self) {
-        let title_size = if portrait_layout() { 88 } else { 38 };
-        let meta_size = if portrait_layout() { 44 } else { 18 };
-        let stat_size = if portrait_layout() { 50 } else { 22 };
+        let title_size = screen::mobile_text_size(38);
+        let meta_size = screen::mobile_text_size(18);
+        let stat_size = screen::mobile_text_size(22);
         centered_text(
             "MATH PONG",
             42.0,
@@ -328,7 +328,7 @@ impl MathPong {
             );
 
             let text = target.value.to_string();
-            let target_text_size = if portrait_layout() { 70 } else { 28 };
+            let target_text_size = screen::mobile_text_size(28);
             let metrics = measure_text(&text, None, target_text_size, 1.0);
             draw_text(
                 &text,
@@ -364,9 +364,9 @@ impl MathPong {
     fn draw_footer(&self) {
         let lines: Vec<&str> = self.question.text.lines().collect();
         let mobile = portrait_layout();
-        let question_size = if mobile { 58 } else { 22 };
-        let message_size = if mobile { 44 } else { 18 };
-        let controls_size = if mobile { 38 } else { 14 };
+        let question_size = screen::mobile_text_size(22);
+        let message_size = screen::mobile_text_size(18);
+        let controls_size = screen::mobile_text_size(14);
         let question_gap = if mobile { 38.0 } else { 22.0 };
         let box_h = if mobile {
             116.0 + (lines.len().saturating_sub(1) as f32 * question_gap)
