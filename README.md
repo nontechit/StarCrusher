@@ -4,6 +4,14 @@ Star Crusher is an educational arcade collection about two young space travelers
 
 Current build: `1.5.1`
 
+## Latest Mobile Release
+
+- Migrated the virtual playfield from the older 1024x768 4:3 layout to a 1280x720 16:9 baseline.
+- Reworked portrait mobile menus into large rounded tap targets, matching the web `Site` button style.
+- Added explicit mobile `CONTINUE`, `START`, `BACK`, and `TITLE` buttons so players do not have to guess at swipe or keyboard prompts.
+- Refreshed the space-traveler color palette across the title, adventure intro, gates, overlays, HUDs, Math Invaders, Reading Snake, and Math Pong.
+- Rebuilt the checked-in `star-crusher.wasm` artifact for the static site.
+
 ## Features
 
 - Seven-grade progression from Preschool through 5th Grade.
@@ -258,7 +266,7 @@ flowchart LR
     wasm["wasm32 release"]
     dist["dist + index.html"]
     gha["pages.yml"]
-    pages["GitHub Pages"]
+    pages["GitHub Pages + www.boohw.com"]
 
     srcDir --> cargo
     cargo --> native
@@ -321,19 +329,20 @@ Reading Snake Nightmare:
 
 ## Web Deployment (GitHub Pages)
 
-This project builds to WASM and deploys automatically via GitHub Actions to [GitHub Pages](https://nontechit.github.io/StarCrusher/).
+This project builds to WASM and deploys automatically from the `main` branch via GitHub Actions to [GitHub Pages](https://nontechit.github.io/StarCrusher/) and the custom domain [www.boohw.com](https://www.boohw.com/).
 
 ### How It Works
 
 1. Pushing to `main` triggers `.github/workflows/pages.yml`.
-2. The action installs Rust, compiles the WASM target, runs `wasm-bindgen`, and stages the output in `dist/`.
-3. GitHub Pages serves the static files from the `gh-pages` branch.
+2. The action installs Rust, compiles the WASM target, and stages `index.html`, `CNAME`, and `star-crusher.wasm` in `dist/`.
+3. `actions/deploy-pages` publishes the `dist/` artifact to GitHub Pages.
+4. GitHub Pages serves the same build at `www.boohw.com` when the custom domain is configured.
 
 ### Custom Domain (www.boohw.com)
 
-The site is configured for the custom domain **www.boohw.com**. To complete setup:
+The repository includes a `CNAME` file for **www.boohw.com**. To complete or verify setup:
 
-1. Go to **Settings → Pages** on this repo and add `www.boohw.com` as a custom domain.
+1. Go to **Settings -> Pages** on this repo and add `www.boohw.com` as a custom domain.
 2. Add these DNS records at your registrar for boohw.com:
 
 | Type    | Name          | Value                  |
