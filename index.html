@@ -294,8 +294,9 @@
         @media (max-width: 700px) {
             .site-exit {
                 top: max(10px, env(safe-area-inset-top));
-                left: 50%;
-                transform: translateX(-50%);
+                right: max(10px, env(safe-area-inset-right));
+                left: auto;
+                transform: none;
                 min-height: 36px;
                 padding: 0 12px;
                 font-size: 0.82rem;
@@ -312,7 +313,7 @@
             margin: 0;
             padding: 0;
             border: 0;
-            image-rendering: pixelated;
+            image-rendering: auto;
             background: #000;
             touch-action: none;
             -webkit-tap-highlight-color: transparent;
@@ -513,8 +514,8 @@
             h: 78,
             gap: 16
         };
-        const mobileBack = { x: 54, y: 28, w: 82, h: 58 };
-        const mobileAction = { x: 428, y: 640, w: 424, h: 56 };
+        const mobileBack = { x: 54, y: 24, w: 72, h: 46 };
+        const mobileAction = { x: 190, y: 640, w: 900, h: 54 };
         const spellingPlay = { x: 390, y: 536, w: 220, h: 74 };
         const spellingNight = { x: 670, y: 536, w: 220, h: 74 };
         const mobileKeypad = { x: 930, y: 404, key: 64, gap: 8 };

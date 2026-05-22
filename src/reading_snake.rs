@@ -1,7 +1,5 @@
 use crate::random;
-use crate::screen::{
-    self, primary_tap_position, SCREEN_H, SCREEN_W,
-};
+use crate::screen::{self, primary_tap_position, to_virtual_position, SCREEN_H, SCREEN_W};
 use crate::ui;
 use macroquad::prelude::*;
 
@@ -11,10 +9,11 @@ const CELL: f32 = 27.0;
 const BOARD_X: f32 = 451.0;
 const BOARD_Y: f32 = 148.0;
 const MOBILE_CELL_W: f32 = 62.0;
-const MOBILE_CELL_H: f32 = 25.0;
+const MOBILE_CELL_H: f32 = 23.0;
 const MOBILE_BOARD_X: f32 = (SCREEN_W - GRID_W as f32 * MOBILE_CELL_W) / 2.0;
-const MOBILE_BOARD_Y: f32 = 170.0;
-const MOBILE_HEADER_BOTTOM: f32 = 152.0;
+const MOBILE_BOARD_Y: f32 = 190.0;
+const MOBILE_HEADER_BOTTOM: f32 = 178.0;
+const MOBILE_SWIPE_THRESHOLD: f32 = 34.0;
 const STEP_SECONDS: f64 = 0.25;
 const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
 const MAX_LIVES: u8 = 9;
@@ -115,6 +114,7 @@ pub struct ReadingSnake {
     showing_definition_card: bool,
     definition_card_title: &'static str,
     message: &'static str,
+    touch_start: Option<Vec2>,
 }
 
 #[derive(Clone, Debug)]
@@ -186,6 +186,7 @@ impl ReadingSnake {
                 "New word!"
             },
             message: "Collect the next letter.",
+            touch_start: None,
         };
         game.reset_run();
         game
@@ -322,12 +323,59 @@ impl ReadingSnake {
             self.next_dir = CellPos::new(1, 0);
         }
 
-        if let Some(tap) = primary_tap_position() {
-            if screen::portrait_layout() && self.tap_in_ui_chrome(tap) {
-                return;
+        let handled_swipe = self.handle_touch_swipe();
+
+        if !handled_swipe {
+            if let Some(tap) = primary_tap_position() {
+                if screen::portrait_layout() && self.tap_in_ui_chrome(tap) {
+                    return;
+                }
+                self.steer_from_tap(tap);
             }
-            self.steer_from_tap(tap);
         }
+    }
+
+    fn handle_touch_swipe(&mut self) -> bool {
+        if !screen::portrait_layout() {
+            return false;
+        }
+
+        let mut steered = false;
+        for touch in touches() {
+            let point = to_virtual_position(touch.position);
+            match touch.phase {
+                TouchPhase::Started => {
+                    if !self.tap_in_ui_chrome(point) && self.point_in_board(point) {
+                        self.touch_start = Some(point);
+                    }
+                }
+                TouchPhase::Moved | TouchPhase::Ended => {
+                    if let Some(start) = self.touch_start {
+                        let delta = point - start;
+                        if delta.length() >= MOBILE_SWIPE_THRESHOLD {
+                            let next = if delta.x.abs() > delta.y.abs() {
+                                CellPos::new(delta.x.signum() as i32, 0)
+                            } else {
+                                CellPos::new(0, delta.y.signum() as i32)
+                            };
+                            self.set_next_dir(next);
+                            self.touch_start = Some(point);
+                            steered = true;
+                        }
+                    }
+
+                    if touch.phase == TouchPhase::Ended {
+                        self.touch_start = None;
+                    }
+                }
+                TouchPhase::Stationary => {}
+                _ => {
+                    self.touch_start = None;
+                }
+            }
+        }
+
+        steered
     }
 
     fn tap_in_ui_chrome(&self, tap: Vec2) -> bool {
@@ -339,15 +387,8 @@ impl ReadingSnake {
 
     fn steer_from_tap(&mut self, tap: Vec2) {
         let (board_x, board_y, cell_w, cell_h) = board_metrics();
-        let board_w = GRID_W as f32 * cell_w;
-        let board_h = GRID_H as f32 * cell_h;
 
-        if screen::portrait_layout()
-            && (tap.x < board_x
-                || tap.x > board_x + board_w
-                || tap.y < board_y
-                || tap.y > board_y + board_h)
-        {
+        if screen::portrait_layout() && !self.point_in_board(tap) {
             return;
         }
 
@@ -368,6 +409,14 @@ impl ReadingSnake {
         };
 
         self.set_next_dir(next);
+    }
+
+    fn point_in_board(&self, point: Vec2) -> bool {
+        let (board_x, board_y, cell_w, cell_h) = board_metrics();
+        point.x >= board_x
+            && point.x <= board_x + GRID_W as f32 * cell_w
+            && point.y >= board_y
+            && point.y <= board_y + GRID_H as f32 * cell_h
     }
 
     fn set_next_dir(&mut self, next: CellPos) {
@@ -591,63 +640,70 @@ impl ReadingSnake {
     fn draw_mobile_header(&self) {
         let title = if self.nightmare_mode {
             if self.bonus_round {
-                "Night Word Quest"
+                "Night Reading"
             } else {
                 "Nightmare Reading"
             }
         } else {
-            "Reading Snake"
+            "Reading Planet"
         };
 
-        let title_size = screen::mobile_text_size(28);
-        centered_text(title, 38.0, title_size, soft_white());
+        draw_mobile_header_band();
+        draw_text(title, 154.0, 48.0, 36.0, soft_white());
 
         draw_stat_chip(
             82.0,
-            58.0,
-            210.0,
+            62.0,
+            232.0,
             "Score",
             &self.score.to_string(),
             star_yellow(),
         );
+        draw_stat_chip(342.0, 62.0, 208.0, "Lives", &self.lives.to_string(), mint());
         draw_stat_chip(
-            318.0,
-            58.0,
-            184.0,
-            "Lives",
-            &self.lives.to_string(),
-            mint(),
-        );
-        draw_stat_chip(
-            528.0,
-            58.0,
-            298.0,
-            "Mode",
-            if self.nightmare_mode { "Night" } else { "Read" },
-            planet_pink(),
+            578.0,
+            62.0,
+            270.0,
+            "Next",
+            &self.next_letter_label(),
+            soft_cyan(),
         );
 
-        draw_surface_card(82.0, 96.0, 1116.0, 44.0, 20.0, surface());
-        draw_text("Mission", 112.0, 122.0, 15.0, muted_text());
-        draw_wrapped_text(&self.definition, 228.0, 122.0, 930.0, 18, soft_white());
+        draw_surface_card(82.0, 116.0, 1116.0, 54.0, 20.0, elevated_surface());
+        draw_text("Goal", 116.0, 150.0, 20.0, muted_text());
+        draw_wrapped_text(&self.definition, 206.0, 150.0, 940.0, 24, soft_white());
     }
 
     fn draw_board(&self) {
         let (board_x, board_y, cell_w, cell_h) = board_metrics();
         if screen::portrait_layout() {
             draw_surface_card(
-                board_x - 20.0,
-                board_y - 18.0,
-                GRID_W as f32 * cell_w + 40.0,
-                GRID_H as f32 * cell_h + 36.0,
-                30.0,
-                Color::new(0.045, 0.065, 0.06, 0.98),
+                board_x - 26.0,
+                board_y - 24.0,
+                GRID_W as f32 * cell_w + 52.0,
+                GRID_H as f32 * cell_h + 48.0,
+                28.0,
+                Color::new(0.095, 0.105, 0.15, 0.98),
+            );
+            draw_round_rect(
+                board_x - 26.0,
+                board_y - 24.0,
+                GRID_W as f32 * cell_w + 52.0,
+                7.0,
+                4.0,
+                Color::new(0.48, 0.29, 1.0, 0.92),
             );
         }
 
         for x in 0..GRID_W {
             for y in 0..GRID_H {
-                let color = if (x + y) % 2 == 0 {
+                let color = if screen::portrait_layout() {
+                    if (x + y) % 2 == 0 {
+                        Color::new(0.12, 0.15, 0.2, 0.98)
+                    } else {
+                        Color::new(0.09, 0.12, 0.17, 0.98)
+                    }
+                } else if (x + y) % 2 == 0 {
                     Color::new(0.08, 0.17, 0.13, 0.92)
                 } else {
                     Color::new(0.055, 0.125, 0.12, 0.92)
@@ -684,19 +740,29 @@ impl ReadingSnake {
     fn draw_tile(&self, tile: &LetterTile, color: Color) {
         let (board_x, board_y, cell_w, cell_h) = board_metrics();
         let mobile = screen::portrait_layout();
-        let letter_size = if mobile { 18 } else { 22 };
+        let letter_size = if mobile { 28 } else { 22 };
         let x = board_x + tile.pos.x as f32 * cell_w;
         let y = board_y + tile.pos.y as f32 * cell_h;
-        let inset_x = if mobile { 9.0 } else { 2.0 };
-        let inset_y = if mobile { 2.0 } else { 2.0 };
+        let inset_x = if mobile { 6.0 } else { 2.0 };
+        let inset_y = if mobile { 1.5 } else { 2.0 };
         draw_round_rect(
             x + inset_x,
             y + inset_y,
             cell_w - inset_x * 2.0,
             cell_h - inset_y * 2.0,
-            if mobile { 5.0 } else { 0.0 },
+            if mobile { 8.0 } else { 0.0 },
             color,
         );
+        if mobile {
+            draw_round_rect(
+                x + inset_x + 4.0,
+                y + inset_y + 4.0,
+                cell_w - inset_x * 2.0 - 8.0,
+                4.0,
+                2.0,
+                Color::new(1.0, 1.0, 1.0, 0.22),
+            );
+        }
         let letter = tile.letter.to_string();
         let metrics = measure_text(&letter, None, letter_size, 1.0);
         draw_text(
@@ -715,12 +781,16 @@ impl ReadingSnake {
             let x = board_x + part.x as f32 * cell_w;
             let y = board_y + part.y as f32 * cell_h;
             let color = if idx == 0 {
-                mint()
+                if mobile {
+                    soft_cyan()
+                } else {
+                    mint()
+                }
             } else {
-                Color::new(0.22, 0.82, 0.42, 1.0)
+                Color::new(0.38, 0.86, 0.58, 1.0)
             };
-            let inset_x = if mobile { 8.0 } else { 3.0 };
-            let inset_y = if mobile { 3.0 } else { 3.0 };
+            let inset_x = if mobile { 6.0 } else { 3.0 };
+            let inset_y = if mobile { 2.5 } else { 3.0 };
             draw_round_rect(
                 x + inset_x,
                 y + inset_y,
@@ -765,21 +835,29 @@ impl ReadingSnake {
         let footer_y = board_y + GRID_H as f32 * cell_h + 28.0;
         let progress = format_word_progress(&self.word, self.letter_index);
 
-        draw_surface_card(
-            82.0,
-            footer_y,
-            1116.0,
-            52.0,
-            24.0,
-            Color::new(0.07, 0.07, 0.09, 0.96),
+        draw_surface_card(82.0, footer_y, 1116.0, 70.0, 20.0, elevated_surface());
+        draw_text("Word", 122.0, footer_y + 30.0, 18.0, muted_text());
+        centered_text_in_rect(
+            &progress,
+            252.0,
+            footer_y + 6.0,
+            440.0,
+            44.0,
+            34,
+            star_yellow(),
         );
-        draw_text("Word", 122.0, footer_y + 33.0, 16.0, muted_text());
-        centered_text_in_rect(&progress, 292.0, footer_y + 8.0, 360.0, 36.0, 28, star_yellow());
-        draw_text(self.message, 716.0, footer_y + 33.0, 16.0, soft_white());
+        draw_wrapped_text(
+            self.message,
+            744.0,
+            footer_y + 30.0,
+            370.0,
+            20,
+            soft_white(),
+        );
         centered_text(
-            "Tap the board to steer",
-            footer_y + 62.0,
-            14,
+            "Tap or swipe on the board to steer",
+            footer_y + 96.0,
+            18,
             muted_text(),
         );
     }
@@ -834,16 +912,16 @@ impl ReadingSnake {
             0.0,
             SCREEN_W,
             SCREEN_H,
-            Color::new(0.0, 0.0, 0.0, 0.68),
+            Color::new(0.01, 0.012, 0.02, 0.84),
         );
-        draw_surface_card(112.0, 128.0, 1056.0, 420.0, 38.0, surface());
+        draw_mobile_reading_card(104.0, 112.0, 1072.0, 462.0);
 
-        draw_text(self.definition_card_title, 176.0, 202.0, 34.0, muted_text());
+        draw_text(self.definition_card_title, 176.0, 192.0, 42.0, soft_white());
         draw_text(
             &self.word,
             176.0,
-            292.0,
-            72.0,
+            314.0,
+            104.0,
             if self.nightmare_mode {
                 planet_pink()
             } else {
@@ -853,12 +931,20 @@ impl ReadingSnake {
         draw_text(
             &format!("{} word", self.part_of_speech),
             182.0,
-            336.0,
-            24.0,
+            372.0,
+            34.0,
             mint(),
         );
-        draw_wrapped_text(&self.definition, 178.0, 400.0, 900.0, 30, soft_white());
+        draw_wrapped_text(&self.definition, 178.0, 452.0, 900.0, 42, soft_white());
         ui::draw_mobile_action_button("START");
+    }
+
+    fn next_letter_label(&self) -> String {
+        self.word
+            .chars()
+            .nth(self.letter_index)
+            .map(|letter| letter.to_string())
+            .unwrap_or_else(|| "-".to_string())
     }
 }
 
@@ -950,6 +1036,21 @@ fn mobile_footer_top() -> f32 {
 }
 
 fn draw_mobile_space_background() {
+    draw_rectangle(
+        0.0,
+        0.0,
+        SCREEN_W,
+        SCREEN_H,
+        Color::new(0.035, 0.035, 0.07, 1.0),
+    );
+    draw_rectangle(
+        0.0,
+        0.0,
+        SCREEN_W,
+        188.0,
+        Color::new(0.38, 0.22, 0.95, 0.72),
+    );
+
     for i in 0..42 {
         let x = ((i * 83 + 29) % SCREEN_W as i32) as f32;
         let y = ((i * 47 + 61) % SCREEN_H as i32) as f32;
@@ -962,8 +1063,26 @@ fn draw_mobile_space_background() {
         draw_circle(x, y, radius, color);
     }
 
-    draw_circle(1088.0, 282.0, 84.0, Color::new(1.0, 0.44, 0.7, 0.08));
-    draw_circle(150.0, 602.0, 96.0, Color::new(0.36, 0.92, 0.72, 0.06));
+    draw_circle(1088.0, 282.0, 84.0, Color::new(0.55, 0.36, 1.0, 0.1));
+    draw_circle(150.0, 602.0, 96.0, Color::new(0.3, 0.62, 1.0, 0.08));
+}
+
+fn draw_mobile_header_band() {
+    draw_circle(1000.0, 60.0, 280.0, Color::new(0.54, 0.35, 1.0, 0.12));
+    draw_circle(256.0, 116.0, 180.0, Color::new(0.25, 0.52, 1.0, 0.1));
+}
+
+fn draw_mobile_reading_card(x: f32, y: f32, w: f32, h: f32) {
+    draw_round_rect(x, y, w, h, 36.0, Color::new(0.115, 0.12, 0.16, 0.98));
+    draw_round_rect(x, y, w, 86.0, 36.0, Color::new(0.16, 0.17, 0.23, 0.96));
+    draw_round_rect(
+        x + 34.0,
+        y + h - 8.0,
+        w - 68.0,
+        8.0,
+        4.0,
+        Color::new(0.48, 0.29, 1.0, 0.86),
+    );
 }
 
 fn draw_surface_card(x: f32, y: f32, w: f32, h: f32, radius: f32, fill: Color) {
@@ -1000,22 +1119,33 @@ fn centered_text_in_rect(text: &str, x: f32, y: f32, w: f32, h: f32, font_size: 
 }
 
 fn draw_stat_chip(x: f32, y: f32, w: f32, label: &str, value: &str, accent: Color) {
-    draw_round_rect(x, y, w, 30.0, 15.0, Color::new(0.09, 0.1, 0.13, 0.96));
-    draw_circle(x + 22.0, y + 15.0, 6.0, accent);
-    draw_text(label, x + 40.0, y + 20.0, 15.0, muted_text());
-    draw_text(value, x + w - 58.0, y + 21.0, 18.0, soft_white());
+    draw_round_rect(x, y, w, 46.0, 23.0, Color::new(0.09, 0.1, 0.13, 0.96));
+    draw_circle(x + 28.0, y + 23.0, 8.0, accent);
+    draw_text(label, x + 50.0, y + 30.0, 23.0, muted_text());
+    let metrics = measure_text(value, None, 30, 1.0);
+    draw_text(
+        value,
+        x + w - metrics.width - 28.0,
+        y + 33.0,
+        30.0,
+        soft_white(),
+    );
 }
 
 fn surface() -> Color {
-    Color::new(0.07, 0.075, 0.105, 0.97)
+    Color::new(0.095, 0.1, 0.14, 0.97)
+}
+
+fn elevated_surface() -> Color {
+    Color::new(0.12, 0.125, 0.17, 0.97)
 }
 
 fn soft_white() -> Color {
-    Color::new(0.92, 0.92, 0.94, 1.0)
+    Color::new(0.96, 0.97, 1.0, 1.0)
 }
 
 fn muted_text() -> Color {
-    Color::new(0.6, 0.61, 0.66, 1.0)
+    Color::new(0.66, 0.67, 0.74, 1.0)
 }
 
 fn soft_cyan() -> Color {
@@ -1133,6 +1263,7 @@ mod tests {
             showing_definition_card: false,
             definition_card_title: "New word!",
             message: "Collect the next letter.",
+            touch_start: None,
         }
     }
 
