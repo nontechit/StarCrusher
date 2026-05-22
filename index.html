@@ -265,7 +265,8 @@
             position: fixed;
             z-index: 4;
             top: max(18px, env(safe-area-inset-top));
-            right: max(18px, env(safe-area-inset-right));
+            left: 50%;
+            transform: translateX(-50%);
             display: none;
             align-items: center;
             min-height: 44px;
@@ -293,7 +294,8 @@
         @media (max-width: 700px) {
             .site-exit {
                 top: max(10px, env(safe-area-inset-top));
-                right: max(10px, env(safe-area-inset-right));
+                left: 50%;
+                transform: translateX(-50%);
                 min-height: 36px;
                 padding: 0 12px;
                 font-size: 0.82rem;

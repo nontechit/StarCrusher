@@ -3,11 +3,17 @@ use macroquad::prelude::*;
 use crate::levels::Grade;
 use crate::question::{generate_question, Question};
 use crate::random;
-use crate::screen::{self, SCREEN_H, SCREEN_W};
+use crate::screen::{
+    self, primary_pointer_position, primary_release_position, primary_tap_position, SCREEN_H,
+    SCREEN_W,
+};
 use crate::ui;
 
 const PADDLE_Y: f32 = 616.0;
 const TARGET_Y: f32 = 116.0;
+const MOBILE_TARGET_Y: f32 = 200.0;
+const MOBILE_PADDLE_TOUCH_MIN_Y: f32 = 260.0;
+const MOBILE_PADDLE_TOUCH_MAX_Y: f32 = 610.0;
 const TARGET_W: f32 = 76.0;
 const TARGET_H: f32 = 42.0;
 const BALL_RADIUS: f32 = 8.0;
@@ -141,7 +147,12 @@ impl MathPong {
             self.paddle_x += speed;
         }
         if let Some(pointer) = primary_pointer_position() {
-            if pointer.y > 400.0 {
+            let in_paddle_zone = if portrait_layout() {
+                pointer.y >= MOBILE_PADDLE_TOUCH_MIN_Y && pointer.y <= MOBILE_PADDLE_TOUCH_MAX_Y
+            } else {
+                pointer.y > 400.0
+            };
+            if in_paddle_zone {
                 self.paddle_x = pointer.x - self.paddle_w / 2.0;
             }
         }
@@ -257,6 +268,12 @@ impl MathPong {
         let total_w = count as f32 * TARGET_W + count.saturating_sub(1) as f32 * spacing;
         let start_x = SCREEN_W / 2.0 - total_w / 2.0;
 
+        let target_y = if portrait_layout() {
+            MOBILE_TARGET_Y
+        } else {
+            TARGET_Y
+        };
+
         self.targets = answers
             .into_iter()
             .take(count)
@@ -264,7 +281,7 @@ impl MathPong {
             .map(|(idx, value)| Target {
                 rect: Rect::new(
                     start_x + idx as f32 * (TARGET_W + spacing),
-                    TARGET_Y,
+                    target_y,
                     TARGET_W,
                     TARGET_H,
                 ),
@@ -318,46 +335,27 @@ impl MathPong {
     }
 
     fn draw_mobile_header(&self) {
-        draw_card(
-            214.0,
-            24.0,
-            852.0,
-            78.0,
-            Color::new(0.04, 0.06, 0.15, 0.96),
-            Color::new(0.42, 0.86, 1.0, 0.82),
+        let progress = format!(
+            "{}  Question {}/{}",
+            self.grade.display_name(),
+            self.questions_cleared + 1,
+            QUESTIONS_PER_GRADE
         );
-        draw_text(
+        draw_mobile_corner_stat(&progress, &format!("Lives {}", self.lives), 34.0);
+
+        ui::draw_mobile_question_card(&self.question.text, 44.0);
+
+        centered_text(
             "Math Pong",
-            252.0,
-            70.0,
-            32.0,
+            130.0,
+            28,
             Color::new(0.92, 0.98, 1.0, 1.0),
         );
-        draw_text(
-            &format!(
-                "{}  Question {}/{}",
-                self.grade.display_name(),
-                self.questions_cleared + 1,
-                QUESTIONS_PER_GRADE
-            ),
-            538.0,
-            56.0,
-            17.0,
-            Color::new(0.62, 0.88, 1.0, 1.0),
-        );
-        draw_text(
+        centered_text(
             &format!("Score {}", self.score),
-            538.0,
-            82.0,
-            17.0,
+            162.0,
+            22,
             Color::new(1.0, 0.82, 0.34, 1.0),
-        );
-        draw_text(
-            &format!("Lives {}", self.lives),
-            780.0,
-            82.0,
-            17.0,
-            Color::new(0.74, 1.0, 0.72, 1.0),
         );
     }
 
@@ -485,35 +483,15 @@ impl MathPong {
     }
 
     fn draw_mobile_footer(&self) {
-        let lines: Vec<&str> = self.question.text.lines().collect();
-        let question_gap = 34.0;
-        let box_h = 112.0 + (lines.len().saturating_sub(1) as f32 * question_gap);
-        draw_card(
-            198.0,
-            396.0,
-            884.0,
-            box_h,
-            Color::new(0.045, 0.06, 0.15, 0.95),
-            Color::new(1.0, 0.78, 0.28, 0.82),
-        );
-
-        for (idx, line) in lines.iter().enumerate() {
-            centered_text(
-                line,
-                442.0 + idx as f32 * question_gap,
-                25,
-                Color::new(1.0, 0.9, 0.34, 1.0),
-            );
-        }
         centered_text(
             self.message,
-            524.0 + (lines.len().saturating_sub(1) as f32 * question_gap),
+            560.0,
             18,
             Color::new(0.94, 0.98, 1.0, 1.0),
         );
         centered_text(
             "Drag the paddle, then tap START.",
-            554.0 + (lines.len().saturating_sub(1) as f32 * question_gap),
+            588.0,
             15,
             Color::new(0.68, 0.78, 0.9, 1.0),
         );
@@ -528,59 +506,22 @@ fn portrait_layout() -> bool {
     screen::portrait_layout()
 }
 
-fn primary_tap_position() -> Option<Vec2> {
-    for touch in touches() {
-        if touch.phase == TouchPhase::Started {
-            return Some(to_virtual_position(touch.position));
-        }
-    }
-
-    if is_mouse_button_pressed(MouseButton::Left) {
-        let (x, y) = mouse_position();
-        return Some(to_virtual_position(vec2(x, y)));
-    }
-
-    None
-}
-
-fn primary_pointer_position() -> Option<Vec2> {
-    for touch in touches() {
-        if matches!(
-            touch.phase,
-            TouchPhase::Started | TouchPhase::Stationary | TouchPhase::Moved
-        ) {
-            return Some(to_virtual_position(touch.position));
-        }
-    }
-
-    if is_mouse_button_down(MouseButton::Left) {
-        let (x, y) = mouse_position();
-        return Some(to_virtual_position(vec2(x, y)));
-    }
-
-    None
-}
-
-fn primary_release_position() -> Option<Vec2> {
-    for touch in touches() {
-        if touch.phase == TouchPhase::Ended {
-            return Some(to_virtual_position(touch.position));
-        }
-    }
-
-    if is_mouse_button_released(MouseButton::Left) {
-        let (x, y) = mouse_position();
-        return Some(to_virtual_position(vec2(x, y)));
-    }
-
-    None
-}
-
-fn to_virtual_position(position: Vec2) -> Vec2 {
-    vec2(
-        position.x * SCREEN_W / screen_width().max(1.0),
-        position.y * SCREEN_H / screen_height().max(1.0),
-    )
+fn draw_mobile_corner_stat(left: &str, right: &str, y: f32) {
+    draw_text(
+        left,
+        82.0,
+        y,
+        16.0,
+        Color::new(0.62, 0.88, 1.0, 1.0),
+    );
+    let tm = measure_text(right, None, 16, 1.0);
+    draw_text(
+        right,
+        SCREEN_W - tm.width - 82.0,
+        y,
+        16.0,
+        Color::new(0.74, 1.0, 0.72, 1.0),
+    );
 }
 
 fn build_answer_choices(question: &Question, count: usize) -> Vec<i64> {
@@ -634,21 +575,6 @@ fn draw_starfield() {
             Color::new(brightness, brightness, 1.0, 0.75),
         );
     }
-}
-
-fn draw_card(x: f32, y: f32, w: f32, h: f32, fill: Color, edge: Color) {
-    draw_round_rect(x, y, w, h, 22.0, edge);
-    draw_round_rect(x + 4.0, y + 4.0, w - 8.0, h - 8.0, 18.0, fill);
-}
-
-fn draw_round_rect(x: f32, y: f32, w: f32, h: f32, radius: f32, color: Color) {
-    let r = radius.min(w / 2.0).min(h / 2.0);
-    draw_rectangle(x + r, y, w - r * 2.0, h, color);
-    draw_rectangle(x, y + r, w, h - r * 2.0, color);
-    draw_circle(x + r, y + r, r, color);
-    draw_circle(x + w - r, y + r, r, color);
-    draw_circle(x + r, y + h - r, r, color);
-    draw_circle(x + w - r, y + h - r, r, color);
 }
 
 fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {

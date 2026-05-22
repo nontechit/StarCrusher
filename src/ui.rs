@@ -231,40 +231,97 @@ pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text
     set_default_color();
 }
 
-fn draw_mobile_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text: Option<&str>) {
-    let fill = Color::new(0.035, 0.06, 0.13, 0.94);
-    let edge = Color::new(0.38, 0.82, 1.0, 0.78);
-    draw_rounded_panel(214.0, 24.0, 724.0, 68.0, 20.0, fill, edge);
+/// Yellow-bordered question card for portrait mobile HUDs. Returns the card bottom Y.
+pub fn draw_mobile_question_card(text: &str, banner_y: f32) -> f32 {
+    let lines: Vec<&str> = text.lines().collect();
+    let banner_w = 884.0;
+    let banner_x = CENTER_X - banner_w / 2.0;
+    let font_size = if lines.len() > 2 { 18 } else { 24 };
+    let line_h = font_size as f32 + 8.0;
+    let banner_h = (lines.len() as f32 * line_h + 28.0).max(70.0);
 
-    let stat_size = 17;
-    draw_text(
-        "Math Invaders",
-        248.0,
-        54.0,
+    draw_rounded_panel(
+        banner_x,
+        banner_y,
+        banner_w,
+        banner_h,
         22.0,
-        Color::new(0.92, 0.98, 1.0, 1.0),
-    );
-    draw_text(
-        &format!("{}  Wave {}", grade.display_name(), wave),
-        248.0,
-        78.0,
-        stat_size as f32,
-        Color::new(0.62, 0.88, 1.0, 1.0),
-    );
-    draw_text(
-        &format!("SCORE {}", score),
-        644.0,
-        58.0,
-        stat_size as f32,
-        Color::new(1.0, 0.82, 0.32, 1.0),
+        Color::new(0.055, 0.07, 0.17, 0.94),
+        Color::new(1.0, 0.78, 0.28, 0.82),
     );
 
-    for i in 0..lives.min(5) {
-        assets::draw_life_icon(816.0 + (i as f32) * 18.0, 78.0);
+    for (i, line) in lines.iter().enumerate() {
+        let tm = measure_text(line, None, font_size, 1.0);
+        draw_text(
+            line,
+            CENTER_X - tm.w / 2.0,
+            banner_y + 42.0 + (i as f32) * line_h,
+            font_size as f32,
+            Color::new(1.0, 0.97, 0.34, 1.0),
+        );
     }
 
+    banner_y + banner_h
+}
+
+fn draw_mobile_corner_stat(left: &str, right: &str, y: f32) {
+    draw_text(
+        left,
+        82.0,
+        y,
+        16.0,
+        Color::new(0.62, 0.88, 1.0, 1.0),
+    );
+    let tm = measure_text(right, None, 16, 1.0);
+    draw_text(
+        right,
+        SCREEN_W - tm.w - 82.0,
+        y,
+        16.0,
+        Color::new(0.74, 1.0, 0.72, 1.0),
+    );
+}
+
+fn draw_mobile_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text: Option<&str>) {
     if let Some(qtext) = question_text {
-        draw_mobile_question_banner(qtext);
+        let score_txt = format!("SCORE {}", score);
+        let tm = measure_text(&score_txt, None, 18, 1.0);
+        draw_text(
+            &score_txt,
+            CENTER_X - tm.w / 2.0,
+            34.0,
+            18.0,
+            Color::new(1.0, 0.82, 0.32, 1.0),
+        );
+
+        let stats_y = draw_mobile_question_card(qtext, 44.0);
+
+        draw_text(
+            &format!("{}  Wave {}", grade.display_name(), wave),
+            82.0,
+            stats_y + 18.0,
+            16.0,
+            Color::new(0.62, 0.88, 1.0, 1.0),
+        );
+
+        for i in 0..lives.min(5) {
+            assets::draw_life_icon(1098.0 - (i as f32) * 20.0, stats_y + 6.0);
+        }
+    } else {
+        let score_txt = format!("SCORE {}", score);
+        let tm = measure_text(&score_txt, None, 18, 1.0);
+        draw_text(
+            &score_txt,
+            CENTER_X - tm.w / 2.0,
+            34.0,
+            18.0,
+            Color::new(1.0, 0.82, 0.32, 1.0),
+        );
+        draw_mobile_corner_stat(
+            &format!("{}  Wave {}", grade.display_name(), wave),
+            &format!("Lives {}", lives),
+            58.0,
+        );
     }
 
     set_default_color();
@@ -303,37 +360,6 @@ fn draw_question_banner(text: &str) {
     }
 
     set_default_color();
-}
-
-fn draw_mobile_question_banner(text: &str) {
-    let lines: Vec<&str> = text.lines().collect();
-    let banner_w = 828.0;
-    let banner_x = CENTER_X - banner_w / 2.0;
-    let banner_y = 112.0;
-    let font_size = if lines.len() > 2 { 18 } else { 24 };
-    let line_h = font_size as f32 + 8.0;
-    let banner_h = (lines.len() as f32 * line_h + 28.0).max(70.0);
-
-    draw_rounded_panel(
-        banner_x,
-        banner_y,
-        banner_w,
-        banner_h,
-        22.0,
-        Color::new(0.055, 0.07, 0.17, 0.94),
-        Color::new(1.0, 0.78, 0.28, 0.82),
-    );
-
-    for (i, line) in lines.iter().enumerate() {
-        let tm = measure_text(line, None, font_size, 1.0);
-        draw_text(
-            line,
-            CENTER_X - tm.w / 2.0,
-            banner_y + 42.0 + (i as f32) * line_h,
-            font_size as f32,
-            Color::new(1.0, 0.97, 0.34, 1.0),
-        );
-    }
 }
 
 /// Draws the space-travel title screen and adventure menu.
