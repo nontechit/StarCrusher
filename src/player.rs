@@ -1,6 +1,8 @@
 use crate::assets;
 use macroquad::prelude::*;
 
+const PLAYER_Y: f32 = 680.0;
+
 /// Player ship position and state.
 pub struct Player {
     pub x: f32,
@@ -15,7 +17,7 @@ impl Player {
         let w = 32.0;
         Player {
             x: (screen_w - w) / 2.0,
-            y: 708.0,
+            y: PLAYER_Y,
             width: w,
             height: 32.0,
         }
@@ -123,7 +125,7 @@ impl EnemyBullet {
     /// Updates position each frame. Returns true if off-screen (bottom).
     pub fn update(&mut self) -> bool {
         self.y += self.speed;
-        self.y > 778.0 // Off bottom of screen
+        self.y > 730.0 // Off bottom of the 1280x720 virtual screen
     }
 
     /// Draws the enemy bullet at current position.

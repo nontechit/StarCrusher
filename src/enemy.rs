@@ -4,8 +4,9 @@ use crate::question::Question;
 use crate::random;
 use macroquad::prelude::*;
 
-const ENEMY_MIN_Y: f32 = 145.0;
-const ENEMY_MAX_Y: f32 = 430.0;
+const ENEMY_MIN_Y: f32 = 132.0;
+const ENEMY_MAX_Y: f32 = 410.0;
+const ENEMY_PLAYER_ZONE_Y: f32 = 530.0;
 
 /// Type of enemy: standard invader or puzzle type showing an answer.
 #[derive(Debug, Clone)]
@@ -81,6 +82,7 @@ impl Enemy {
 /// Manages Math Invaders targets with movement, firing, and puzzle assignment.
 pub struct EnemyGrid {
     pub enemies: Vec<Enemy>,
+    screen_w: f32,
     /// Horizontal speed multiplier (increases as fewer enemies remain).
     pub speed_mult: f32,
     /// Base movement pixels per frame.
@@ -113,6 +115,7 @@ impl EnemyGrid {
 
         let mut grid = EnemyGrid {
             enemies,
+            screen_w,
             speed_mult: config.enemy_move_speed,
             base_speed: 0.5,
             fire_interval_ms: config.fire_interval_ms,
@@ -167,10 +170,10 @@ impl EnemyGrid {
             e.x += e.velocity_x * effective_speed;
             e.y += e.velocity_y * effective_speed;
 
-            if e.x > 980.0 {
+            if e.x > self.screen_w + e.width {
                 e.x = -e.width;
             } else if e.x + e.width < 0.0 {
-                e.x = 980.0;
+                e.x = self.screen_w;
             }
 
             if e.y < ENEMY_MIN_Y || e.y > ENEMY_MAX_Y {
@@ -178,7 +181,7 @@ impl EnemyGrid {
                 e.y = e.y.clamp(ENEMY_MIN_Y, ENEMY_MAX_Y);
             }
 
-            if e.y + e.height > 480.0 {
+            if e.y + e.height > ENEMY_PLAYER_ZONE_Y {
                 return true;
             }
         }

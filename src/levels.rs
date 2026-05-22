@@ -55,13 +55,13 @@ impl Grade {
     /// Primary color for enemies at this grade level.
     pub fn enemy_color(&self) -> Color {
         match self {
-            Grade::Preschool => RED,
-            Grade::Kindergarten => ORANGE,
-            Grade::FirstGrade => YELLOW,
-            Grade::SecondGrade => GREEN,
-            Grade::ThirdGrade => Color::new(0.0, 1.0, 1.0, 1.0),
-            Grade::FourthGrade => BLUE,
-            Grade::FifthGrade => PURPLE,
+            Grade::Preschool => Color::new(1.0, 0.42, 0.55, 1.0),
+            Grade::Kindergarten => Color::new(1.0, 0.74, 0.28, 1.0),
+            Grade::FirstGrade => Color::new(0.98, 0.9, 0.36, 1.0),
+            Grade::SecondGrade => Color::new(0.36, 0.88, 0.55, 1.0),
+            Grade::ThirdGrade => Color::new(0.28, 0.82, 1.0, 1.0),
+            Grade::FourthGrade => Color::new(0.48, 0.62, 1.0, 1.0),
+            Grade::FifthGrade => Color::new(0.78, 0.52, 1.0, 1.0),
         }
     }
 

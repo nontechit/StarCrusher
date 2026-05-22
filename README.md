@@ -2,7 +2,7 @@
 
 Star Crusher is an educational arcade collection about two young space travelers flying between dungeon planets. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.4.8`
+Current build: `1.5.1`
 
 ## Features
 
@@ -19,15 +19,17 @@ Current build: `1.4.8`
 - Math Pong mode for launching a straight ball into randomly placed numbered targets.
 - Reading Snake mini game for letter order, word recognition, and definition practice, with randomized default or custom spelling lists and Nightmare mode.
 - Reading Snake shows definition cards, keeps the active definition visible above the board, and keeps new letter tiles away from the snake head.
-- Reading Snake supports swipe steering and a portrait-mode thumb D-pad on mobile.
+- Reading Snake supports a portrait-mode thumb D-pad on mobile, with swipe steering still available as a fallback.
 - Reading Snake definition cards show part of speech and use larger definition text for easier reading.
 - Completing the standard Reading Snake list starts a bonus Nightmare round using the same words in the same randomized order.
 - In Launch Voyage, completing normal Reading Snake advances directly to Math Pong instead of the standalone bonus round.
 - Space-travel title menu with two travelers, a ship, dungeon planets, a focused main adventure menu, and a Mission Select submenu.
 - Portrait mobile screens show an in-canvas `TITLE` / `BACK` button for touch navigation.
+- Portrait mobile menus use large rounded touch buttons styled like the site controls.
+- Portrait mobile gameplay uses compact HUD and question panels that leave room for the site button.
 - Game over and victory stat panels are centered with their score and progress text.
 - Procedural graphics only; no external assets or fonts required.
-- Launches in a 1920x1080 fullscreen window with a fixed 1024x768 virtual playfield.
+- Launches in a 1920x1080 fullscreen window with a fixed 1280x720 virtual playfield, with 16:9 title, gate, overlay, HUD, and mini-game layouts.
 
 ## Controls
 
@@ -49,6 +51,7 @@ Title menu controls:
 - Direct shortcut for Word Cargo: `L`
 - On mobile, tap menu rows directly.
 - On mobile, tap the in-canvas `BACK` button to return from Mission Select to the main menu.
+- On mobile, use explicit `CONTINUE`, `START`, `BACK`, and `TITLE` buttons for story, gate, restart, and navigation screens.
 
 Math Invaders controls:
 
@@ -68,8 +71,8 @@ Reading Snake controls:
 - Start spelling after a definition card: `Enter` or `Space`
 - Restart after game over: `Enter` or `Space`
 - Return to title: `Esc`
-- On mobile, swipe in the desired direction or tap the portrait thumb D-pad.
-- On mobile, tap definition cards and game-over screens to continue.
+- On mobile, tap the portrait thumb D-pad, or swipe in the desired direction as a fallback.
+- On mobile, tap `START` on definition cards and game-over screens to continue.
 - On mobile, tap `TITLE` to return to the title menu.
 
 Reading Snake layout and safety:
@@ -105,7 +108,7 @@ Math Pong controls:
 - Restart after game over: `Enter` or `Space`
 - Return to title: `Esc`
 - On mobile, drag or hold near the lower play area to move the paddle.
-- On mobile, release touch to launch the ball.
+- On mobile, drag or hold near the lower play area to move the paddle, then tap `START` to launch the ball.
 - On mobile, tap `TITLE` to return to the title menu.
 
 ## Requirements
