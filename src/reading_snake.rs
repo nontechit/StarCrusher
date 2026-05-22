@@ -5,8 +5,8 @@ use macroquad::prelude::*;
 const GRID_W: i32 = 14;
 const GRID_H: i32 = 14;
 const CELL: f32 = 27.0;
-const BOARD_X: f32 = 321.0;
-const BOARD_Y: f32 = 215.0;
+const BOARD_X: f32 = 323.0;
+const BOARD_Y: f32 = 160.0;
 const STEP_SECONDS: f64 = 0.25;
 const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
 const MAX_LIVES: u8 = 9;
@@ -474,9 +474,9 @@ impl ReadingSnake {
 
     fn draw_header(&self) {
         let portrait = screen_height() > screen_width() * 1.15;
-        let title_size = if portrait { 48 } else { 36 };
-        let def_size = if portrait { 80 } else { 56 };
-        let stat_size = if portrait { 48 } else { 32 };
+        let title_size = if portrait { 48 } else { 38 };
+        let def_size = if portrait { 64 } else { 32 };
+        let stat_size = if portrait { 40 } else { 22 };
 
         let title = if self.nightmare_mode {
             if self.bonus_round {
@@ -487,36 +487,20 @@ impl ReadingSnake {
         } else {
             "READING SNAKE"
         };
-        centered_text(title, 38.0, title_size, Color::new(0.4, 1.0, 0.65, 1.0));
-        centered_text(&format!("Definition: {}", self.definition), 88.0, def_size, WHITE);
+        centered_text(title, 42.0, title_size, Color::new(0.4, 1.0, 0.65, 1.0));
+        centered_text(&format!("Definition: {}", self.definition), 72.0, def_size, WHITE);
 
-        draw_text(&format!("Score: {}", self.score), 28.0, 40.0, stat_size as f32, YELLOW);
-        draw_text(&format!("Lives: {}", self.lives), 780.0, 40.0, stat_size as f32, WHITE);
+        draw_text(&format!("Score: {}", self.score), 24.0, 36.0, stat_size as f32, YELLOW);
+        draw_text(&format!("Lives: {}", self.lives), 680.0, 36.0, stat_size as f32, WHITE);
     }
 
     fn draw_board(&self) {
-        draw_rectangle(
-            BOARD_X - 8.0,
-            BOARD_Y - 8.0,
-            GRID_W as f32 * CELL + 16.0,
-            GRID_H as f32 * CELL + 16.0,
-            Color::new(0.05, 0.12, 0.08, 1.0),
-        );
-        draw_rectangle_lines(
-            BOARD_X - 8.0,
-            BOARD_Y - 8.0,
-            GRID_W as f32 * CELL + 16.0,
-            GRID_H as f32 * CELL + 16.0,
-            3.0,
-            Color::new(0.25, 0.75, 0.4, 1.0),
-        );
-
         for x in 0..GRID_W {
             for y in 0..GRID_H {
                 let color = if (x + y) % 2 == 0 {
-                    Color::new(0.08, 0.16, 0.1, 1.0)
+                    Color::new(0.08, 0.16, 0.1, 0.9)
                 } else {
-                    Color::new(0.06, 0.13, 0.09, 1.0)
+                    Color::new(0.06, 0.13, 0.09, 0.9)
                 };
                 draw_rectangle(
                     BOARD_X + x as f32 * CELL,
