@@ -60,7 +60,7 @@ fn hsl_to_rgb(h: f32, s: f32, l: f32) -> Color {
 /// Draws the heads-up display (HUD) at top of screen.
 pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text: Option<&str>) {
     let portrait = screen_height() > screen_width() * 1.15;
-    let font_size = if portrait { 28 } else { 16 };
+    let font_size = if portrait { 42 } else { 16 };
 
     // Grade level indicator (top-left)
     set_color(WHITE);
@@ -108,7 +108,7 @@ fn draw_question_banner(text: &str) {
     let banner_x = CENTER_X - banner_w / 2.0;
     let banner_y = 28.0;
     let base_font_size = if lines.len() > 2 { 22 } else { 28 };
-    let font_size = if portrait { (base_font_size as f32 * 1.5) as u16 } else { base_font_size };
+    let font_size = if portrait { (base_font_size as f32 * 2.5) as u16 } else { base_font_size };
     let line_h = font_size as f32 + 8.0;
     let banner_h = (lines.len() as f32 * line_h + 22.0).max(62.0);
 
@@ -687,10 +687,10 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
 /// Draws the game over screen with final score and grade reached.
 pub fn draw_game_over(score: u32, grade_reached: &Grade) {
     let portrait = screen_height() > screen_width() * 1.15;
-    let title_size = if portrait { 72 } else { 48 };
-    let score_size = if portrait { 42 } else { 28 };
-    let grade_size = if portrait { 36 } else { 24 };
-    let restart_size = if portrait { 30 } else { 20 };
+    let title_size = if portrait { 100 } else { 48 };
+    let score_size = if portrait { 60 } else { 28 };
+    let grade_size = if portrait { 50 } else { 24 };
+    let restart_size = if portrait { 42 } else { 20 };
 
     // Dark overlay
     set_color(Color::new(0.1, 0.05, 0.05, 0.9));
@@ -764,10 +764,10 @@ pub fn draw_game_over(score: u32, grade_reached: &Grade) {
 /// Draws the victory screen (completed all grades through 5th).
 pub fn draw_victory_screen(score: u32) {
     let portrait = screen_height() > screen_width() * 1.15;
-    let title_size = if portrait { 72 } else { 48 };
-    let score_size = if portrait { 54 } else { 36 };
-    let achievement_size = if portrait { 30 } else { 20 };
-    let restart_size = if portrait { 28 } else { 18 };
+    let title_size = if portrait { 100 } else { 48 };
+    let score_size = if portrait { 80 } else { 36 };
+    let achievement_size = if portrait { 48 } else { 20 };
+    let restart_size = if portrait { 42 } else { 18 };
 
     // Celebration overlay with gradient-like effect
     set_color(Color::new(0.1, 0.1, 0.2, 0.9));

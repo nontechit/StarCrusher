@@ -12,6 +12,7 @@ pub fn window_conf() -> Conf {
         window_height: WINDOW_H,
         fullscreen: true,
         window_resizable: false,
+        high_dpi: true,
         ..Default::default()
     }
 }
