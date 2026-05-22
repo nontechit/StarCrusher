@@ -4,8 +4,8 @@ use macroquad::prelude::*;
 
 const GRID_W: i32 = 14;
 const GRID_H: i32 = 14;
-const CELL: f32 = 23.0;
-const BOARD_X: f32 = 343.0;
+const CELL: f32 = 27.0;
+const BOARD_X: f32 = 321.0;
 const BOARD_Y: f32 = 215.0;
 const STEP_SECONDS: f64 = 0.25;
 const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
@@ -491,7 +491,7 @@ impl ReadingSnake {
         centered_text(&format!("Definition: {}", self.definition), 88.0, def_size, WHITE);
 
         draw_text(&format!("Score: {}", self.score), 28.0, 40.0, stat_size as f32, YELLOW);
-        draw_text(&format!("Lives: {}", self.lives), 870.0, 40.0, stat_size as f32, WHITE);
+        draw_text(&format!("Lives: {}", self.lives), 780.0, 40.0, stat_size as f32, WHITE);
     }
 
     fn draw_board(&self) {
