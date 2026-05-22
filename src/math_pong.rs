@@ -114,10 +114,17 @@ impl MathPong {
                 "MATH PONG OVER"
             };
             let color = if self.victory { GREEN } else { RED };
-            centered_text(title, 220.0, 42, color);
-            centered_text(&format!("Final Score: {}", self.score), 280.0, 28, YELLOW);
-            centered_text("Press ENTER to play again", 340.0, 22, WHITE);
-            centered_text("Press ESC for title", 375.0, 18, GRAY);
+            if portrait_layout() {
+                centered_text(title, 210.0, 72, color);
+                centered_text(&format!("Final Score: {}", self.score), 304.0, 46, YELLOW);
+                centered_text("Tap to play again", 402.0, 36, WHITE);
+                centered_text("Back to Site exits the game", 456.0, 28, GRAY);
+            } else {
+                centered_text(title, 220.0, 42, color);
+                centered_text(&format!("Final Score: {}", self.score), 280.0, 28, YELLOW);
+                centered_text("Press ENTER to play again", 340.0, 22, WHITE);
+                centered_text("Press ESC for title", 375.0, 18, GRAY);
+            }
         }
     }
 
@@ -261,7 +268,15 @@ impl MathPong {
     }
 
     fn draw_header(&self) {
-        centered_text("MATH PONG", 42.0, 38, Color::new(0.55, 0.85, 1.0, 1.0));
+        let title_size = if portrait_layout() { 56 } else { 38 };
+        let meta_size = if portrait_layout() { 26 } else { 18 };
+        let stat_size = if portrait_layout() { 30 } else { 22 };
+        centered_text(
+            "MATH PONG",
+            42.0,
+            title_size,
+            Color::new(0.55, 0.85, 1.0, 1.0),
+        );
         centered_text(
             &format!(
                 "{} | Question {}/{}",
@@ -270,11 +285,23 @@ impl MathPong {
                 QUESTIONS_PER_GRADE
             ),
             72.0,
-            18,
+            meta_size,
             WHITE,
         );
-        draw_text(&format!("Score: {}", self.score), 24.0, 36.0, 22.0, YELLOW);
-        draw_text(&format!("Lives: {}", self.lives), 680.0, 36.0, 22.0, WHITE);
+        draw_text(
+            &format!("Score: {}", self.score),
+            24.0,
+            36.0,
+            stat_size as f32,
+            YELLOW,
+        );
+        draw_text(
+            &format!("Lives: {}", self.lives),
+            680.0,
+            36.0,
+            stat_size as f32,
+            WHITE,
+        );
     }
 
     fn draw_targets(&self) {
@@ -301,12 +328,13 @@ impl MathPong {
             );
 
             let text = target.value.to_string();
-            let metrics = measure_text(&text, None, 28, 1.0);
+            let target_text_size = if portrait_layout() { 42 } else { 28 };
+            let metrics = measure_text(&text, None, target_text_size, 1.0);
             draw_text(
                 &text,
                 target.rect.x + target.rect.w / 2.0 - metrics.width / 2.0,
                 target.rect.y + target.rect.h / 2.0 + metrics.height / 2.5,
-                28.0,
+                target_text_size as f32,
                 WHITE,
             );
         }
@@ -335,7 +363,16 @@ impl MathPong {
 
     fn draw_footer(&self) {
         let lines: Vec<&str> = self.question.text.lines().collect();
-        let box_h = 62.0 + (lines.len().saturating_sub(1) as f32 * 22.0);
+        let mobile = portrait_layout();
+        let question_size = if mobile { 36 } else { 22 };
+        let message_size = if mobile { 28 } else { 18 };
+        let controls_size = if mobile { 22 } else { 14 };
+        let question_gap = if mobile { 38.0 } else { 22.0 };
+        let box_h = if mobile {
+            116.0 + (lines.len().saturating_sub(1) as f32 * question_gap)
+        } else {
+            62.0 + (lines.len().saturating_sub(1) as f32 * question_gap)
+        };
         draw_rectangle(
             100.0,
             424.0,
@@ -353,16 +390,35 @@ impl MathPong {
         );
 
         for (idx, line) in lines.iter().enumerate() {
-            centered_text(line, 452.0 + idx as f32 * 22.0, 22, YELLOW);
+            centered_text(
+                line,
+                462.0 + idx as f32 * question_gap,
+                question_size,
+                YELLOW,
+            );
         }
-        centered_text(self.message, 506.0, 18, WHITE);
         centered_text(
-            "Move: Arrow Keys / A,D or touch   Launch: Space/Enter or release touch   ESC: Title",
-            586.0,
-            14,
+            self.message,
+            if mobile { 548.0 } else { 506.0 },
+            message_size,
+            WHITE,
+        );
+        let controls = if mobile {
+            "Touch to aim. Release to launch."
+        } else {
+            "Move: Arrow Keys / A,D or touch   Launch: Space/Enter or release touch   ESC: Title"
+        };
+        centered_text(
+            controls,
+            if mobile { 626.0 } else { 586.0 },
+            controls_size,
             GRAY,
         );
     }
+}
+
+fn portrait_layout() -> bool {
+    screen_height() > screen_width() * 1.15
 }
 
 fn primary_tap_position() -> Option<Vec2> {
