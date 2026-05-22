@@ -7,13 +7,13 @@ Current build: `1.5.6`
 ## Latest Mobile Release
 
 - Fixed portrait touch mapping by converting screen coordinates through the virtual 1280x720 camera in `screen.rs`, so paddle and ship controls align with finger position on iPhone Safari.
-- Centered the web `Site` button at the top of the game shell with safe-area spacing.
+- Moved the mobile web `Site` button to the top-right of the game shell so it no longer overlaps in-canvas headers.
 - Math Invaders portrait HUD now leads with the active question card at the top; score, wave, and lives sit in corner stats instead of a separate title bar.
 - Math Invaders portrait gameplay scales the player ship and numbered targets for easier reading on phone screens.
 - Math Pong portrait HUD moves the question card to the top, centers the title and score, and keeps level progress and lives in the corners.
 - Math Pong paddle touch input is limited to the gameplay band so header and footer taps do not yank the paddle sideways.
-- Reading Snake portrait mode removes the thumb D-pad; tap anywhere on the board to steer toward the next letter.
-- Reading Snake portrait layout uses a compact header, larger board, and a footer hint: `Tap the board to steer`.
+- Reading Snake portrait mode removes the thumb D-pad; tap or swipe on the board to steer toward the next letter.
+- Reading Snake portrait layout uses a clearer Reading Planet header, compact stat pills, a goal banner, a larger high-contrast board, and a footer hint: `Tap or swipe on the board to steer`.
 - Added a web touch bridge so iPhone Safari taps on canvas buttons trigger the matching game controls.
 - Migrated the virtual playfield from the older 1024x768 4:3 layout to a 1280x720 16:9 baseline.
 - Reworked portrait mobile menus into large rounded tap targets, matching the web `Site` button style.
@@ -37,14 +37,14 @@ Current build: `1.5.6`
 - Math Pong mode for launching a straight ball into randomly placed numbered targets.
 - Reading Snake mini game for letter order, word recognition, and definition practice, with randomized default or custom spelling lists and Nightmare mode.
 - Reading Snake shows definition cards, keeps the active definition visible above the board, and keeps new letter tiles away from the snake head.
-- Reading Snake supports portrait tap-to-steer on the board; arrow keys and WASD remain available as fallback controls.
+- Reading Snake supports portrait tap-or-swipe steering on the board; arrow keys and WASD remain available as fallback controls.
 - Reading Snake definition cards show part of speech and use larger definition text for easier reading.
 - Completing the standard Reading Snake list starts a bonus Nightmare round using the same words in the same randomized order.
 - In Launch Voyage, completing normal Reading Snake advances directly to Math Pong instead of the standalone bonus round.
 - Space-travel title menu with two travelers, a ship, dungeon planets, a focused main adventure menu, and a Mission Select submenu.
 - Portrait mobile screens show an in-canvas `TITLE` / `BACK` button for touch navigation.
 - Portrait mobile menus use large rounded touch buttons styled like the site controls.
-- Portrait mobile gameplay uses compact HUD and question panels, with the centered `Site` button above the playfield.
+- Portrait mobile gameplay uses compact HUD and question panels, with the browser `Site` button kept in the top-right shell control area.
 - Game over and victory stat panels are centered with their score and progress text.
 - Procedural graphics only; no external assets or fonts required.
 - Launches in a 1920x1080 fullscreen window with a fixed 1280x720 virtual playfield, with 16:9 title, gate, overlay, HUD, and mini-game layouts.
@@ -90,7 +90,7 @@ Reading Snake controls:
 - Start spelling after a definition card: `Enter` or `Space`
 - Restart after game over: `Enter` or `Space`
 - Return to title: `Esc`
-- On mobile, tap the board to steer toward the next letter.
+- On mobile, tap or swipe on the board to steer toward the next letter.
 - On mobile, tap `START` on definition cards and game-over screens to continue.
 - On mobile, tap `TITLE` to return to the title menu.
 
@@ -320,7 +320,7 @@ Reading Snake:
 3. Use the format `apple: a fruit; moon: shines at night` for custom definitions.
 4. Read the definition card, then press `Enter` or `Space` to start spelling.
 5. Use the visible definition above the board and follow the blank word prompt below the board.
-6. Steer the snake into the next correct letter; on portrait mobile, tap the board to choose direction.
+6. Steer the snake into the next correct letter; on portrait mobile, tap or swipe on the board to choose direction.
 7. Avoid wrong letters, walls, and the snake's own tail.
 8. New letters appear away from the snake head so the player has room to react.
 9. Complete every word in the randomized list to unlock a bonus Nightmare pass through those same words in the same order.
