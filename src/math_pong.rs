@@ -4,9 +4,10 @@ use crate::levels::Grade;
 use crate::question::{generate_question, Question};
 use crate::random;
 use crate::screen::{self, SCREEN_H, SCREEN_W};
+use crate::ui;
 
-const PADDLE_Y: f32 = 708.0;
-const TARGET_Y: f32 = 120.0;
+const PADDLE_Y: f32 = 616.0;
+const TARGET_Y: f32 = 116.0;
 const TARGET_W: f32 = 76.0;
 const TARGET_H: f32 = 42.0;
 const BALL_RADIUS: f32 = 8.0;
@@ -74,9 +75,13 @@ impl MathPong {
         }
 
         if self.game_over || self.victory {
+            let mobile_start =
+                primary_tap_position().is_some_and(ui::mobile_action_button_contains);
+            let desktop_start = !portrait_layout() && primary_tap_position().is_some();
             if is_key_pressed(KeyCode::Enter)
                 || is_key_pressed(KeyCode::Space)
-                || primary_tap_position().is_some()
+                || mobile_start
+                || desktop_start
             {
                 *self = Self::new();
             }
@@ -117,13 +122,12 @@ impl MathPong {
             if portrait_layout() {
                 centered_text(title, 210.0, 72, color);
                 centered_text(&format!("Final Score: {}", self.score), 304.0, 46, YELLOW);
-                centered_text("Tap to play again", 402.0, 36, WHITE);
-                centered_text("Back to Site exits the game", 456.0, 28, GRAY);
+                ui::draw_mobile_action_button("START");
             } else {
-                centered_text(title, 220.0, 42, color);
-                centered_text(&format!("Final Score: {}", self.score), 280.0, 28, YELLOW);
-                centered_text("Press ENTER to play again", 340.0, 22, WHITE);
-                centered_text("Press ESC for title", 375.0, 18, GRAY);
+                centered_text(title, 208.0, 42, color);
+                centered_text(&format!("Final Score: {}", self.score), 268.0, 28, YELLOW);
+                centered_text("Press ENTER to play again", 328.0, 22, WHITE);
+                centered_text("Press ESC for title", 364.0, 18, GRAY);
             }
         }
     }
@@ -137,7 +141,7 @@ impl MathPong {
             self.paddle_x += speed;
         }
         if let Some(pointer) = primary_pointer_position() {
-            if pointer.y > 420.0 {
+            if pointer.y > 400.0 {
                 self.paddle_x = pointer.x - self.paddle_w / 2.0;
             }
         }
@@ -146,10 +150,14 @@ impl MathPong {
 
         if !self.ball_launched {
             self.ball_pos = vec2(self.paddle_x + self.paddle_w / 2.0, PADDLE_Y - 14.0);
-            if is_key_pressed(KeyCode::Space)
-                || is_key_pressed(KeyCode::Enter)
-                || primary_release_position().is_some()
-            {
+            let mobile_start =
+                primary_tap_position().is_some_and(ui::mobile_action_button_contains);
+            let touch_launch = if portrait_layout() {
+                mobile_start
+            } else {
+                primary_release_position().is_some()
+            };
+            if is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Enter) || touch_launch {
                 let grade_speed = 4.8 + self.grade.index() as f32 * 0.35;
                 self.ball_vel = vec2(0.0, -grade_speed);
                 self.ball_launched = true;
@@ -268,7 +276,7 @@ impl MathPong {
     }
 
     fn draw_header(&self) {
-        let title_size = screen::mobile_text_size(38);
+        let title_size = screen::mobile_text_size(34);
         let meta_size = screen::mobile_text_size(18);
         let stat_size = screen::mobile_text_size(22);
         centered_text(
@@ -297,7 +305,7 @@ impl MathPong {
         );
         draw_text(
             &format!("Lives: {}", self.lives),
-            680.0,
+            1040.0,
             36.0,
             stat_size as f32,
             WHITE,
@@ -373,17 +381,20 @@ impl MathPong {
         } else {
             62.0 + (lines.len().saturating_sub(1) as f32 * question_gap)
         };
+        let box_x = 120.0;
+        let box_y = if mobile { 402.0 } else { 418.0 };
+        let box_w = SCREEN_W - box_x * 2.0;
         draw_rectangle(
-            100.0,
-            424.0,
-            SCREEN_H,
+            box_x,
+            box_y,
+            box_w,
             box_h,
             Color::new(0.05, 0.08, 0.18, 0.88),
         );
         draw_rectangle_lines(
-            100.0,
-            424.0,
-            SCREEN_H,
+            box_x,
+            box_y,
+            box_w,
             box_h,
             2.0,
             Color::new(0.4, 0.7, 1.0, 1.0),
@@ -392,28 +403,31 @@ impl MathPong {
         for (idx, line) in lines.iter().enumerate() {
             centered_text(
                 line,
-                462.0 + idx as f32 * question_gap,
+                if mobile { 440.0 } else { 456.0 } + idx as f32 * question_gap,
                 question_size,
                 YELLOW,
             );
         }
         centered_text(
             self.message,
-            if mobile { 548.0 } else { 506.0 },
+            if mobile { 536.0 } else { 500.0 },
             message_size,
             WHITE,
         );
         let controls = if mobile {
-            "Touch to aim. Release to launch."
+            "Drag to aim, then tap START."
         } else {
             "Move: Arrow Keys / A,D or touch   Launch: Space/Enter or release touch   ESC: Title"
         };
         centered_text(
             controls,
-            if mobile { 626.0 } else { 586.0 },
+            if mobile { 588.0 } else { 576.0 },
             controls_size,
             GRAY,
         );
+        if mobile && !self.ball_launched {
+            ui::draw_mobile_action_button("START");
+        }
     }
 }
 

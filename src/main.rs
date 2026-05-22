@@ -266,16 +266,23 @@ impl Game {
             }
             GameMode::Playing => self.update_playing(),
             GameMode::GateIntro => {
+                let mobile_start =
+                    primary_tap_position().is_some_and(ui::mobile_action_button_contains);
+                let desktop_start = !screen::portrait_layout() && primary_tap_position().is_some();
                 if is_key_pressed(KeyCode::Enter)
                     || is_key_pressed(KeyCode::Space)
-                    || primary_tap_position().is_some()
+                    || mobile_start
+                    || desktop_start
                 {
                     self.mode = GameMode::GateQuestion;
                 }
             }
             GameMode::GateQuestion => self.update_gate_question(),
             GameMode::GameOver | GameMode::Victory => {
-                if is_key_pressed(KeyCode::Enter) || primary_tap_position().is_some() {
+                let mobile_start =
+                    primary_tap_position().is_some_and(ui::mobile_action_button_contains);
+                let desktop_start = !screen::portrait_layout() && primary_tap_position().is_some();
+                if is_key_pressed(KeyCode::Enter) || mobile_start || desktop_start {
                     self.reset();
                 }
             }
@@ -567,9 +574,13 @@ impl Game {
     fn update_adventure_intro(&mut self) {
         let total_pages = ui::adventure_intro_page_count();
 
+        let mobile_continue = primary_tap_position().is_some_and(ui::mobile_action_button_contains);
+        let desktop_continue = !screen::portrait_layout() && primary_tap_position().is_some();
+
         if is_key_pressed(KeyCode::Enter)
             || is_key_pressed(KeyCode::Space)
-            || primary_tap_position().is_some()
+            || mobile_continue
+            || desktop_continue
         {
             if self.intro_page + 1 >= total_pages {
                 self.start_adventure_math_invaders();
@@ -627,7 +638,7 @@ impl Game {
             GameMode::Playing => self.draw_playing(),
             GameMode::GateIntro => {
                 self.draw_playing();
-                ui::draw_question_gate(&self.grade, self.grade.math_topics());
+                ui::draw_question_gate(&self.grade, self.grade.math_topics(), true);
             }
             GameMode::GateQuestion => self.draw_gate_question(),
             GameMode::GameOver => {
@@ -678,7 +689,7 @@ impl Game {
     fn draw_gate_question(&self) {
         draw_starfield();
         assets::draw_border(SCREEN_W, SCREEN_H);
-        ui::draw_question_gate(&self.grade, self.grade.math_topics());
+        ui::draw_question_gate(&self.grade, self.grade.math_topics(), false);
 
         let question_lines: Vec<&str> = self.gate_question.text.lines().collect();
         for (i, line) in question_lines.iter().enumerate() {

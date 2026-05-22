@@ -1,19 +1,20 @@
 use crate::random;
 use crate::screen::{self, SCREEN_H, SCREEN_W};
+use crate::ui;
 use macroquad::prelude::*;
 
 const GRID_W: i32 = 14;
 const GRID_H: i32 = 14;
 const CELL: f32 = 27.0;
-const BOARD_X: f32 = 323.0;
-const BOARD_Y: f32 = 160.0;
+const BOARD_X: f32 = 451.0;
+const BOARD_Y: f32 = 148.0;
 const STEP_SECONDS: f64 = 0.25;
 const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
 const MAX_LIVES: u8 = 9;
 const SWIPE_MIN_DISTANCE: f32 = 46.0;
-const DPAD_X: f32 = 42.0;
-const DPAD_Y: f32 = 558.0;
-const DPAD_KEY: f32 = 62.0;
+const DPAD_X: f32 = 72.0;
+const DPAD_Y: f32 = 488.0;
+const DPAD_KEY: f32 = 58.0;
 const DPAD_GAP: f32 = 8.0;
 
 const WORDS: &[(&str, &str, &str)] = &[
@@ -197,9 +198,13 @@ impl ReadingSnake {
             if self.completed && self.completion_returns_action {
                 return ReadingSnakeAction::Completed;
             }
+            let mobile_start =
+                primary_tap_position().is_some_and(ui::mobile_action_button_contains);
+            let desktop_start = !screen::portrait_layout() && primary_tap_position().is_some();
             if is_key_pressed(KeyCode::Enter)
                 || is_key_pressed(KeyCode::Space)
-                || primary_tap_position().is_some()
+                || mobile_start
+                || desktop_start
             {
                 *self = Self::new_with_mode(self.custom_words.clone(), self.nightmare_mode);
             }
@@ -207,9 +212,13 @@ impl ReadingSnake {
         }
 
         if self.showing_definition_card {
+            let mobile_start =
+                primary_tap_position().is_some_and(ui::mobile_action_button_contains);
+            let desktop_start = !screen::portrait_layout() && primary_tap_position().is_some();
             if is_key_pressed(KeyCode::Enter)
                 || is_key_pressed(KeyCode::Space)
-                || primary_tap_position().is_some()
+                || mobile_start
+                || desktop_start
             {
                 self.showing_definition_card = false;
                 self.place_letters();
@@ -253,10 +262,14 @@ impl ReadingSnake {
                 "READING SNAKE OVER"
             };
             let title_color = if self.completed { YELLOW } else { RED };
-            centered_text(title, 300.0, 42, title_color);
-            centered_text(&format!("Final Score: {}", self.score), 360.0, 28, YELLOW);
-            centered_text("Press ENTER to play again", 420.0, 22, WHITE);
-            centered_text("Press ESC for title", 455.0, 18, GRAY);
+            centered_text(title, 288.0, 42, title_color);
+            centered_text(&format!("Final Score: {}", self.score), 352.0, 28, YELLOW);
+            if screen::portrait_layout() {
+                ui::draw_mobile_action_button("START");
+            } else {
+                centered_text("Press ENTER to play again", 412.0, 22, WHITE);
+                centered_text("Press ESC for title", 446.0, 18, GRAY);
+            }
         } else if self.showing_definition_card {
             self.draw_definition_card();
         }
@@ -554,7 +567,7 @@ impl ReadingSnake {
         );
         draw_text(
             &format!("Lives: {}", self.lives),
-            680.0,
+            1040.0,
             72.0,
             stat_size as f32,
             WHITE,
@@ -606,7 +619,7 @@ impl ReadingSnake {
     }
 
     fn draw_tile(&self, tile: &LetterTile, color: Color) {
-        let letter_size = screen::mobile_text_size(36);
+        let letter_size = 22;
         let x = BOARD_X + tile.pos.x as f32 * CELL;
         let y = BOARD_Y + tile.pos.y as f32 * CELL;
         draw_rectangle(x + 2.0, y + 2.0, CELL - 4.0, CELL - 4.0, color);
@@ -641,11 +654,11 @@ impl ReadingSnake {
         let controls_size = screen::mobile_text_size(16);
 
         let progress = format_word_progress(&self.word, self.letter_index);
-        centered_text(&format!("Word: {}", progress), 568.0, progress_size, YELLOW);
-        centered_text(self.message, 602.0, message_size, WHITE);
+        centered_text(&format!("Word: {}", progress), 550.0, progress_size, YELLOW);
+        centered_text(self.message, 584.0, message_size, WHITE);
         centered_text(
             "Meaning: Read the card, then spell the word.",
-            632.0,
+            614.0,
             hint_size,
             WHITE,
         );
@@ -654,7 +667,7 @@ impl ReadingSnake {
         } else {
             "Arrow Keys / WASD to move   ESC returns to title"
         };
-        centered_text(controls, 660.0, controls_size, GRAY);
+        centered_text(controls, 642.0, controls_size, GRAY);
     }
 
     fn draw_mobile_dpad(&self) {
@@ -719,9 +732,9 @@ impl ReadingSnake {
     }
 
     fn draw_definition_card(&self) {
-        let title_size = screen::mobile_text_size(60);
-        let pos_size = screen::mobile_text_size(40);
-        let def_size = screen::mobile_text_size(60);
+        let title_size = screen::mobile_text_size(42);
+        let pos_size = screen::mobile_text_size(24);
+        let def_size = screen::mobile_text_size(30);
 
         draw_rectangle(
             0.0,
@@ -731,29 +744,30 @@ impl ReadingSnake {
             Color::new(0.0, 0.0, 0.0, 0.65),
         );
         draw_rectangle(
-            157.0,
-            180.0,
-            710.0,
-            380.0,
+            260.0,
+            164.0,
+            760.0,
+            360.0,
             Color::new(0.06, 0.14, 0.1, 0.98),
         );
         draw_rectangle_lines(
-            157.0,
-            180.0,
-            710.0,
-            380.0,
+            260.0,
+            164.0,
+            760.0,
+            360.0,
             4.0,
             Color::new(0.4, 1.0, 0.65, 1.0),
         );
 
-        centered_text(self.definition_card_title, 245.0, title_size, YELLOW);
+        centered_text(self.definition_card_title, 230.0, title_size, YELLOW);
         centered_text(
             &format!("Part of speech: {}", self.part_of_speech),
-            310.0,
+            292.0,
             pos_size,
             Color::new(0.4, 1.0, 0.65, 1.0),
         );
-        draw_wrapped_centered_text(&self.definition, 382.0, 610.0, def_size, WHITE);
+        draw_wrapped_centered_text(&self.definition, 360.0, 700.0, def_size, WHITE);
+        ui::draw_mobile_action_button("START");
     }
 }
 

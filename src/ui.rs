@@ -4,32 +4,36 @@ use crate::screen::{self, SCREEN_H, SCREEN_W};
 use macroquad::prelude::*;
 
 const CENTER_X: f32 = SCREEN_W / 2.0;
-pub const TITLE_MENU_X: f32 = 552.0;
-pub const TITLE_MENU_Y: f32 = 206.0;
-pub const TITLE_MENU_W: f32 = 332.0;
-pub const TITLE_MENU_ROW_TOP: f32 = 276.0;
+pub const TITLE_MENU_X: f32 = 720.0;
+pub const TITLE_MENU_Y: f32 = 190.0;
+pub const TITLE_MENU_W: f32 = 420.0;
+pub const TITLE_MENU_ROW_TOP: f32 = 270.0;
 pub const TITLE_MENU_ROW_H: f32 = 54.0;
 pub const TITLE_MENU_ROW_GAP: f32 = 18.0;
-pub const MOBILE_TITLE_MENU_X: f32 = 122.0;
-pub const MOBILE_TITLE_MENU_ROW_TOP: f32 = 338.0;
-pub const MOBILE_TITLE_MENU_W: f32 = 780.0;
-pub const MOBILE_TITLE_MENU_ROW_H: f32 = 86.0;
-pub const MOBILE_TITLE_MENU_ROW_GAP: f32 = 18.0;
-pub const KEYPAD_X: f32 = 704.0;
-pub const KEYPAD_Y: f32 = 438.0;
+pub const MOBILE_TITLE_MENU_X: f32 = 160.0;
+pub const MOBILE_TITLE_MENU_ROW_TOP: f32 = 318.0;
+pub const MOBILE_TITLE_MENU_W: f32 = 960.0;
+pub const MOBILE_TITLE_MENU_ROW_H: f32 = 78.0;
+pub const MOBILE_TITLE_MENU_ROW_GAP: f32 = 16.0;
+pub const KEYPAD_X: f32 = 920.0;
+pub const KEYPAD_Y: f32 = 414.0;
 pub const KEYPAD_KEY: f32 = 54.0;
 pub const KEYPAD_GAP: f32 = 8.0;
-pub const GATE_QUESTION_X: f32 = 104.0;
-pub const GATE_QUESTION_Y: f32 = 454.0;
-pub const GATE_QUESTION_W: f32 = 540.0;
+pub const GATE_QUESTION_X: f32 = 210.0;
+pub const GATE_QUESTION_Y: f32 = 438.0;
+pub const GATE_QUESTION_W: f32 = 620.0;
 pub const GATE_QUESTION_LINE_GAP: f32 = 34.0;
 pub const MOBILE_BACK_X: f32 = 24.0;
 pub const MOBILE_BACK_Y: f32 = 24.0;
 pub const MOBILE_BACK_W: f32 = 170.0;
 pub const MOBILE_BACK_H: f32 = 68.0;
-pub const SPELLING_PLAY_X: f32 = 270.0;
-pub const SPELLING_NIGHTMARE_X: f32 = 534.0;
-pub const SPELLING_ACTION_Y: f32 = 548.0;
+pub const MOBILE_ACTION_X: f32 = 428.0;
+pub const MOBILE_ACTION_Y: f32 = 640.0;
+pub const MOBILE_ACTION_W: f32 = 424.0;
+pub const MOBILE_ACTION_H: f32 = 56.0;
+pub const SPELLING_PLAY_X: f32 = 390.0;
+pub const SPELLING_NIGHTMARE_X: f32 = 670.0;
+pub const SPELLING_ACTION_Y: f32 = 536.0;
 pub const SPELLING_ACTION_W: f32 = 220.0;
 pub const SPELLING_ACTION_H: f32 = 74.0;
 
@@ -65,6 +69,22 @@ fn draw_circle(x: f32, y: f32, r: f32) {
     macroquad::prelude::draw_circle(x, y, r, current_color());
 }
 
+fn draw_rounded_rect(x: f32, y: f32, w: f32, h: f32, radius: f32, color: Color) {
+    let r = radius.min(w / 2.0).min(h / 2.0);
+    set_color(color);
+    draw_rectangle(x + r, y, w - r * 2.0, h);
+    draw_rectangle(x, y + r, w, h - r * 2.0);
+    draw_circle(x + r, y + r, r);
+    draw_circle(x + w - r, y + r, r);
+    draw_circle(x + r, y + h - r, r);
+    draw_circle(x + w - r, y + h - r, r);
+}
+
+fn draw_rounded_panel(x: f32, y: f32, w: f32, h: f32, radius: f32, fill: Color, edge: Color) {
+    draw_rounded_rect(x, y, w, h, radius, edge);
+    draw_rounded_rect(x + 3.0, y + 3.0, w - 6.0, h - 6.0, radius - 3.0, fill);
+}
+
 fn measure_text(text: &str, font: Option<&Font>, font_size: u16, font_scale: f32) -> TextMeasure {
     let measure = macroquad::prelude::measure_text(text, font, font_size, font_scale);
     TextMeasure { w: measure.width }
@@ -87,6 +107,14 @@ pub fn mobile_back_button_contains(point: Vec2) -> bool {
         && point.y <= MOBILE_BACK_Y + MOBILE_BACK_H
 }
 
+pub fn mobile_action_button_contains(point: Vec2) -> bool {
+    screen::portrait_layout()
+        && point.x >= MOBILE_ACTION_X
+        && point.x <= MOBILE_ACTION_X + MOBILE_ACTION_W
+        && point.y >= MOBILE_ACTION_Y
+        && point.y <= MOBILE_ACTION_Y + MOBILE_ACTION_H
+}
+
 pub fn spelling_play_button_contains(point: Vec2) -> bool {
     point.x >= SPELLING_PLAY_X
         && point.x <= SPELLING_PLAY_X + SPELLING_ACTION_W
@@ -106,10 +134,15 @@ pub fn draw_mobile_back_button(label: &str) {
         return;
     }
 
-    set_color(Color::new(0.05, 0.08, 0.14, 0.86));
-    draw_rectangle(MOBILE_BACK_X, MOBILE_BACK_Y, MOBILE_BACK_W, MOBILE_BACK_H);
-    set_color(Color::new(0.55, 0.85, 1.0, 0.95));
-    draw_rectangle_lines(MOBILE_BACK_X, MOBILE_BACK_Y, MOBILE_BACK_W, MOBILE_BACK_H);
+    draw_rounded_panel(
+        MOBILE_BACK_X,
+        MOBILE_BACK_Y,
+        MOBILE_BACK_W,
+        MOBILE_BACK_H,
+        16.0,
+        Color::new(0.035, 0.06, 0.11, 0.94),
+        Color::new(0.55, 0.78, 1.0, 0.7),
+    );
 
     let font_size = screen::mobile_text_size(13);
     centered_text_in(
@@ -122,8 +155,38 @@ pub fn draw_mobile_back_button(label: &str) {
     );
 }
 
+pub fn draw_mobile_action_button(label: &str) {
+    if !screen::portrait_layout() {
+        return;
+    }
+
+    draw_rounded_panel(
+        MOBILE_ACTION_X,
+        MOBILE_ACTION_Y,
+        MOBILE_ACTION_W,
+        MOBILE_ACTION_H,
+        18.0,
+        Color::new(0.06, 0.11, 0.19, 0.96),
+        Color::new(1.0, 0.74, 0.28, 0.95),
+    );
+
+    centered_text_in(
+        label,
+        MOBILE_ACTION_X,
+        MOBILE_ACTION_Y + 38.0,
+        MOBILE_ACTION_W,
+        24,
+        WHITE,
+    );
+}
+
 /// Draws the heads-up display (HUD) at top of screen.
 pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text: Option<&str>) {
+    if screen::portrait_layout() {
+        draw_mobile_hud(grade, score, lives, wave, question_text);
+        return;
+    }
+
     let font_size = screen::mobile_text_size(16);
 
     // Grade level indicator (top-left)
@@ -171,10 +234,42 @@ pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text
     set_default_color();
 }
 
+fn draw_mobile_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text: Option<&str>) {
+    let fill = Color::new(0.035, 0.06, 0.12, 0.9);
+    let edge = Color::new(0.38, 0.72, 1.0, 0.62);
+    draw_rounded_panel(214.0, 24.0, 676.0, 58.0, 16.0, fill, edge);
+
+    let stat_size = 15;
+    draw_text(
+        &format!("{}  |  WAVE {}", grade.display_name(), wave),
+        244.0,
+        60.0,
+        stat_size as f32,
+        Color::new(0.88, 0.94, 1.0, 1.0),
+    );
+    draw_text(
+        &format!("SCORE {}", score),
+        548.0,
+        60.0,
+        stat_size as f32,
+        Color::new(1.0, 0.82, 0.32, 1.0),
+    );
+
+    for i in 0..lives.min(5) {
+        assets::draw_life_icon(812.0 + (i as f32) * 16.0, 54.0);
+    }
+
+    if let Some(qtext) = question_text {
+        draw_mobile_question_banner(qtext);
+    }
+
+    set_default_color();
+}
+
 /// Draws a semi-transparent banner with the current math question.
 fn draw_question_banner(text: &str) {
     let lines: Vec<&str> = text.lines().collect();
-    let banner_w = 760.0;
+    let banner_w = 920.0;
     let banner_x = CENTER_X - banner_w / 2.0;
     let banner_y = 44.0;
     let base_font_size = if lines.len() > 2 { 22 } else { 28 };
@@ -206,6 +301,37 @@ fn draw_question_banner(text: &str) {
     set_default_color();
 }
 
+fn draw_mobile_question_banner(text: &str) {
+    let lines: Vec<&str> = text.lines().collect();
+    let banner_w = 760.0;
+    let banner_x = CENTER_X - banner_w / 2.0;
+    let banner_y = 96.0;
+    let font_size = if lines.len() > 2 { 16 } else { 20 };
+    let line_h = font_size as f32 + 6.0;
+    let banner_h = (lines.len() as f32 * line_h + 20.0).max(50.0);
+
+    draw_rounded_panel(
+        banner_x,
+        banner_y,
+        banner_w,
+        banner_h,
+        18.0,
+        Color::new(0.055, 0.075, 0.19, 0.88),
+        Color::new(0.46, 0.5, 1.0, 0.62),
+    );
+
+    for (i, line) in lines.iter().enumerate() {
+        let tm = measure_text(line, None, font_size, 1.0);
+        draw_text(
+            line,
+            CENTER_X - tm.w / 2.0,
+            banner_y + 30.0 + (i as f32) * line_h,
+            font_size as f32,
+            Color::new(1.0, 0.97, 0.34, 1.0),
+        );
+    }
+}
+
 /// Draws the space-travel title screen and adventure menu.
 pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
     if screen::portrait_layout() {
@@ -227,13 +353,13 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
 
     clear_background(Color::new(0.12, 0.15, 0.14, 1.0));
     draw_dungeon_tiles(stone_dark, ink);
-    draw_stone_frame(54.0, 42.0, 916.0, 684.0, stone, stone_light, ink);
+    draw_stone_frame(58.0, 38.0, 1164.0, 644.0, stone, stone_light, ink);
 
-    centered_text("STAR CRUSHER", 116.0, title_size, stone_light);
-    centered_text("PLANET DUNGEON CREW", 154.0, subtitle_size, parchment);
+    centered_text("STAR CRUSHER", 104.0, title_size, stone_light);
+    centered_text("PLANET DUNGEON CREW", 140.0, subtitle_size, parchment);
     centered_text(
         "Choose a path, then press ENTER or SPACE.",
-        654.0,
+        636.0,
         hint_size,
         stone_light,
     );
@@ -242,13 +368,13 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
     } else {
         "Shortcuts: M Math Invaders   P Missions   L Word Cargo"
     };
-    centered_text(shortcuts, 680.0, shortcut_size, parchment);
+    centered_text(shortcuts, 664.0, shortcut_size, parchment);
 
     draw_title_scene(
-        112.0,
-        198.0,
-        360.0,
-        374.0,
+        120.0,
+        184.0,
+        470.0,
+        350.0,
         ink,
         stone,
         stone_light,
@@ -271,22 +397,22 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
 }
 
 fn draw_mobile_title_screen(showing_mini_games: bool, selected_index: usize) {
-    let void = Color::new(0.015, 0.025, 0.06, 1.0);
-    let panel = Color::new(0.05, 0.11, 0.16, 0.94);
-    let panel_edge = Color::new(0.35, 0.72, 0.95, 1.0);
-    let moon = Color::new(0.78, 0.84, 0.72, 1.0);
+    let void = Color::new(0.01, 0.015, 0.04, 1.0);
+    let panel = Color::new(0.035, 0.07, 0.13, 0.96);
+    let panel_edge = Color::new(0.42, 0.78, 1.0, 0.9);
+    let moon = Color::new(0.9, 0.96, 0.98, 1.0);
     let amber = Color::new(1.0, 0.76, 0.25, 1.0);
-    let cyan = Color::new(0.35, 0.9, 1.0, 1.0);
-    let rose = Color::new(0.95, 0.45, 0.62, 1.0);
+    let cyan = Color::new(0.32, 0.9, 1.0, 1.0);
+    let rose = Color::new(1.0, 0.4, 0.68, 1.0);
 
     clear_background(void);
     draw_star_map_background();
     draw_mobile_space_scene(
-        88.0, 120.0, 848.0, 172.0, panel, panel_edge, moon, amber, cyan, rose,
+        150.0, 112.0, 980.0, 164.0, panel, panel_edge, moon, amber, cyan, rose,
     );
 
-    centered_text("STAR CRUSHER", 76.0, 48, moon);
-    centered_text("PLANET DUNGEON CREW", 116.0, 20, cyan);
+    centered_text("STAR CRUSHER", 72.0, 40, moon);
+    centered_text("PLANET DUNGEON CREW", 108.0, 16, cyan);
 
     draw_mobile_adventure_menu(
         showing_mini_games,
@@ -303,8 +429,8 @@ fn draw_mobile_title_screen(showing_mini_games: bool, selected_index: usize) {
         } else {
             "Choose a destination"
         },
-        680.0,
-        20,
+        624.0,
+        16,
         moon,
     );
 
@@ -313,8 +439,8 @@ fn draw_mobile_title_screen(showing_mini_games: bool, selected_index: usize) {
 
 fn draw_star_map_background() {
     set_color(Color::new(0.04, 0.08, 0.13, 1.0));
-    for row in 0..12 {
-        for col in 0..16 {
+    for row in 0..11 {
+        for col in 0..20 {
             let x = col as f32 * 68.0 - if row % 2 == 0 { 0.0 } else { 34.0 };
             let y = row as f32 * 68.0 + 8.0;
             draw_rectangle_lines(x, y, 48.0, 48.0);
@@ -346,10 +472,7 @@ fn draw_mobile_space_scene(
     cyan: Color,
     rose: Color,
 ) {
-    set_color(panel);
-    draw_rectangle(x, y, w, h);
-    set_color(panel_edge);
-    draw_rectangle_lines(x, y, w, h);
+    draw_rounded_panel(x, y, w, h, 18.0, panel, panel_edge);
 
     draw_dungeon_planet(x + 112.0, y + 96.0, 58.0, moon, amber);
     draw_dungeon_planet(x + 724.0, y + 80.0, 46.0, rose, cyan);
@@ -447,8 +570,8 @@ fn draw_mobile_adventure_menu(
         } else {
             "LAUNCH DECK"
         },
-        326.0,
-        22,
+        306.0,
+        18,
         amber,
     );
 
@@ -457,62 +580,83 @@ fn draw_mobile_adventure_menu(
             + index as f32 * (MOBILE_TITLE_MENU_ROW_H + MOBILE_TITLE_MENU_ROW_GAP);
         let selected = selected_index % options.len() == index;
 
-        set_color(if selected {
-            Color::new(0.78, 0.84, 0.72, 0.98)
-        } else {
-            panel
-        });
-        draw_rectangle(
-            MOBILE_TITLE_MENU_X,
-            y,
-            MOBILE_TITLE_MENU_W,
-            MOBILE_TITLE_MENU_ROW_H,
-        );
-        set_color(if selected { amber } else { panel_edge });
-        draw_rectangle_lines(
-            MOBILE_TITLE_MENU_X,
-            y,
-            MOBILE_TITLE_MENU_W,
-            MOBILE_TITLE_MENU_ROW_H,
-        );
-
-        let text_color = if selected {
-            Color::new(0.03, 0.06, 0.08, 1.0)
-        } else {
-            moon
-        };
-        let detail_color = if selected {
-            Color::new(0.13, 0.18, 0.18, 1.0)
-        } else {
-            Color::new(0.7, 0.9, 1.0, 1.0)
-        };
-
-        set_color(if selected {
-            Color::new(0.03, 0.06, 0.08, 1.0)
-        } else {
-            amber
-        });
-        draw_rectangle(MOBILE_TITLE_MENU_X + 26.0, y + 32.0, 16.0, 22.0);
-        draw_text(
-            label,
-            MOBILE_TITLE_MENU_X + 62.0,
-            y + 36.0,
-            28.0,
-            text_color,
-        );
-        draw_text(
-            detail,
-            MOBILE_TITLE_MENU_X + 62.0,
-            y + 66.0,
-            16.0,
-            detail_color,
-        );
+        draw_mobile_menu_button(y, selected, label, detail, panel, panel_edge, moon, amber);
     }
 }
 
+fn draw_mobile_menu_button(
+    y: f32,
+    selected: bool,
+    label: &str,
+    detail: &str,
+    panel: Color,
+    panel_edge: Color,
+    moon: Color,
+    amber: Color,
+) {
+    let fill = if selected {
+        Color::new(0.98, 0.82, 0.42, 0.98)
+    } else {
+        panel
+    };
+    let edge = if selected {
+        amber
+    } else {
+        Color::new(panel_edge.r, panel_edge.g, panel_edge.b, 0.68)
+    };
+    draw_rounded_panel(
+        MOBILE_TITLE_MENU_X,
+        y,
+        MOBILE_TITLE_MENU_W,
+        MOBILE_TITLE_MENU_ROW_H,
+        18.0,
+        fill,
+        edge,
+    );
+
+    let text_color = if selected {
+        Color::new(0.035, 0.06, 0.1, 1.0)
+    } else {
+        moon
+    };
+    let detail_color = if selected {
+        Color::new(0.12, 0.16, 0.18, 1.0)
+    } else {
+        Color::new(0.62, 0.86, 1.0, 1.0)
+    };
+    let icon_color = if selected {
+        Color::new(0.035, 0.06, 0.1, 1.0)
+    } else {
+        amber
+    };
+
+    draw_rounded_rect(
+        MOBILE_TITLE_MENU_X + 28.0,
+        y + 21.0,
+        24.0,
+        36.0,
+        7.0,
+        icon_color,
+    );
+    draw_text(
+        label,
+        MOBILE_TITLE_MENU_X + 76.0,
+        y + 35.0,
+        25.0,
+        text_color,
+    );
+    draw_text(
+        detail,
+        MOBILE_TITLE_MENU_X + 76.0,
+        y + 58.0,
+        13.0,
+        detail_color,
+    );
+}
+
 fn draw_dungeon_tiles(stone_dark: Color, ink: Color) {
-    for row in 0..16 {
-        for col in 0..22 {
+    for row in 0..15 {
+        for col in 0..28 {
             let x = col as f32 * 48.0 + if row % 2 == 0 { 0.0 } else { -24.0 };
             let y = row as f32 * 48.0;
             let shade = if (row + col) % 2 == 0 {
@@ -542,12 +686,14 @@ fn draw_stone_frame(x: f32, y: f32, w: f32, h: f32, stone: Color, stone_light: C
         stone_light.b,
         0.35,
     ));
-    for i in 0..18 {
+    let horizontal_blocks = ((w - 44.0) / 50.0).max(1.0) as usize;
+    for i in 0..horizontal_blocks {
         let bx = x + 22.0 + i as f32 * 50.0;
         draw_rectangle_lines(bx, y + 8.0, 42.0, 24.0);
         draw_rectangle_lines(bx, y + h - 32.0, 42.0, 24.0);
     }
-    for i in 0..12 {
+    let vertical_blocks = ((h - 84.0) / 50.0).max(1.0) as usize;
+    for i in 0..vertical_blocks {
         let by = y + 42.0 + i as f32 * 50.0;
         draw_rectangle_lines(x + 8.0, by, 24.0, 42.0);
         draw_rectangle_lines(x + w - 32.0, by, 24.0, 42.0);
@@ -737,6 +883,11 @@ pub fn adventure_intro_page_count() -> usize {
 
 /// Draws the lightweight voyage intro before Start Adventure enters Math Invaders.
 pub fn draw_adventure_intro(page: usize) {
+    if screen::portrait_layout() {
+        draw_mobile_adventure_intro(page);
+        return;
+    }
+
     let ink = Color::new(0.07, 0.08, 0.1, 1.0);
     let stone_dark = Color::new(0.16, 0.18, 0.2, 1.0);
     let stone = Color::new(0.38, 0.42, 0.43, 1.0);
@@ -748,19 +899,19 @@ pub fn draw_adventure_intro(page: usize) {
 
     clear_background(Color::new(0.08, 0.09, 0.11, 1.0));
     draw_dungeon_tiles(stone_dark, ink);
-    draw_stone_frame(68.0, 48.0, 888.0, 642.0, stone, stone_light, ink);
+    draw_stone_frame(92.0, 44.0, 1096.0, 616.0, stone, stone_light, ink);
 
-    draw_door_glyph(464.0, 164.0, ink, stone, stone_light);
-    draw_torch_glyph(314.0, 218.0, ink, torch);
-    draw_torch_glyph(684.0, 218.0, ink, torch);
-    draw_hero_glyph(302.0, 432.0, ink, parchment);
-    draw_monster_glyph(658.0, 420.0, ink, stone_light);
+    draw_door_glyph(592.0, 150.0, ink, stone, stone_light);
+    draw_torch_glyph(430.0, 204.0, ink, torch);
+    draw_torch_glyph(820.0, 204.0, ink, torch);
+    draw_hero_glyph(438.0, 384.0, ink, parchment);
+    draw_monster_glyph(784.0, 376.0, ink, stone_light);
 
     set_color(stone);
     for step in 0..6 {
         draw_rectangle(
-            424.0 + step as f32 * 16.0,
-            330.0 + step as f32 * 18.0,
+            552.0 + step as f32 * 16.0,
+            314.0 + step as f32 * 16.0,
             176.0 - step as f32 * 32.0,
             10.0,
         );
@@ -771,31 +922,94 @@ pub fn draw_adventure_intro(page: usize) {
     let line1_size = screen::mobile_text_size(if page == 0 { 34 } else { 24 });
     let line2_size = screen::mobile_text_size(if page == 0 { 22 } else { 20 });
     let hint_size = screen::mobile_text_size(18);
+    let mobile = screen::portrait_layout();
 
-    centered_text("START ADVENTURE", 104.0, title_size, parchment);
+    centered_text("START ADVENTURE", 96.0, title_size, parchment);
     centered_text_in(
         &format!("PAGE {} / {}", page + 1, ADVENTURE_INTRO_PAGES.len()),
-        722.0,
-        106.0,
+        980.0,
+        98.0,
         170.0,
         page_size,
         stone_light,
     );
 
     set_color(Color::new(0.1, 0.08, 0.12, 0.96));
-    draw_rectangle(112.0, 552.0, 800.0, 116.0);
+    draw_rectangle(180.0, 500.0, 920.0, 110.0);
     set_color(parchment);
-    draw_rectangle_lines(112.0, 552.0, 800.0, 116.0);
+    draw_rectangle_lines(180.0, 500.0, 920.0, 110.0);
 
     let _title_card = page == 0;
-    centered_text_in(line_one, 142.0, 596.0, 740.0, line1_size, parchment);
-    centered_text_in(line_two, 142.0, 632.0, 740.0, line2_size, WHITE);
-    centered_text(
-        "ENTER / SPACE: continue     ESC: return to title",
-        716.0,
-        hint_size,
-        stone_light,
+    centered_text_in(line_one, 210.0, 542.0, 860.0, line1_size, parchment);
+    centered_text_in(line_two, 210.0, 578.0, 860.0, line2_size, WHITE);
+    if mobile {
+        draw_mobile_action_button(if page + 1 >= ADVENTURE_INTRO_PAGES.len() {
+            "START"
+        } else {
+            "CONTINUE"
+        });
+    } else {
+        centered_text(
+            "ENTER / SPACE: continue     ESC: return to title",
+            686.0,
+            hint_size,
+            stone_light,
+        );
+    }
+
+    set_default_color();
+}
+
+fn draw_mobile_adventure_intro(page: usize) {
+    let page = page.min(ADVENTURE_INTRO_PAGES.len() - 1);
+    let (line_one, line_two) = ADVENTURE_INTRO_PAGES[page];
+    let panel = Color::new(0.035, 0.07, 0.13, 0.96);
+    let edge = Color::new(0.42, 0.78, 1.0, 0.82);
+    let moon = Color::new(0.9, 0.96, 0.98, 1.0);
+    let amber = Color::new(1.0, 0.76, 0.25, 1.0);
+    let cyan = Color::new(0.32, 0.9, 1.0, 1.0);
+    let rose = Color::new(1.0, 0.4, 0.68, 1.0);
+
+    clear_background(Color::new(0.01, 0.015, 0.04, 1.0));
+    draw_star_map_background();
+
+    centered_text("STAR CRUSHER VOYAGE", 74.0, 30, moon);
+    centered_text_in(
+        &format!("PAGE {} / {}", page + 1, ADVENTURE_INTRO_PAGES.len()),
+        900.0,
+        78.0,
+        180.0,
+        14,
+        Color::new(0.7, 0.9, 1.0, 1.0),
     );
+
+    draw_rounded_panel(168.0, 112.0, 944.0, 286.0, 22.0, panel, edge);
+    draw_dungeon_planet(330.0, 236.0, 58.0, Color::new(0.82, 0.9, 0.7, 1.0), amber);
+    draw_dungeon_planet(950.0, 220.0, 48.0, rose, cyan);
+    draw_spaceship(640.0, 218.0, cyan, moon, amber);
+    draw_space_traveler(528.0, 274.0, moon, cyan);
+    draw_space_traveler(752.0, 282.0, moon, rose);
+    set_color(Color::new(0.36, 0.74, 1.0, 0.38));
+    draw_rectangle(390.0, 236.0, 180.0, 5.0);
+    draw_rectangle(712.0, 236.0, 184.0, 5.0);
+
+    draw_rounded_panel(
+        176.0,
+        440.0,
+        928.0,
+        142.0,
+        22.0,
+        Color::new(0.07, 0.055, 0.12, 0.96),
+        Color::new(1.0, 0.82, 0.36, 0.9),
+    );
+    centered_text_in(line_one, 220.0, 490.0, 840.0, 24, amber);
+    centered_text_in(line_two, 220.0, 528.0, 840.0, 18, moon);
+
+    draw_mobile_action_button(if page + 1 >= ADVENTURE_INTRO_PAGES.len() {
+        "START"
+    } else {
+        "CONTINUE"
+    });
 
     set_default_color();
 }
@@ -909,14 +1123,14 @@ fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
 }
 
 pub fn gate_question_text_size() -> u16 {
-    screen::mobile_text_size(26)
+    screen::mobile_text_size(24)
 }
 
 pub fn keypad_button_rect(index: usize) -> Rect {
     let col = index % 3;
     let row = index / 3;
     let (key, gap, x, y) = if screen::portrait_layout() {
-        (118.0, 14.0, 608.0, 384.0)
+        (64.0, 8.0, 930.0, 404.0)
     } else {
         (KEYPAD_KEY, KEYPAD_GAP, KEYPAD_X, KEYPAD_Y)
     };
@@ -955,16 +1169,16 @@ fn draw_wrapped_text(text: &str, x: f32, y: f32, max_width: f32, font_size: u16,
 }
 
 /// Draws the question gate screen between waves.
-pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
+pub fn draw_question_gate(grade: &Grade, math_topics: &str, show_start_button: bool) {
     let title_size = screen::mobile_text_size(32);
     let grade_size = screen::mobile_text_size(26);
     let topic_size = screen::mobile_text_size(20);
     let instr_size = screen::mobile_text_size(16);
 
-    let box_w = 640.0;
-    let box_h = 280.0;
+    let box_w = 720.0;
+    let box_h = 270.0;
     let box_x = CENTER_X - box_w / 2.0;
-    let box_y = 140.0;
+    let box_y = 128.0;
 
     // Semi-transparent overlay
     set_color(Color::new(0.05, 0.05, 0.15, 0.85));
@@ -977,7 +1191,7 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
     draw_text(
         gate_title,
         CENTER_X - tm_gt.w / 2.0,
-        80.0,
+        76.0,
         title_size as f32,
         current_color(),
     );
@@ -997,7 +1211,7 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
     draw_text(
         &grade_txt,
         CENTER_X - tm_gn.w / 2.0,
-        180.0,
+        168.0,
         grade_size as f32,
         current_color(),
     );
@@ -1009,19 +1223,43 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
     draw_text(
         &topic_txt,
         CENTER_X - tm_tp.w / 2.0,
-        230.0,
+        218.0,
         topic_size as f32,
         current_color(),
     );
 
     // Instructions for gate questions
-    let instructions = [
-        "Answer the math question correctly to advance.",
-        "",
-        "Type your answer and press ENTER.",
-        "",
-        "Press SPACE or ENTER when ready!",
-    ];
+    let instructions = if screen::portrait_layout() {
+        if show_start_button {
+            [
+                "Answer the math question correctly to advance.",
+                "",
+                "Use the number pad on the next screen.",
+                "",
+                "Tap START when ready.",
+            ]
+        } else {
+            [
+                "Answer the math question correctly to advance.",
+                "",
+                "Use the number pad.",
+                "",
+                "Tap OK to submit.",
+            ]
+        }
+    } else {
+        [
+            "Answer the math question correctly to advance.",
+            "",
+            "Type your answer and press ENTER.",
+            "",
+            if show_start_button {
+                "Press SPACE or ENTER when ready!"
+            } else {
+                "Submit the answer to continue."
+            },
+        ]
+    };
 
     set_color(WHITE);
     for (i, line) in instructions.iter().enumerate() {
@@ -1029,10 +1267,14 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str) {
         draw_text(
             line,
             CENTER_X - tm.w / 2.0,
-            300.0 + (i as f32) * 28.0,
+            286.0 + (i as f32) * 27.0,
             instr_size as f32,
             WHITE,
         );
+    }
+
+    if show_start_button {
+        draw_mobile_action_button("START");
     }
 
     set_default_color();
@@ -1101,15 +1343,19 @@ pub fn draw_game_over(score: u32, grade_reached: &Grade) {
 
     // Restart prompt
     set_color(WHITE);
-    let restart = "Press ENTER to Play Again";
-    let tm_rs = measure_text(restart, None, restart_size, 1.0);
-    draw_text(
-        restart,
-        CENTER_X - tm_rs.w / 2.0,
-        450.0,
-        restart_size as f32,
-        current_color(),
-    );
+    if screen::portrait_layout() {
+        draw_mobile_action_button("START");
+    } else {
+        let restart = "Press ENTER to Play Again";
+        let tm_rs = measure_text(restart, None, restart_size, 1.0);
+        draw_text(
+            restart,
+            CENTER_X - tm_rs.w / 2.0,
+            450.0,
+            restart_size as f32,
+            current_color(),
+        );
+    }
 
     set_default_color();
 }
@@ -1178,16 +1424,20 @@ pub fn draw_victory_screen(score: u32) {
     }
 
     // Restart prompt
-    let restart = "Press ENTER to Play Again";
-    set_color(WHITE);
-    let tm_rs = measure_text(restart, None, restart_size, 1.0);
-    draw_text(
-        restart,
-        CENTER_X - tm_rs.w / 2.0,
-        500.0,
-        restart_size as f32,
-        current_color(),
-    );
+    if screen::portrait_layout() {
+        draw_mobile_action_button("START");
+    } else {
+        let restart = "Press ENTER to Play Again";
+        set_color(WHITE);
+        let tm_rs = measure_text(restart, None, restart_size, 1.0);
+        draw_text(
+            restart,
+            CENTER_X - tm_rs.w / 2.0,
+            500.0,
+            restart_size as f32,
+            current_color(),
+        );
+    }
 
     set_default_color();
 }

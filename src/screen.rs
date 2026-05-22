@@ -1,13 +1,13 @@
 use macroquad::prelude::*;
 
-pub const SCREEN_W: f32 = 1024.0;
-pub const SCREEN_H: f32 = 768.0;
+pub const SCREEN_W: f32 = 1280.0;
+pub const SCREEN_H: f32 = 720.0;
 pub const WINDOW_W: i32 = 1920;
 pub const WINDOW_H: i32 = 1080;
 
 pub fn mobile_text_size(base: u16) -> u16 {
     if screen_height() > screen_width() * 1.15 {
-        (base as f32 * 3.5) as u16
+        (base as f32 * 0.72).max(12.0) as u16
     } else {
         base
     }
