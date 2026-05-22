@@ -10,6 +10,11 @@ pub const TITLE_MENU_W: f32 = 332.0;
 pub const TITLE_MENU_ROW_TOP: f32 = 276.0;
 pub const TITLE_MENU_ROW_H: f32 = 54.0;
 pub const TITLE_MENU_ROW_GAP: f32 = 18.0;
+pub const MOBILE_TITLE_MENU_X: f32 = 122.0;
+pub const MOBILE_TITLE_MENU_ROW_TOP: f32 = 338.0;
+pub const MOBILE_TITLE_MENU_W: f32 = 780.0;
+pub const MOBILE_TITLE_MENU_ROW_H: f32 = 86.0;
+pub const MOBILE_TITLE_MENU_ROW_GAP: f32 = 18.0;
 pub const KEYPAD_X: f32 = 704.0;
 pub const KEYPAD_Y: f32 = 438.0;
 pub const KEYPAD_KEY: f32 = 54.0;
@@ -54,6 +59,10 @@ fn draw_rectangle(x: f32, y: f32, w: f32, h: f32) {
 
 fn draw_rectangle_lines(x: f32, y: f32, w: f32, h: f32) {
     macroquad::prelude::draw_rectangle_lines(x, y, w, h, 2.0, current_color());
+}
+
+fn draw_circle(x: f32, y: f32, r: f32) {
+    macroquad::prelude::draw_circle(x, y, r, current_color());
 }
 
 fn measure_text(text: &str, font: Option<&Font>, font_size: u16, font_scale: f32) -> TextMeasure {
@@ -197,8 +206,13 @@ fn draw_question_banner(text: &str) {
     set_default_color();
 }
 
-/// Draws the RPG-style title screen and adventure menu.
+/// Draws the space-travel title screen and adventure menu.
 pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
+    if screen::portrait_layout() {
+        draw_mobile_title_screen(showing_mini_games, selected_index);
+        return;
+    }
+
     let ink = Color::new(0.08, 0.1, 0.11, 1.0);
     let stone_dark = Color::new(0.2, 0.24, 0.24, 1.0);
     let stone = Color::new(0.46, 0.51, 0.48, 1.0);
@@ -216,7 +230,7 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
     draw_stone_frame(54.0, 42.0, 916.0, 684.0, stone, stone_light, ink);
 
     centered_text("STAR CRUSHER", 116.0, title_size, stone_light);
-    centered_text("DUNGEON DWELLERS", 154.0, subtitle_size, parchment);
+    centered_text("PLANET DUNGEON CREW", 154.0, subtitle_size, parchment);
     centered_text(
         "Choose a path, then press ENTER or SPACE.",
         654.0,
@@ -226,7 +240,7 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
     let shortcuts = if showing_mini_games {
         "ESC Back   P Pong   R Snake   N Nightmare"
     } else {
-        "Shortcuts: M Math Invaders   P Mini Games   L Custom Spelling List"
+        "Shortcuts: M Math Invaders   P Missions   L Word Cargo"
     };
     centered_text(shortcuts, 680.0, shortcut_size, parchment);
 
@@ -254,6 +268,246 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
     );
 
     set_default_color();
+}
+
+fn draw_mobile_title_screen(showing_mini_games: bool, selected_index: usize) {
+    let void = Color::new(0.015, 0.025, 0.06, 1.0);
+    let panel = Color::new(0.05, 0.11, 0.16, 0.94);
+    let panel_edge = Color::new(0.35, 0.72, 0.95, 1.0);
+    let moon = Color::new(0.78, 0.84, 0.72, 1.0);
+    let amber = Color::new(1.0, 0.76, 0.25, 1.0);
+    let cyan = Color::new(0.35, 0.9, 1.0, 1.0);
+    let rose = Color::new(0.95, 0.45, 0.62, 1.0);
+
+    clear_background(void);
+    draw_star_map_background();
+    draw_mobile_space_scene(
+        88.0, 120.0, 848.0, 172.0, panel, panel_edge, moon, amber, cyan, rose,
+    );
+
+    centered_text("STAR CRUSHER", 76.0, 48, moon);
+    centered_text("PLANET DUNGEON CREW", 116.0, 20, cyan);
+
+    draw_mobile_adventure_menu(
+        showing_mini_games,
+        selected_index,
+        panel,
+        panel_edge,
+        moon,
+        amber,
+    );
+
+    centered_text(
+        if showing_mini_games {
+            "Tap BACK for launch deck"
+        } else {
+            "Choose a destination"
+        },
+        680.0,
+        20,
+        moon,
+    );
+
+    set_default_color();
+}
+
+fn draw_star_map_background() {
+    set_color(Color::new(0.04, 0.08, 0.13, 1.0));
+    for row in 0..12 {
+        for col in 0..16 {
+            let x = col as f32 * 68.0 - if row % 2 == 0 { 0.0 } else { 34.0 };
+            let y = row as f32 * 68.0 + 8.0;
+            draw_rectangle_lines(x, y, 48.0, 48.0);
+        }
+    }
+
+    for i in 0..72 {
+        let x = ((i * 83 + 29) % SCREEN_W as i32) as f32;
+        let y = ((i * 47 + 61) % SCREEN_H as i32) as f32;
+        let size = if i % 5 == 0 { 4.0 } else { 2.0 };
+        set_color(if i % 7 == 0 {
+            Color::new(0.55, 0.9, 1.0, 0.86)
+        } else {
+            Color::new(0.86, 0.9, 0.78, 0.76)
+        });
+        draw_rectangle(x, y, size, size);
+    }
+}
+
+fn draw_mobile_space_scene(
+    x: f32,
+    y: f32,
+    w: f32,
+    h: f32,
+    panel: Color,
+    panel_edge: Color,
+    moon: Color,
+    amber: Color,
+    cyan: Color,
+    rose: Color,
+) {
+    set_color(panel);
+    draw_rectangle(x, y, w, h);
+    set_color(panel_edge);
+    draw_rectangle_lines(x, y, w, h);
+
+    draw_dungeon_planet(x + 112.0, y + 96.0, 58.0, moon, amber);
+    draw_dungeon_planet(x + 724.0, y + 80.0, 46.0, rose, cyan);
+    draw_spaceship(x + 420.0, y + 74.0, cyan, moon, amber);
+    draw_space_traveler(x + 314.0, y + 92.0, moon, cyan);
+    draw_space_traveler(x + 532.0, y + 100.0, moon, rose);
+
+    set_color(Color::new(0.35, 0.72, 0.95, 0.42));
+    draw_rectangle(x + 170.0, y + 86.0, 230.0, 4.0);
+    draw_rectangle(x + 510.0, y + 90.0, 170.0, 4.0);
+}
+
+fn draw_dungeon_planet(x: f32, y: f32, radius: f32, body: Color, accent: Color) {
+    set_color(body);
+    draw_circle(x, y, radius);
+    set_color(Color::new(body.r * 0.55, body.g * 0.55, body.b * 0.55, 1.0));
+    draw_circle(x - radius * 0.28, y + radius * 0.18, radius * 0.16);
+    draw_circle(x + radius * 0.26, y - radius * 0.22, radius * 0.12);
+
+    set_color(Color::new(0.05, 0.08, 0.1, 1.0));
+    draw_rectangle(
+        x - radius * 0.34,
+        y + radius * 0.05,
+        radius * 0.68,
+        radius * 0.48,
+    );
+    set_color(accent);
+    draw_rectangle(
+        x - radius * 0.16,
+        y - radius * 0.22,
+        radius * 0.32,
+        radius * 0.24,
+    );
+    draw_rectangle_lines(
+        x - radius * 0.34,
+        y + radius * 0.05,
+        radius * 0.68,
+        radius * 0.48,
+    );
+}
+
+fn draw_spaceship(x: f32, y: f32, cyan: Color, moon: Color, amber: Color) {
+    set_color(moon);
+    draw_rectangle(x - 62.0, y - 18.0, 124.0, 36.0);
+    draw_rectangle(x - 32.0, y - 42.0, 64.0, 24.0);
+    set_color(cyan);
+    draw_rectangle(x - 20.0, y - 34.0, 40.0, 12.0);
+    draw_rectangle(x - 86.0, y - 10.0, 24.0, 20.0);
+    draw_rectangle(x + 62.0, y - 10.0, 24.0, 20.0);
+    set_color(amber);
+    draw_rectangle(x - 18.0, y + 18.0, 12.0, 18.0);
+    draw_rectangle(x + 6.0, y + 18.0, 12.0, 18.0);
+}
+
+fn draw_space_traveler(x: f32, y: f32, suit: Color, accent: Color) {
+    set_color(suit);
+    draw_rectangle(x - 16.0, y - 34.0, 32.0, 28.0);
+    draw_rectangle(x - 22.0, y - 4.0, 44.0, 54.0);
+    draw_rectangle(x - 34.0, y + 2.0, 12.0, 42.0);
+    draw_rectangle(x + 22.0, y + 2.0, 12.0, 42.0);
+    draw_rectangle(x - 16.0, y + 50.0, 12.0, 38.0);
+    draw_rectangle(x + 4.0, y + 50.0, 12.0, 38.0);
+    set_color(accent);
+    draw_rectangle(x - 10.0, y - 26.0, 20.0, 10.0);
+    draw_rectangle(x - 14.0, y + 14.0, 28.0, 8.0);
+}
+
+fn draw_mobile_adventure_menu(
+    showing_mini_games: bool,
+    selected_index: usize,
+    panel: Color,
+    panel_edge: Color,
+    moon: Color,
+    amber: Color,
+) {
+    let main_options = [
+        ("Launch Voyage", "Start the planet dungeon route"),
+        ("Mission Select", "Practice arcade encounters"),
+        ("Word Cargo", "Load a spelling list"),
+    ];
+    let mini_game_options = [
+        ("Reading Planet", "Steer through word caves"),
+        ("Math Orbit", "Bounce into number targets"),
+        ("Night Planet", "Same-color letter trial"),
+    ];
+    let options = if showing_mini_games {
+        &mini_game_options
+    } else {
+        &main_options
+    };
+
+    centered_text(
+        if showing_mini_games {
+            "MISSION SELECT"
+        } else {
+            "LAUNCH DECK"
+        },
+        326.0,
+        22,
+        amber,
+    );
+
+    for (index, (label, detail)) in options.iter().enumerate() {
+        let y = MOBILE_TITLE_MENU_ROW_TOP
+            + index as f32 * (MOBILE_TITLE_MENU_ROW_H + MOBILE_TITLE_MENU_ROW_GAP);
+        let selected = selected_index % options.len() == index;
+
+        set_color(if selected {
+            Color::new(0.78, 0.84, 0.72, 0.98)
+        } else {
+            panel
+        });
+        draw_rectangle(
+            MOBILE_TITLE_MENU_X,
+            y,
+            MOBILE_TITLE_MENU_W,
+            MOBILE_TITLE_MENU_ROW_H,
+        );
+        set_color(if selected { amber } else { panel_edge });
+        draw_rectangle_lines(
+            MOBILE_TITLE_MENU_X,
+            y,
+            MOBILE_TITLE_MENU_W,
+            MOBILE_TITLE_MENU_ROW_H,
+        );
+
+        let text_color = if selected {
+            Color::new(0.03, 0.06, 0.08, 1.0)
+        } else {
+            moon
+        };
+        let detail_color = if selected {
+            Color::new(0.13, 0.18, 0.18, 1.0)
+        } else {
+            Color::new(0.7, 0.9, 1.0, 1.0)
+        };
+
+        set_color(if selected {
+            Color::new(0.03, 0.06, 0.08, 1.0)
+        } else {
+            amber
+        });
+        draw_rectangle(MOBILE_TITLE_MENU_X + 26.0, y + 32.0, 16.0, 22.0);
+        draw_text(
+            label,
+            MOBILE_TITLE_MENU_X + 62.0,
+            y + 36.0,
+            28.0,
+            text_color,
+        );
+        draw_text(
+            detail,
+            MOBILE_TITLE_MENU_X + 62.0,
+            y + 66.0,
+            16.0,
+            detail_color,
+        );
+    }
 }
 
 fn draw_dungeon_tiles(stone_dark: Color, ink: Color) {
@@ -311,26 +565,35 @@ fn draw_title_scene(
     parchment: Color,
     torch: Color,
 ) {
-    set_color(Color::new(0.13, 0.16, 0.15, 1.0));
+    set_color(Color::new(0.04, 0.08, 0.13, 1.0));
     draw_rectangle(x, y, w, h);
     set_color(stone_light);
     draw_rectangle_lines(x, y, w, h);
 
-    draw_door_glyph(x + 132.0, y + 44.0, ink, stone, stone_light);
-    draw_torch_glyph(x + 52.0, y + 82.0, ink, torch);
-    draw_torch_glyph(x + 282.0, y + 82.0, ink, torch);
-    draw_monster_glyph(x + 256.0, y + 238.0, ink, stone_light);
-    draw_hero_glyph(x + 88.0, y + 248.0, ink, parchment);
-
-    set_color(stone);
-    for step in 0..5 {
-        draw_rectangle(
-            x + 128.0 + step as f32 * 12.0,
-            y + 282.0 + step as f32 * 12.0,
-            114.0 - step as f32 * 24.0,
-            8.0,
-        );
+    for i in 0..32 {
+        let sx = x + ((i * 61 + 17) % w as i32) as f32;
+        let sy = y + ((i * 37 + 23) % h as i32) as f32;
+        set_color(if i % 5 == 0 { torch } else { parchment });
+        draw_rectangle(sx, sy, 3.0, 3.0);
     }
+
+    draw_dungeon_planet(x + 84.0, y + 92.0, 42.0, stone_light, torch);
+    draw_dungeon_planet(x + 292.0, y + 88.0, 34.0, stone, parchment);
+    draw_spaceship(x + 190.0, y + 104.0, stone_light, parchment, torch);
+    draw_space_traveler(x + 126.0, y + 256.0, parchment, stone_light);
+    draw_space_traveler(x + 238.0, y + 264.0, parchment, torch);
+
+    set_color(Color::new(
+        stone_light.r,
+        stone_light.g,
+        stone_light.b,
+        0.45,
+    ));
+    draw_rectangle(x + 98.0, y + 156.0, 184.0, 4.0);
+    set_color(ink);
+    draw_rectangle(x + 172.0, y + 278.0, 44.0, 28.0);
+    set_color(stone_light);
+    draw_rectangle_lines(x + 172.0, y + 278.0, 44.0, 28.0);
 }
 
 fn draw_adventure_menu(
@@ -345,14 +608,14 @@ fn draw_adventure_menu(
     parchment: Color,
 ) {
     let main_options = [
-        ("Start Adventure", "Begin the dungeon trail"),
-        ("Play Mini Games", "Open arcade side quests"),
-        ("Custom Spelling List", "Enter weekly words"),
+        ("Launch Voyage", "Start the planet dungeon route"),
+        ("Mission Select", "Practice arcade encounters"),
+        ("Word Cargo", "Load a spelling list"),
     ];
     let mini_game_options = [
-        ("Reading Snake", "Word path encounter"),
-        ("Math Pong", "Paddle target challenge"),
-        ("Nightmare Snake", "Same-color letter trial"),
+        ("Reading Planet", "Steer through word caves"),
+        ("Math Orbit", "Bounce into number targets"),
+        ("Night Planet", "Same-color letter trial"),
     ];
     let options = if showing_mini_games {
         &mini_game_options
@@ -449,22 +712,22 @@ fn centered_text_in(text: &str, x: f32, y: f32, w: f32, font_size: u16, color: C
 }
 
 const ADVENTURE_INTRO_PAGES: [(&str, &str); 5] = [
-    ("THE MATH DUNGEON", "A Star Crusher Adventure"),
+    ("PLANET DUNGEON ROUTE", "A Star Crusher Voyage"),
     (
-        "Deep beneath the Crystal Mountains lies an ancient dungeon.",
-        "Its stone halls glow with quiet number magic.",
+        "Two travelers chart dungeon planets from their little ship.",
+        "Every world hides doors powered by number magic.",
     ),
     (
-        "Its doors open only for heroes who can solve the number riddles.",
-        "Every correct answer lights the path ahead.",
+        "Ancient gates open for crews who solve the number riddles.",
+        "Every correct answer lights another landing path.",
     ),
     (
-        "You are the newest Star Crusher, brave, clever, and ready.",
-        "Take your first steps into the torchlit halls.",
+        "Your crew is brave, clever, and ready for launch.",
+        "Step from the ship into the first alien dungeon.",
     ),
     (
-        "First quest: clear the drifting number monsters.",
-        "Math Invaders blocks await between challenges.",
+        "First mission: clear the drifting number sentries.",
+        "Math Invaders guards the route between planets.",
     ),
 ];
 
@@ -472,7 +735,7 @@ pub fn adventure_intro_page_count() -> usize {
     ADVENTURE_INTRO_PAGES.len()
 }
 
-/// Draws the lightweight RPG intro before Start Adventure enters Math Invaders.
+/// Draws the lightweight voyage intro before Start Adventure enters Math Invaders.
 pub fn draw_adventure_intro(page: usize) {
     let ink = Color::new(0.07, 0.08, 0.1, 1.0);
     let stone_dark = Color::new(0.16, 0.18, 0.2, 1.0);

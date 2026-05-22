@@ -289,6 +289,17 @@
             background: rgba(23, 33, 52, 0.92);
         }
 
+        @media (max-width: 700px) {
+            .site-exit {
+                top: max(10px, env(safe-area-inset-top));
+                right: max(10px, env(safe-area-inset-right));
+                min-height: 36px;
+                padding: 0 12px;
+                font-size: 0.82rem;
+                border-radius: 7px;
+            }
+        }
+
         #glcanvas {
             display: block;
             width: 100vw;
@@ -534,6 +545,7 @@
             status.textContent = 'Preparing launch...';
             landing.style.display = 'none';
             shell.classList.add('active');
+            siteExit.textContent = window.innerWidth <= 700 ? 'Site' : 'Back to Site';
             siteExit.classList.add('visible');
             document.body.style.overflow = 'hidden';
             document.documentElement.style.overflow = 'hidden';

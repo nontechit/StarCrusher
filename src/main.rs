@@ -18,9 +18,6 @@ use question::{generate_question, Question};
 use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
 use screen::{enter_fullscreen, use_virtual_screen, window_conf, SCREEN_H, SCREEN_W};
 
-const TITLE_MENU_ROW_LEFT: f32 = ui::TITLE_MENU_X + 22.0;
-const TITLE_MENU_ROW_RIGHT: f32 = ui::TITLE_MENU_X + ui::TITLE_MENU_W - 22.0;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum GameMode {
     Title,
@@ -711,14 +708,31 @@ enum GateKey {
 }
 
 fn title_menu_index_at(point: Vec2, menu_len: usize) -> Option<usize> {
-    if point.x < TITLE_MENU_ROW_LEFT || point.x > TITLE_MENU_ROW_RIGHT {
+    let (row_left, row_right, row_top, row_h, row_gap) = if screen::portrait_layout() {
+        (
+            ui::MOBILE_TITLE_MENU_X,
+            ui::MOBILE_TITLE_MENU_X + ui::MOBILE_TITLE_MENU_W,
+            ui::MOBILE_TITLE_MENU_ROW_TOP,
+            ui::MOBILE_TITLE_MENU_ROW_H,
+            ui::MOBILE_TITLE_MENU_ROW_GAP,
+        )
+    } else {
+        (
+            ui::TITLE_MENU_X + 22.0,
+            ui::TITLE_MENU_X + ui::TITLE_MENU_W - 22.0,
+            ui::TITLE_MENU_ROW_TOP,
+            ui::TITLE_MENU_ROW_H,
+            ui::TITLE_MENU_ROW_GAP,
+        )
+    };
+
+    if point.x < row_left || point.x > row_right {
         return None;
     }
 
     (0..menu_len).find(|index| {
-        let row_top = ui::TITLE_MENU_ROW_TOP
-            + *index as f32 * (ui::TITLE_MENU_ROW_H + ui::TITLE_MENU_ROW_GAP);
-        point.y >= row_top && point.y <= row_top + ui::TITLE_MENU_ROW_H
+        let row_y = row_top + *index as f32 * (row_h + row_gap);
+        point.y >= row_y && point.y <= row_y + row_h
     })
 }
 
