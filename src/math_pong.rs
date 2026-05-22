@@ -58,7 +58,7 @@ impl MathPong {
             ball_vel: Vec2::ZERO,
             ball_launched: false,
             score: 0,
-            lives: 3,
+            lives: 5,
             questions_cleared: 0,
             message: "Aim the ball at the correct number.",
             game_over: false,

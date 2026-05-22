@@ -126,7 +126,7 @@ impl Game {
             grade,
             wave: 1,
             score: 0,
-            lives: 3,
+            lives: 5,
             player: Player::new(SCREEN_W),
             enemies,
             player_bullets: Vec::new(),
