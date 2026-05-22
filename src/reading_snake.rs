@@ -563,7 +563,7 @@ impl ReadingSnake {
 
     fn draw_footer(&self) {
         let portrait = screen_height() > screen_width() * 1.15;
-        let footer_size = if portrait { 48 } else { 32 };
+        let footer_size = if portrait { 42 } else { 28 };
 
         let progress = format_word_progress(&self.word, self.letter_index);
         centered_text(&format!("Word: {}", progress), 675.0, footer_size, YELLOW);
