@@ -2,6 +2,7 @@ use crate::assets;
 use crate::levels::{Grade, LevelConfig};
 use crate::question::Question;
 use crate::random;
+use crate::screen;
 use macroquad::prelude::*;
 
 const ENEMY_MIN_Y: f32 = 132.0;
@@ -44,28 +45,45 @@ impl Enemy {
         }
     }
 
+    fn draw_scale(&self) -> f32 {
+        screen::portrait_gameplay_scale()
+    }
+
+    fn scaled_width(&self) -> f32 {
+        self.width * self.draw_scale()
+    }
+
+    fn scaled_height(&self) -> f32 {
+        self.height * self.draw_scale()
+    }
+
     /// Draws this enemy at current position with the given color and scale.
     pub fn draw(&self, grade_color: Color) {
         if !self.alive {
             return;
         }
+        let scale = self.draw_scale();
         match &self.r#type {
             EnemyType::Standard => {
-                assets::draw_enemy_invader(self.x, self.y, grade_color, 1.0);
+                assets::draw_enemy_invader(self.x, self.y, grade_color, scale);
             }
             EnemyType::Puzzle(num) => {
-                assets::draw_puzzle_enemy(self.x, self.y, grade_color, 1.0, *num);
+                assets::draw_puzzle_enemy(self.x, self.y, grade_color, scale, *num);
             }
         }
     }
 
     /// Checks if a bullet hits this enemy's hitbox.
     pub fn is_hit(&self, bx: f32, by: f32) -> bool {
-        !self.alive
-            || (bx >= self.x - 4.0
-                && bx <= self.x + self.width + 4.0
-                && by >= self.y - 4.0
-                && by <= self.y + self.height + 4.0)
+        if !self.alive {
+            return false;
+        }
+        let scale = self.draw_scale();
+        let margin = 4.0 * scale;
+        bx >= self.x - margin
+            && bx <= self.x + self.scaled_width() + margin
+            && by >= self.y - margin
+            && by <= self.y + self.scaled_height() + margin
     }
 
     /// Returns the center X of this enemy (for spawning enemy bullets).

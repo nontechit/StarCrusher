@@ -1,4 +1,5 @@
 use crate::assets;
+use crate::screen;
 use macroquad::prelude::*;
 
 const PLAYER_Y: f32 = 680.0;
@@ -23,6 +24,14 @@ impl Player {
         }
     }
 
+    pub fn draw_scale(&self) -> f32 {
+        screen::portrait_gameplay_scale()
+    }
+
+    pub fn effective_width(&self) -> f32 {
+        self.width * self.draw_scale()
+    }
+
     /// Handles input and updates player position each frame.
     pub fn update(&mut self, screen_w: f32) {
         let speed = 5.0;
@@ -35,31 +44,35 @@ impl Player {
 
         // Clamp to screen bounds (account for border thickness of 4px on each side)
         let margin = 8.0;
-        self.x = self.x.max(margin).min(screen_w - self.width - margin);
+        let ship_w = self.effective_width();
+        self.x = self.x.max(margin).min(screen_w - ship_w - margin);
     }
 
     /// Draws the player ship at current position.
     pub fn draw(&self) {
-        assets::draw_player_ship(self.x, self.y, 1.0);
+        assets::draw_player_ship(self.x, self.y, self.draw_scale());
     }
 
     /// Returns the center point of the ship (for bullet spawn).
     pub fn center_x(&self) -> f32 {
-        self.x + self.width / 2.0
+        self.x + self.effective_width() / 2.0
     }
 
     /// Returns the top edge Y coordinate (bullet spawns here).
     pub fn top_y(&self) -> f32 {
-        self.y - self.height * 0.4
+        let scale = self.draw_scale();
+        self.y - self.height * 0.4 * scale
     }
 
     /// Checks if a point is within the player's hitbox.
     pub fn contains_point(&self, px: f32, py: f32) -> bool {
-        let margin = 6.0; // Slightly forgiving hitbox
+        let scale = self.draw_scale();
+        let margin = 6.0 * scale;
+        let ship_w = self.effective_width();
         px >= self.x - margin
-            && px <= self.x + self.width + margin
-            && py >= self.y - self.height * 0.5 - margin
-            && py <= self.y + self.height * 0.3 + margin
+            && px <= self.x + ship_w + margin
+            && py >= self.y - self.height * 0.5 * scale - margin
+            && py <= self.y + self.height * 0.3 * scale + margin
     }
 }
 
