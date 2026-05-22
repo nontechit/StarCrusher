@@ -533,7 +533,6 @@
             loaderStarted = true;
             launch.disabled = true;
             status.textContent = 'Preparing launch...';
-            window.__starCrusherGame = game || '';
             landing.style.display = 'none';
             shell.classList.add('active');
             siteExit.classList.add('visible');
@@ -550,6 +549,17 @@
                         throw new Error('Macroquad loader did not initialize.');
                     }
                     window.load('star-crusher.wasm');
+                    if (game) {
+                        const keyMap = { mathinv: 'm', mathpong: 'p', readsnake: 'r' };
+                        const key = keyMap[game];
+                        if (key) {
+                            setTimeout(() => {
+                                const opts = { key: key, code: 'Key' + key.toUpperCase(), bubbles: true };
+                                document.dispatchEvent(new KeyboardEvent('keydown', opts));
+                                document.dispatchEvent(new KeyboardEvent('keyup', opts));
+                            }, 3000);
+                        }
+                    }
                 } catch (error) {
                     showLaunchError(error);
                 }

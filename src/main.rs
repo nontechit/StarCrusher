@@ -18,15 +18,6 @@ use question::{generate_question, Question};
 use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
 use screen::{enter_fullscreen, use_virtual_screen, window_conf, SCREEN_H, SCREEN_W};
 
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
-
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(inline_js = "export function read_startup_game() { const g = (window.__starCrusherGame || '').toString(); window.__starCrusherGame = ''; return g; }")]
-extern "C" {
-    fn read_startup_game() -> String;
-}
-
 const TITLE_MENU_ROW_LEFT: f32 = ui::TITLE_MENU_X + 22.0;
 const TITLE_MENU_ROW_RIGHT: f32 = ui::TITLE_MENU_X + ui::TITLE_MENU_W - 22.0;
 
@@ -770,19 +761,6 @@ async fn main() {
     enter_fullscreen();
 
     let mut game = Game::new();
-
-    #[cfg(target_arch = "wasm32")]
-    {
-        let choice = read_startup_game();
-        if !choice.is_empty() {
-            match choice.as_str() {
-                "mathinv" => game.launch_title_option(TitleMenuOption::MathInvaders),
-                "mathpong" => game.launch_title_option(TitleMenuOption::MathPong),
-                "readsnake" => game.launch_title_option(TitleMenuOption::ReadingSnake),
-                _ => {}
-            }
-        }
-    }
 
     loop {
         game.update();
