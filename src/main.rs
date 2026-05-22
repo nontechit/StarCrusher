@@ -18,6 +18,9 @@ use question::{generate_question, Question};
 use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
 use screen::{enter_fullscreen, use_virtual_screen, window_conf, SCREEN_H, SCREEN_W};
 
+const MAX_GATE_ANSWER_LEN: usize = 8;
+const MAX_SPELLING_INPUT_CHARS: usize = 2_000;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum GameMode {
     Title,
@@ -478,7 +481,9 @@ impl Game {
         let mut submit_answer = false;
 
         while let Some(ch) = get_char_pressed() {
-            if ch.is_ascii_digit() || (ch == '-' && self.gate_answer.is_empty()) {
+            if self.gate_answer.len() < MAX_GATE_ANSWER_LEN
+                && (ch.is_ascii_digit() || (ch == '-' && self.gate_answer.is_empty()))
+            {
                 self.gate_answer.push(ch);
             }
         }
@@ -489,7 +494,10 @@ impl Game {
 
         if let Some(tap) = primary_tap_position() {
             match gate_key_at(tap) {
-                Some(GateKey::Digit(digit)) => self.gate_answer.push(digit),
+                Some(GateKey::Digit(digit)) if self.gate_answer.len() < MAX_GATE_ANSWER_LEN => {
+                    self.gate_answer.push(digit);
+                }
+                Some(GateKey::Digit(_)) => {}
                 Some(GateKey::Delete) => {
                     self.gate_answer.pop();
                 }
@@ -529,16 +537,17 @@ impl Game {
         }
 
         while let Some(ch) = get_char_pressed() {
-            if ch.is_ascii_alphabetic()
-                || ch == ' '
-                || ch == ','
-                || ch == ':'
-                || ch == ';'
-                || ch == '.'
-                || ch == '\''
-                || ch == '-'
-                || ch == '\n'
-                || ch == '\r'
+            if self.spelling_input.chars().count() < MAX_SPELLING_INPUT_CHARS
+                && (ch.is_ascii_alphabetic()
+                    || ch == ' '
+                    || ch == ','
+                    || ch == ':'
+                    || ch == ';'
+                    || ch == '.'
+                    || ch == '\''
+                    || ch == '-'
+                    || ch == '\n'
+                    || ch == '\r')
             {
                 self.spelling_input.push(ch);
             }

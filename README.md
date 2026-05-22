@@ -2,7 +2,7 @@
 
 Star Crusher is an educational arcade collection about two young space travelers flying between dungeon planets. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.5.2`
+Current build: `1.5.4`
 
 ## Latest Mobile Release
 
@@ -161,7 +161,8 @@ src/player.rs        Player ship, player bullets, enemy bullets
 src/ui.rs            HUD, title, mobile touch buttons, game over, victory, and question gate UI
 src/assets.rs        Procedural drawing helpers for ships, enemies, stars, effects
 star-crusher.wasm    Checked-in WASM artifact used by the static landing page
-index.html           Static landing page and Macroquad WASM loader
+mq_js_bundle.js      Vendored Macroquad/Miniquad browser loader for the WASM build
+index.html           Static landing page and local WASM loader bootstrap
 ```
 
 ## Architecture
