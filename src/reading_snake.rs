@@ -488,10 +488,27 @@ impl ReadingSnake {
         };
         centered_text(title, 40.0, title_size, Color::new(0.4, 1.0, 0.65, 1.0));
 
-        draw_text(&format!("Score: {}", self.score), 24.0, 72.0, stat_size as f32, YELLOW);
-        draw_text(&format!("Lives: {}", self.lives), 680.0, 72.0, stat_size as f32, WHITE);
+        draw_text(
+            &format!("Score: {}", self.score),
+            24.0,
+            72.0,
+            stat_size as f32,
+            YELLOW,
+        );
+        draw_text(
+            &format!("Lives: {}", self.lives),
+            680.0,
+            72.0,
+            stat_size as f32,
+            WHITE,
+        );
 
-        centered_text(&format!("Definition: {}", self.definition), 100.0, def_size, WHITE);
+        centered_text(
+            &format!("Definition: {}", self.definition),
+            100.0,
+            def_size,
+            WHITE,
+        );
     }
 
     fn draw_board(&self) {
@@ -567,11 +584,11 @@ impl ReadingSnake {
         let controls_size = screen::mobile_text_size(16);
 
         let progress = format_word_progress(&self.word, self.letter_index);
-        centered_text(&format!("Word: {}", progress), 580.0, progress_size, YELLOW);
-        centered_text(self.message, 618.0, message_size, WHITE);
+        centered_text(&format!("Word: {}", progress), 568.0, progress_size, YELLOW);
+        centered_text(self.message, 602.0, message_size, WHITE);
         centered_text(
             "Meaning: Read the card, then spell the word.",
-            652.0,
+            632.0,
             hint_size,
             WHITE,
         );
@@ -580,7 +597,7 @@ impl ReadingSnake {
         } else {
             "Arrow Keys / WASD to move   ESC returns to title"
         };
-        centered_text(controls, 684.0, controls_size, GRAY);
+        centered_text(controls, 660.0, controls_size, GRAY);
     }
 
     fn draw_definition_card(&self) {

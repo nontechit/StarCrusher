@@ -418,7 +418,7 @@ impl MathPong {
 }
 
 fn portrait_layout() -> bool {
-    screen_height() > screen_width() * 1.15
+    screen::portrait_layout()
 }
 
 fn primary_tap_position() -> Option<Vec2> {

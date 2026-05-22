@@ -13,6 +13,10 @@ pub fn mobile_text_size(base: u16) -> u16 {
     }
 }
 
+pub fn portrait_layout() -> bool {
+    screen_height() > screen_width() * 1.15
+}
+
 pub fn window_conf() -> Conf {
     Conf {
         window_title: "Star Crusher".to_string(),

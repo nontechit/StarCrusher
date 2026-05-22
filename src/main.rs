@@ -637,12 +637,13 @@ impl Game {
 
         let question_lines: Vec<&str> = self.gate_question.text.lines().collect();
         for (i, line) in question_lines.iter().enumerate() {
-            let text_size = 26;
+            let text_size = ui::gate_question_text_size();
             let metrics = measure_text(line, None, text_size, 1.0);
+            let question_center_x = ui::GATE_QUESTION_X + ui::GATE_QUESTION_W / 2.0;
             draw_text(
                 line,
-                SCREEN_W / 2.0 - metrics.width / 2.0,
-                455.0 + i as f32 * 28.0,
+                question_center_x - metrics.width / 2.0,
+                ui::GATE_QUESTION_Y + i as f32 * ui::GATE_QUESTION_LINE_GAP,
                 text_size as f32,
                 YELLOW,
             );

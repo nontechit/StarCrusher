@@ -14,6 +14,10 @@ pub const KEYPAD_X: f32 = 704.0;
 pub const KEYPAD_Y: f32 = 438.0;
 pub const KEYPAD_KEY: f32 = 54.0;
 pub const KEYPAD_GAP: f32 = 8.0;
+pub const GATE_QUESTION_X: f32 = 104.0;
+pub const GATE_QUESTION_Y: f32 = 454.0;
+pub const GATE_QUESTION_W: f32 = 540.0;
+pub const GATE_QUESTION_LINE_GAP: f32 = 34.0;
 
 thread_local! {
     static CURRENT_COLOR: std::cell::Cell<Color> = const { std::cell::Cell::new(WHITE) };
@@ -85,7 +89,13 @@ pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text
     // Wave number (top-right)
     let wave_txt = format!("WAVE: {}", wave);
     let tm_w = measure_text(&wave_txt, None, font_size as u16, 1.0);
-    draw_text(&wave_txt, SCREEN_W - tm_w.w - 10.0, 18.0, font_size as f32, WHITE);
+    draw_text(
+        &wave_txt,
+        SCREEN_W - tm_w.w - 10.0,
+        18.0,
+        font_size as f32,
+        WHITE,
+    );
 
     // Lives display (below grade, top-left)
     for i in 0..lives {
@@ -463,22 +473,8 @@ pub fn draw_adventure_intro(page: usize) {
     draw_rectangle_lines(112.0, 552.0, 800.0, 116.0);
 
     let _title_card = page == 0;
-    centered_text_in(
-        line_one,
-        142.0,
-        596.0,
-        740.0,
-        line1_size,
-        parchment,
-    );
-    centered_text_in(
-        line_two,
-        142.0,
-        632.0,
-        740.0,
-        line2_size,
-        WHITE,
-    );
+    centered_text_in(line_one, 142.0, 596.0, 740.0, line1_size, parchment);
+    centered_text_in(line_two, 142.0, 632.0, 740.0, line2_size, WHITE);
     centered_text(
         "ENTER / SPACE: continue     ESC: return to title",
         716.0,
@@ -569,6 +565,10 @@ pub fn draw_spelling_list_screen(input: &str) {
 fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
     let tm = measure_text(text, None, font_size, 1.0);
     draw_text(text, CENTER_X - tm.w / 2.0, y, font_size as f32, color);
+}
+
+pub fn gate_question_text_size() -> u16 {
+    screen::mobile_text_size(26)
 }
 
 fn draw_wrapped_text(text: &str, x: f32, y: f32, max_width: f32, font_size: u16, color: Color) {
@@ -889,7 +889,13 @@ pub fn draw_answer_feedback(is_correct: bool) {
     let feedback_font = screen::mobile_text_size(28);
     set_color(color);
     let tm = measure_text(text, None, feedback_font, 1.0);
-    draw_text(text, CENTER_X - tm.w / 2.0, 630.0, feedback_font as f32, color);
+    draw_text(
+        text,
+        CENTER_X - tm.w / 2.0,
+        630.0,
+        feedback_font as f32,
+        color,
+    );
 
     set_default_color();
 }
