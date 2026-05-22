@@ -37,11 +37,13 @@ enum GameMode {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum AdventureStep {
-    MathInvaders,
+    MathInvaders1,
     ReadingSnake,
+    MathInvaders2,
     MathPong,
+    MathInvaders3,
     NightmareSnake,
-    MathInvadersProgression,
+    MathInvadersFinal,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -141,7 +143,7 @@ impl Game {
             math_pong: MathPong::new(),
             intro_page: 0,
             adventure_active: false,
-            adventure_step: AdventureStep::MathInvaders,
+            adventure_step: AdventureStep::MathInvaders1,
         }
     }
 
@@ -160,7 +162,7 @@ impl Game {
             TitleMenuOption::StartAdventure => {
                 self.intro_page = 0;
                 self.adventure_active = true;
-                self.adventure_step = AdventureStep::MathInvaders;
+                self.adventure_step = AdventureStep::MathInvaders1;
                 self.mode = GameMode::AdventureIntro;
             }
             TitleMenuOption::PlayMiniGames => {
@@ -312,10 +314,30 @@ impl Game {
 
         if self.enemies.is_cleared() {
             self.score += 100 * (self.grade.index() as u32 + 1);
-            if self.adventure_active && self.adventure_step == AdventureStep::MathInvaders {
-                self.adventure_step = AdventureStep::ReadingSnake;
-                self.reading_snake = ReadingSnake::new_adventure();
-                self.mode = GameMode::ReadingSnake;
+            if self.adventure_active {
+                match self.adventure_step {
+                    AdventureStep::MathInvaders1 => {
+                        self.adventure_step = AdventureStep::ReadingSnake;
+                        self.reading_snake = ReadingSnake::new_adventure();
+                        self.mode = GameMode::ReadingSnake;
+                    }
+                    AdventureStep::MathInvaders2 => {
+                        self.adventure_step = AdventureStep::MathPong;
+                        self.math_pong = MathPong::new();
+                        self.mode = GameMode::MathPong;
+                    }
+                    AdventureStep::MathInvaders3 => {
+                        self.adventure_step = AdventureStep::NightmareSnake;
+                        self.reading_snake = ReadingSnake::new_adventure_nightmare();
+                        self.mode = GameMode::ReadingSnake;
+                    }
+                    AdventureStep::MathInvadersFinal => {
+                        self.begin_gate();
+                    }
+                    _ => {
+                        self.begin_gate();
+                    }
+                }
             } else {
                 self.begin_gate();
             }
@@ -324,7 +346,7 @@ impl Game {
 
     fn exit_to_title(&mut self) {
         self.adventure_active = false;
-        self.adventure_step = AdventureStep::MathInvaders;
+        self.adventure_step = AdventureStep::MathInvaders1;
         self.title_menu_page = TitleMenuPage::Main;
         self.mode = GameMode::Title;
     }
@@ -336,12 +358,11 @@ impl Game {
 
         match self.adventure_step {
             AdventureStep::ReadingSnake => {
-                self.adventure_step = AdventureStep::MathPong;
-                self.math_pong = MathPong::new();
-                self.mode = GameMode::MathPong;
+                self.adventure_step = AdventureStep::MathInvaders2;
+                self.begin_gate();
             }
             AdventureStep::NightmareSnake => {
-                self.adventure_step = AdventureStep::MathInvadersProgression;
+                self.adventure_step = AdventureStep::MathInvadersFinal;
                 self.begin_gate();
             }
             _ => {}
@@ -353,9 +374,8 @@ impl Game {
             return;
         }
 
-        self.adventure_step = AdventureStep::NightmareSnake;
-        self.reading_snake = ReadingSnake::new_adventure_nightmare();
-        self.mode = GameMode::ReadingSnake;
+        self.adventure_step = AdventureStep::MathInvaders3;
+        self.begin_gate();
     }
 
     fn update_enemy_fire(&mut self) {
@@ -542,7 +562,7 @@ impl Game {
     fn start_adventure_math_invaders(&mut self) {
         let mut next = Self::new();
         next.adventure_active = true;
-        next.adventure_step = AdventureStep::MathInvaders;
+        next.adventure_step = AdventureStep::MathInvaders1;
         *self = next;
         self.start_game();
     }

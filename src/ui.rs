@@ -395,7 +395,7 @@ const ADVENTURE_INTRO_PAGES: [(&str, &str); 5] = [
     ),
     (
         "First quest: clear the drifting number monsters.",
-        "Then Reading Snake, Math Pong, and Nightmare Snake await.",
+        "Math Invaders blocks await between challenges.",
     ),
 ];
 
