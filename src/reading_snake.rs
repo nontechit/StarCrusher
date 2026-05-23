@@ -3,8 +3,8 @@ use crate::screen::{self, primary_tap_position, to_virtual_position, SCREEN_H, S
 use crate::ui;
 use macroquad::prelude::*;
 
-const MOBILE_GRID_W: i32 = 14;
-const MOBILE_GRID_H: i32 = 14;
+const MOBILE_GRID_W: i32 = 18;
+const MOBILE_GRID_H: i32 = 18;
 const DESKTOP_GRID_W: i32 = 26;
 const DESKTOP_GRID_H: i32 = 12;
 const DESKTOP_PANEL_W: f32 = 1240.0;
@@ -16,23 +16,29 @@ const DESKTOP_BOARD_FRAME_BOTTOM: f32 = 10.0;
 const DESKTOP_FOOTER_GAP: f32 = 28.0;
 const DESKTOP_BOTTOM_CHROME: f32 = 0.0;
 const DESKTOP_PANEL_BOTTOM_PAD: f32 = 8.0;
-const MOBILE_CELL_W: f32 = 62.0;
-const MOBILE_CELL_H: f32 = 23.0;
-const MOBILE_BOARD_X: f32 = (SCREEN_W - MOBILE_GRID_W as f32 * MOBILE_CELL_W) / 2.0;
-const MOBILE_GOAL_CARD_Y: f32 = 116.0;
-const MOBILE_GOAL_TEXT_Y: f32 = 150.0;
-const MOBILE_GOAL_TEXT_W: f32 = 940.0;
-const MOBILE_GOAL_TEXT_SIZE: u16 = 28;
-const MOBILE_GOAL_MAX_LINES: usize = 3;
-const MOBILE_BOARD_GAP: f32 = 18.0;
-const MOBILE_FOOTER_GAP: f32 = 24.0;
-const MOBILE_FOOTER_H: f32 = 84.0;
+const MOBILE_BOARD_MARGIN: f32 = 24.0;
+const MOBILE_CELL_H: f32 = 28.0;
+const MOBILE_GOAL_CARD_Y: f32 = 148.0;
+const MOBILE_GOAL_TEXT_Y: f32 = 180.0;
+const MOBILE_GOAL_TEXT_W: f32 = 620.0;
+const MOBILE_GOAL_TEXT_SIZE: u16 = 26;
+const MOBILE_GOAL_MAX_LINES: usize = 2;
+const MOBILE_BOARD_GAP: f32 = 10.0;
+const MOBILE_FOOTER_GAP: f32 = 12.0;
+const MOBILE_FOOTER_H: f32 = 76.0;
+const MOBILE_STAT_CHIP_Y: f32 = ui::MOBILE_CHROME_Y + ui::MOBILE_CHROME_ROW_H + 10.0;
+const MOBILE_STAT_CHIP_H: f32 = 44.0;
+const MOBILE_STAT_CHIP_W: f32 = 200.0;
+const MOBILE_STAT_CHIP_GAP: f32 = 12.0;
 const MOBILE_PLAYFIELD_BOTTOM: f32 = ui::MOBILE_ACTION_Y - 10.0;
 const MOBILE_SWIPE_THRESHOLD: f32 = 34.0;
-const MOBILE_PANEL_MARGIN: f32 = 82.0;
-const MOBILE_PANEL_W: f32 = SCREEN_W - MOBILE_PANEL_MARGIN * 2.0;
-const MOBILE_CARD_CONTENT_PAD: f32 = 48.0;
+const MOBILE_PANEL_MARGIN: f32 = 24.0;
+const MOBILE_CARD_CONTENT_PAD: f32 = 36.0;
 const MOBILE_WRAPPED_LINE_GAP: f32 = 10.0;
+
+fn mobile_panel_w() -> f32 {
+    screen::screen_w() - MOBILE_PANEL_MARGIN * 2.0
+}
 
 struct MobilePlayfieldLayout {
     header_bottom: f32,
@@ -290,8 +296,8 @@ impl ReadingSnake {
             draw_rectangle(
                 0.0,
                 0.0,
-                SCREEN_W,
-                SCREEN_H,
+                screen::screen_w(),
+                screen::screen_h(),
                 Color::new(0.0, 0.0, 0.0, 0.75),
             );
             let title = if self.completed {
@@ -434,7 +440,12 @@ impl ReadingSnake {
     fn playfield_metrics(&self) -> (f32, f32, f32, f32) {
         if screen::portrait_layout() {
             let layout = self.mobile_layout();
-            (MOBILE_BOARD_X, layout.board_y, MOBILE_CELL_W, layout.cell_h)
+            (
+                mobile_board_x(),
+                layout.board_y,
+                mobile_cell_w(),
+                layout.cell_h,
+            )
         } else {
             let (board_x, board_y, cell_w, cell_h) = board_metrics();
             (board_x, board_y, cell_w, cell_h)
@@ -719,27 +730,36 @@ impl ReadingSnake {
         let layout = self.mobile_layout();
 
         draw_mobile_header_band();
-        draw_text(
+        centered_text(
             title,
-            154.0,
-            48.0,
-            screen::mobile_text_size(32) as f32,
+            46.0,
+            screen::mobile_text_size(30),
             soft_white(),
         );
 
+        let row_w =
+            MOBILE_STAT_CHIP_W * 3.0 + MOBILE_STAT_CHIP_GAP * 2.0;
+        let row_x = (screen::screen_w() - row_w) / 2.0;
         draw_stat_chip(
-            82.0,
-            62.0,
-            232.0,
+            row_x,
+            MOBILE_STAT_CHIP_Y,
+            MOBILE_STAT_CHIP_W,
             "Score",
             &self.score.to_string(),
             star_yellow(),
         );
-        draw_stat_chip(342.0, 62.0, 208.0, "Lives", &self.lives.to_string(), mint());
         draw_stat_chip(
-            578.0,
-            62.0,
-            270.0,
+            row_x + MOBILE_STAT_CHIP_W + MOBILE_STAT_CHIP_GAP,
+            MOBILE_STAT_CHIP_Y,
+            MOBILE_STAT_CHIP_W,
+            "Lives",
+            &self.lives.to_string(),
+            mint(),
+        );
+        draw_stat_chip(
+            row_x + (MOBILE_STAT_CHIP_W + MOBILE_STAT_CHIP_GAP) * 2.0,
+            MOBILE_STAT_CHIP_Y,
+            MOBILE_STAT_CHIP_W,
             "Next",
             &self.next_letter_label(),
             if self.nightmare_mode {
@@ -752,7 +772,7 @@ impl ReadingSnake {
         draw_surface_card(
             MOBILE_PANEL_MARGIN,
             MOBILE_GOAL_CARD_Y,
-            MOBILE_PANEL_W,
+            mobile_panel_w(),
             layout.goal_card_h,
             20.0,
             elevated_surface(),
@@ -777,24 +797,7 @@ impl ReadingSnake {
         let (board_x, board_y, cell_w, cell_h) = self.playfield_metrics();
         let grid_w = grid_width();
         let grid_h = grid_height();
-        if screen::portrait_layout() {
-            draw_surface_card(
-                board_x - 26.0,
-                board_y - 24.0,
-                grid_w as f32 * cell_w + 52.0,
-                grid_h as f32 * cell_h + 48.0,
-                28.0,
-                Color::new(0.095, 0.105, 0.15, 0.98),
-            );
-            draw_round_rect(
-                board_x - 26.0,
-                board_y - 24.0,
-                grid_w as f32 * cell_w + 52.0,
-                7.0,
-                4.0,
-                palette.desktop_accent,
-            );
-        } else {
+        if !screen::portrait_layout() {
             draw_surface_card(
                 board_x - 12.0,
                 board_y - 10.0,
@@ -940,7 +943,7 @@ impl ReadingSnake {
         let progress_w = measure_text(&progress, None, progress_size_u16, 1.0).width;
         let row_gap = 14.0;
         let row_w = label_w + row_gap + progress_w;
-        let row_x = SCREEN_W / 2.0 - row_w / 2.0;
+        let row_x = screen::screen_w() / 2.0 - row_w / 2.0;
 
         draw_text(label, row_x, footer_y + 2.0, label_size as f32, muted_text());
         draw_text(
@@ -963,7 +966,7 @@ impl ReadingSnake {
         draw_surface_card(
             MOBILE_PANEL_MARGIN,
             footer_y,
-            MOBILE_PANEL_W,
+            mobile_panel_w(),
             MOBILE_FOOTER_H,
             20.0,
             elevated_surface(),
@@ -971,30 +974,30 @@ impl ReadingSnake {
         centered_text_in_rect(
             "Word",
             MOBILE_PANEL_MARGIN,
-            footer_y + 2.0,
-            MOBILE_PANEL_W,
-            22.0,
+            footer_y + 8.0,
+            mobile_panel_w(),
+            24.0,
             label_size,
             muted_text(),
         );
         centered_text_in_rect(
             &progress,
             MOBILE_PANEL_MARGIN,
-            footer_y + 20.0,
-            MOBILE_PANEL_W,
-            34.0,
+            footer_y + 28.0,
+            mobile_panel_w(),
+            36.0,
             progress_size,
             star_yellow(),
         );
         centered_text(
             self.message,
-            footer_y + 50.0,
+            footer_y + 56.0,
             message_size,
             soft_white(),
         );
         centered_text(
             "Tap or swipe on the board to steer",
-            footer_y + 74.0,
+            footer_y + 72.0,
             screen::mobile_text_size(18),
             muted_text(),
         );
@@ -1083,16 +1086,16 @@ impl ReadingSnake {
     }
 
     fn draw_mobile_definition_card(&self) {
-        const CARD_H: f32 = 520.0;
-        const HEADER_H: f32 = 86.0;
-        let card_y = 108.0;
-        let content_w = MOBILE_PANEL_W - MOBILE_CARD_CONTENT_PAD * 2.0;
+        const CARD_H: f32 = 560.0;
+        const HEADER_H: f32 = 72.0;
+        let card_y = 140.0;
+        let content_w = mobile_panel_w() - MOBILE_CARD_CONTENT_PAD * 2.0;
 
         draw_rectangle(
             0.0,
             0.0,
-            SCREEN_W,
-            SCREEN_H,
+            screen::screen_w(),
+            screen::screen_h(),
             Color::new(0.01, 0.012, 0.02, 0.93),
         );
 
@@ -1105,10 +1108,11 @@ impl ReadingSnake {
         } else {
             "Reading Planet"
         };
+        let screen_title_y = ui::MOBILE_CHROME_Y + ui::MOBILE_CHROME_ROW_H + 22.0;
         centered_text(
             screen_title,
-            54.0,
-            screen::mobile_text_size(36),
+            screen_title_y,
+            screen::mobile_text_size(24),
             soft_white(),
         );
 
@@ -1117,13 +1121,13 @@ impl ReadingSnake {
         } else {
             Color::new(0.4, 1.0, 0.65, 0.88)
         };
-        draw_mobile_reading_card(MOBILE_PANEL_MARGIN, card_y, MOBILE_PANEL_W, CARD_H, accent);
+        draw_mobile_reading_card(MOBILE_PANEL_MARGIN, card_y, mobile_panel_w(), CARD_H, accent);
 
-        let title_size = screen::mobile_text_size(46);
-        let word_size = screen::mobile_text_size(if self.nightmare_mode { 92 } else { 84 });
-        let pos_size = screen::mobile_text_size(36);
-        let def_size = screen::mobile_text_size(44);
-        let hint_size = screen::mobile_text_size(26);
+        let title_size = screen::mobile_text_size(28);
+        let word_size = screen::mobile_text_size(if self.nightmare_mode { 42 } else { 38 });
+        let pos_size = screen::mobile_text_size(20);
+        let def_size = screen::mobile_text_size(22);
+        let hint_size = screen::mobile_text_size(18);
         let word_color = if self.nightmare_mode {
             planet_pink()
         } else {
@@ -1133,17 +1137,25 @@ impl ReadingSnake {
         centered_text_in_card(
             self.definition_card_title,
             MOBILE_PANEL_MARGIN,
-            MOBILE_PANEL_W,
+            mobile_panel_w(),
             card_y + HEADER_H / 2.0 + title_size as f32 / 3.0,
             title_size,
             soft_white(),
         );
 
-        let mut content_y = card_y + HEADER_H + 42.0;
+        let content_top = card_y + HEADER_H;
+        let content_bottom = card_y + CARD_H - 24.0;
+        let content_h = content_bottom - content_top;
+        let pos_label = format!("{} word", self.part_of_speech);
+        let def_lines =
+            wrapped_line_count(&self.definition, content_w, def_size).max(1) as f32;
+        let block_h = word_size as f32 + 22.0 + pos_size as f32 + 30.0
+            + wrapped_block_height(def_lines as usize, def_size);
+        let mut content_y = content_top + (content_h - block_h) / 2.0 + word_size as f32 / 3.0;
         centered_text_fit_in_card(
             &self.word,
             MOBILE_PANEL_MARGIN,
-            MOBILE_PANEL_W,
+            mobile_panel_w(),
             content_y,
             content_w,
             word_size,
@@ -1151,9 +1163,9 @@ impl ReadingSnake {
         );
         content_y += word_size as f32 + 22.0;
         centered_text_in_card(
-            &format!("{} word", self.part_of_speech),
+            &pos_label,
             MOBILE_PANEL_MARGIN,
-            MOBILE_PANEL_W,
+            mobile_panel_w(),
             content_y,
             pos_size,
             if self.nightmare_mode {
@@ -1166,7 +1178,7 @@ impl ReadingSnake {
         draw_wrapped_centered_in_card(
             &self.definition,
             MOBILE_PANEL_MARGIN,
-            MOBILE_PANEL_W,
+            mobile_panel_w(),
             content_y,
             content_w,
             def_size,
@@ -1303,6 +1315,14 @@ fn mobile_playfield_layout(definition: &str) -> MobilePlayfieldLayout {
     }
 }
 
+fn mobile_cell_w() -> f32 {
+    (screen::screen_w() - MOBILE_BOARD_MARGIN * 2.0) / MOBILE_GRID_W as f32
+}
+
+fn mobile_board_x() -> f32 {
+    MOBILE_BOARD_MARGIN
+}
+
 fn grid_width() -> i32 {
     if screen::portrait_layout() {
         MOBILE_GRID_W
@@ -1413,21 +1433,21 @@ fn draw_mobile_space_background() {
     draw_rectangle(
         0.0,
         0.0,
-        SCREEN_W,
-        SCREEN_H,
+        screen::screen_w(),
+        screen::screen_h(),
         Color::new(0.035, 0.035, 0.07, 1.0),
     );
     draw_rectangle(
         0.0,
         0.0,
-        SCREEN_W,
+        screen::screen_w(),
         188.0,
         Color::new(0.38, 0.22, 0.95, 0.72),
     );
 
     for i in 0..42 {
-        let x = ((i * 83 + 29) % SCREEN_W as i32) as f32;
-        let y = ((i * 47 + 61) % SCREEN_H as i32) as f32;
+        let x = ((i * 83 + 29) % screen::screen_w() as i32) as f32;
+        let y = ((i * 47 + 61) % screen::screen_h() as i32) as f32;
         let radius = if i % 6 == 0 { 1.8 } else { 0.9 };
         let color = if i % 8 == 0 {
             Color::new(0.46, 0.9, 1.0, 0.38)
@@ -1493,16 +1513,23 @@ fn centered_text_in_rect(text: &str, x: f32, y: f32, w: f32, h: f32, font_size: 
 }
 
 fn draw_stat_chip(x: f32, y: f32, w: f32, label: &str, value: &str, accent: Color) {
-    let label_size = screen::mobile_text_size(24);
-    let value_size = screen::mobile_text_size(30);
-    draw_round_rect(x, y, w, 46.0, 23.0, Color::new(0.09, 0.1, 0.13, 0.96));
-    draw_circle(x + 28.0, y + 23.0, 8.0, accent);
-    draw_text(label, x + 50.0, y + 30.0, label_size as f32, muted_text());
-    let metrics = measure_text(value, None, value_size, 1.0);
+    let label_size = screen::mobile_text_size(18);
+    let value_size = screen::mobile_text_size(22);
+    draw_round_rect(x, y, w, MOBILE_STAT_CHIP_H, 21.0, Color::new(0.09, 0.1, 0.13, 0.96));
+    draw_circle(x + w / 2.0 - 52.0, y + MOBILE_STAT_CHIP_H / 2.0, 7.0, accent);
+    let label_metrics = measure_text(label, None, label_size, 1.0);
+    draw_text(
+        label,
+        x + w / 2.0 - label_metrics.width / 2.0 - 18.0,
+        y + MOBILE_STAT_CHIP_H / 2.0 + label_size as f32 / 3.5,
+        label_size as f32,
+        muted_text(),
+    );
+    let value_metrics = measure_text(value, None, value_size, 1.0);
     draw_text(
         value,
-        x + w - metrics.width - 28.0,
-        y + 33.0,
+        x + w / 2.0 - value_metrics.width / 2.0 + 18.0,
+        y + MOBILE_STAT_CHIP_H / 2.0 + value_size as f32 / 3.5,
         value_size as f32,
         soft_white(),
     );
@@ -1541,7 +1568,7 @@ fn mint() -> Color {
 }
 
 fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
-    centered_text_in_card(text, 0.0, SCREEN_W, y, font_size, color);
+    centered_text_in_card(text, 0.0, screen::screen_w(), y, font_size, color);
 }
 
 fn centered_text_in_card(
@@ -1579,7 +1606,7 @@ fn centered_text_fit_in_card(
 }
 
 fn draw_wrapped_centered_text(text: &str, y: f32, max_width: f32, font_size: u16, color: Color) {
-    draw_wrapped_centered_in_card(text, 0.0, SCREEN_W, y, max_width, font_size, color);
+    draw_wrapped_centered_in_card(text, 0.0, screen::screen_w(), y, max_width, font_size, color);
 }
 
 fn draw_wrapped_centered_in_card(

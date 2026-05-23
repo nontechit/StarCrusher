@@ -23,6 +23,37 @@ pub fn generate_question(grade: Grade) -> Question {
     }
 }
 
+/// Math Pong uses only single-line counting prompts for hearts, circles, or X shapes.
+pub fn generate_math_pong_question(grade: Grade) -> Question {
+    let (min_count, max_count) = math_pong_count_range(grade);
+    let count = random::i32_inclusive(min_count, max_count);
+    let shapes = ["hearts", "circles", "X's"];
+    let shape = shapes[random::usize_exclusive(shapes.len())];
+
+    Question {
+        text: format!("How many {}?", shape),
+        correct_answer: count as i64,
+        wrong_answers: gen_unique_wrongs(
+            count as i64,
+            min_count as i64,
+            max_count as i64,
+            3,
+        ),
+    }
+}
+
+fn math_pong_count_range(grade: Grade) -> (i32, i32) {
+    match grade {
+        Grade::Preschool => (1, 5),
+        Grade::Kindergarten => (1, 10),
+        Grade::FirstGrade => (1, 12),
+        Grade::SecondGrade => (1, 15),
+        Grade::ThirdGrade => (1, 18),
+        Grade::FourthGrade => (1, 20),
+        Grade::FifthGrade => (1, 25),
+    }
+}
+
 /// Preschool: Count objects (1-5). Simple visual counting.
 fn gen_preschool() -> Question {
     let count = random::i32_inclusive(1, 5);

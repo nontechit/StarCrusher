@@ -22,7 +22,7 @@ use question::{generate_question, Question};
 use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
 use screen::{
     enter_fullscreen, primary_pointer_position, primary_tap_position, use_virtual_screen,
-    window_conf, SCREEN_H, SCREEN_W,
+    window_conf,
 };
 
 const MAX_GATE_ANSWER_LEN: usize = 8;
@@ -125,7 +125,7 @@ impl Game {
     fn new() -> Self {
         let grade = Grade::Preschool;
         let active_question = generate_question(grade);
-        let enemies = EnemyGrid::new(grade, &grade.config(), SCREEN_W, Some(&active_question));
+        let enemies = EnemyGrid::new(grade, &grade.config(), screen::screen_w(), Some(&active_question));
 
         Self {
             mode: GameMode::Title,
@@ -135,7 +135,7 @@ impl Game {
             wave: 1,
             score: 0,
             lives: 5,
-            player: Player::new(SCREEN_W),
+            player: Player::new(screen::screen_w()),
             enemies,
             player_bullets: Vec::new(),
             enemy_bullets: Vec::new(),
@@ -203,10 +203,10 @@ impl Game {
         self.enemies = EnemyGrid::new(
             self.grade,
             &self.grade.config(),
-            SCREEN_W,
+            screen::screen_w(),
             Some(&self.active_question),
         );
-        self.player = Player::new(SCREEN_W);
+        self.player = Player::new(screen::screen_w());
         self.player_bullets.clear();
         self.enemy_bullets.clear();
         self.explosions.clear();
@@ -337,7 +337,7 @@ impl Game {
     }
 
     fn update_playing(&mut self) {
-        self.player.update(SCREEN_W);
+        self.player.update(screen::screen_w());
 
         let touch_fire = self.update_touch_player();
         if (is_key_pressed(KeyCode::Space) || touch_fire) && self.player_bullets.len() < 3 {
@@ -673,7 +673,7 @@ impl Game {
         if let Some(pointer) = primary_pointer_position() {
             if pointer.y > move_threshold {
                 self.player.x = (pointer.x - ship_w / 2.0)
-                    .clamp(8.0, SCREEN_W - ship_w - 8.0);
+                    .clamp(8.0, screen::screen_w() - ship_w - 8.0);
             }
         }
 
@@ -750,7 +750,7 @@ impl Game {
 
     fn draw_playing(&self) {
         draw_starfield();
-        assets::draw_border(SCREEN_W, SCREEN_H);
+        assets::draw_border(screen::screen_w(), screen::screen_h());
         self.enemies.draw(self.grade.enemy_color());
         self.player.draw();
 
@@ -775,7 +775,7 @@ impl Game {
 
     fn draw_gate_question(&self) {
         draw_starfield();
-        assets::draw_border(SCREEN_W, SCREEN_H);
+        assets::draw_border(screen::screen_w(), screen::screen_h());
         ui::draw_question_gate(&self.grade, self.grade.math_topics(), false);
 
         let question_lines: Vec<&str> = self.gate_question.text.lines().collect();
@@ -861,8 +861,8 @@ fn gate_key_at(point: Vec2) -> Option<GateKey> {
 
 fn draw_starfield() {
     for i in 0..90 {
-        let x = ((i * 73 + 19) % SCREEN_W as i32) as f32;
-        let y = ((i * 41 + 37) % (SCREEN_H as i32 - 40)) as f32;
+        let x = ((i * 73 + 19) % screen::screen_w() as i32) as f32;
+        let y = ((i * 41 + 37) % (screen::screen_h() as i32 - 40)) as f32;
         assets::draw_star(x, y, 0.6 + (i % 3) as f32 * 0.4);
     }
 }

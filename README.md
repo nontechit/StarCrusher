@@ -1,53 +1,31 @@
 # Star Crusher
 
-Star Crusher is an educational arcade collection about two young space travelers flying between dungeon planets. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Orbit (Math Pong), and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
+Star Crusher is an educational arcade collection about two young space travelers flying between dungeon planets. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.5.14`
+Current build: `1.5.15`
 
-## Latest Mobile Release (1.5.14)
+## Latest Mobile Release
 
-Shipped after public [PR #10](https://github.com/nontechit/StarCrusher/pull/10) (`1.5.12` — desktop Reading/Nightmare layout and definition updates).
+- **Portrait-native canvas (720×1280):** Mobile uses a dedicated portrait virtual screen that fills the phone viewport with uniform scaling—no letterboxing or vertical font stretch.
+- **Unified mobile chrome:** Circular back (`X`) button and `HOME` pill (HTML overlay) aligned to the game canvas; chrome fonts use fixed sizes independent of gameplay text scaling.
+- **Tap-to-select menus:** Title and Mission Select use first-tap to highlight, second-tap to launch.
+- **Reading Snake:** Retuned definition cards, stat chips, and board layout for the portrait canvas; tap/swipe steering on the board.
+- **Math Orbit:** Portrait HUD with question below numbered targets, centered stat pills, paddle above `START`, and hearts/circles/X's question prompts.
+- **Font scaling:** Mobile gameplay text uses a 1.75× multiplier tuned for readability without overlap.
+- **`build-wasm.ps1`:** Root build script verifies WASM freshness, copies artifacts, and writes sanitized `star-crusher.wasm.buildinfo.json` (relative paths only).
+- Rebuilt checked-in `star-crusher.wasm` for the static site with cache-busting query string in `index.html`.
 
-- **iPhone full-screen shell:** mobile `#glcanvas` fills the viewport (`100dvh` / `visualViewport`) so portrait play is no longer letterboxed into the top third of the screen.
-- **Readable mobile text:** removed the portrait `0.72` text shrink; labels use `mobile_text_size()` with a 20px floor and centered layout on title, adventure intro, gates, spelling list, and Reading Snake screens.
-- **Reading / Nightmare new-word card:** centered word, part-of-speech, and definition copy with larger fonts; mode title (`Reading Planet` / `Night Planet`) centered at the top; gameplay HUD hidden behind the card until START.
-- **Reading Snake mobile HUD:** centered definition banner, footer word progress, and steer hint; larger stat chips and footer height.
-- **Mobile back control:** brighter `TITLE` / `BACK` pill with a larger tap target for the top-left exit button.
-- Rebuilt `star-crusher.wasm` with cache-bust `?v=1.5.14` in `index.html`.
+## Previous Mobile Improvements
 
-### Also in 1.5.12 (PR #10)
-
-- Reading Snake desktop wide 26×12 panel; Nightmare Snake purple palette and uniform letter tiles.
-- Desktop new-word card centered on the board with inset accent bars.
-- Updated default definitions for FUNNY, WOULD, HARD, and NEAR; removed duplicate MY, NIGHT, WASH, and WOULD from the shuffled list.
-- README Word Cargo semicolon guidance for custom definition lists.
-
-### Earlier mobile polish (1.5.8–1.5.11)
-- Math Orbit on iPhone now separates aim from launch: first gameplay-band tap moves the paddle, a second tap or `START` launches the ball.
-- Math Orbit expands the mobile paddle touch band through the visible paddle row and updates footer copy for the two-tap launch flow.
-- Gate questions on portrait mobile submit only through the on-screen `OK` pad tap; desktop keyboard submit is unchanged.
-- Desktop web shell places `Back to Site` below the canvas so it no longer overlaps footer hints; mobile keeps `Site` in the top-right corner.
-- Desktop Math Pong removes the blue question box and anchors question text below the target row.
-- Title screen footer hints move up slightly for desktop clearance above the site button.
-- Fixed portrait touch mapping by converting screen coordinates through the virtual 1280x720 camera in `screen.rs`, so paddle and ship controls align with finger position on iPhone Safari.
-- Moved the mobile web `Site` button to the top-right of the game shell so it no longer overlaps in-canvas headers.
-- Math Invaders portrait HUD now leads with the active question card at the top; score, wave, and lives sit in corner stats instead of a separate title bar.
+- Fixed portrait touch mapping by converting screen coordinates through the virtual camera in `screen.rs`, so paddle and ship controls align with finger position on iPhone Safari.
+- Moved the mobile web exit control to the top-right shell (`HOME` on mobile, `Back to Home` on desktop) so it no longer overlaps in-canvas headers.
+- Math Invaders portrait HUD leads with the active question card at the top; score, wave, and lives sit in stat pills.
 - Math Invaders portrait gameplay scales the player ship and numbered targets for easier reading on phone screens.
-- Math Invaders portrait mode now uses larger stat pills below the question card and keeps the enemy field lower so the HUD does not crowd active targets.
-- Math Pong portrait HUD moves the question card to the top, centers the title and score, and keeps level progress and lives in the corners.
-- Math Orbit portrait mode now uses wider numbered targets, clearer `Q`, `Lives`, and `Score` stat pills, and stronger footer copy above the mobile `START` button.
-- Math Pong paddle touch input is limited to the gameplay band so header and footer taps do not yank the paddle sideways.
+- Math Pong portrait HUD moves the question card below numbered targets, with `Q`, `Lives`, and `Score` stat pills and footer hints above the paddle.
 - Reading Snake portrait mode removes the thumb D-pad; tap or swipe on the board to steer toward the next letter.
-- Reading Snake portrait layout uses a clearer Reading Planet header, compact stat pills, a goal banner, a larger high-contrast board, and a footer hint: `Tap or swipe on the board to steer`.
-- Reading Snake portrait mode now sizes the goal banner from wrapped definition text, keeps the board below the header stack, and tucks the steer hint inside the footer card so it does not collide with `START`.
-- Added a web touch bridge so iPhone Safari taps on shell controls (menus, `START`, `BACK`, spelling-list buttons) trigger the matching game keys; in-game touch for ships, paddles, boards, and gate keypads is handled in Rust.
-- Migrated the virtual playfield from the older 1024x768 4:3 layout to a 1280x720 16:9 baseline.
-- Reworked portrait mobile menus into large rounded tap targets, matching the web `Site` button style.
-- Added explicit mobile `CONTINUE`, `START`, `BACK`, and `TITLE` buttons so players do not have to guess at swipe or keyboard prompts.
-- Refreshed the space-traveler color palette across the title, adventure intro, gates, overlays, HUDs, Math Invaders, Reading Snake, and Math Pong.
-- Rebuilt the checked-in `star-crusher.wasm` artifact for the static site.
-- The static web shell loads `star-crusher.wasm` with a cache-busting query string so deployed mobile UI changes do not get stuck behind an older browser-cached WASM file.
-- Math Invaders and Math Orbit arcade movement is frame-rate independent, preserving the original 60fps feel if browser rendering slows down.
+- Added a web touch bridge so mobile Safari taps on canvas buttons trigger the matching game controls.
+- Desktop virtual playfield remains **1280×720** (16:9); portrait mobile uses **720×1280**.
+- Arcade movement is frame-rate independent, preserving the original 60fps feel if browser rendering slows down.
 
 ## Features
 
@@ -61,9 +39,8 @@ Shipped after public [PR #10](https://github.com/nontechit/StarCrusher/pull/10) 
 - Kindergarten number-recognition prompts use words, such as `Shoot number three`, while targets remain numeric.
 - Question gates between waves that require typed answers to advance.
 - Question gate prompts and answer input are spaced to avoid overlapping the wave-complete instructions.
-- Question gates use larger portrait-mode number pad targets for phone play; portrait mobile submits through the on-screen `OK` pad tap.
-- Math Orbit (Math Pong) mode for launching a straight ball into randomly placed numbered targets.
-- Math Orbit on portrait mobile uses a two-tap launch flow: first gameplay-band tap moves the paddle, then a second tap or `START` launches the ball.
+- Question gates use larger portrait-mode number pad targets for phone play.
+- Math Pong mode for launching a straight ball into randomly placed numbered targets.
 - Reading Snake mini game for letter order, word recognition, and definition practice, with randomized default or custom spelling lists and Nightmare mode.
 - Reading Snake shows definition cards, keeps the active definition visible above the board, and keeps new letter tiles away from the snake head.
 - Reading Snake supports portrait tap-or-swipe steering on the board; arrow keys and WASD remain available as fallback controls.
@@ -71,9 +48,9 @@ Shipped after public [PR #10](https://github.com/nontechit/StarCrusher/pull/10) 
 - Completing the standard Reading Snake list starts a bonus Nightmare round using the same words in the same randomized order.
 - In Launch Voyage, completing normal Reading Snake advances directly to Math Pong instead of the standalone bonus round.
 - Space-travel title menu with two travelers, a ship, dungeon planets, a focused main adventure menu, and a Mission Select submenu.
-- Portrait mobile screens show an in-canvas `TITLE` / `BACK` button for touch navigation.
-- Portrait mobile menus use large rounded touch buttons styled like the site controls.
-- Portrait mobile gameplay uses compact HUD and question panels, with the browser `Site` button kept in the top-right shell control area.
+- Portrait mobile screens show an in-canvas circular `BACK` / `X` button and a shell-level `HOME` pill for touch navigation.
+- Portrait mobile menus use large rounded touch buttons with tap-to-select (first tap highlights, second tap launches).
+- Portrait mobile gameplay uses a **720×1280** virtual canvas; desktop uses **1280×720**.
 - Arcade movement uses frame-time scaling for enemies, ships, bullets, explosions, and Math Orbit ball/paddle motion so desktop and mobile pacing stay consistent across frame rates.
 - Game over and victory stat panels are centered with their score and progress text.
 - Procedural graphics only; no external assets or fonts required.
@@ -97,8 +74,8 @@ Title menu controls:
 - Direct shortcut for Reading Snake: `R`
 - Direct shortcut for Reading Snake Nightmare: `N`
 - Direct shortcut for Word Cargo: `L`
-- On mobile, tap menu rows directly.
-- On mobile, tap the in-canvas `BACK` button to return from Mission Select to the main menu.
+- On mobile, tap menu rows directly (first tap selects, second tap launches).
+- On mobile, tap the in-canvas back (`X`) button or shell `HOME` to navigate.
 - On mobile, use explicit `CONTINUE`, `START`, `BACK`, and `TITLE` buttons for story, gate, restart, and navigation screens.
 
 Math Invaders controls:
@@ -112,7 +89,7 @@ Math Invaders controls:
 - On mobile, hold or drag in the lower play area to move and fire.
 - On mobile, the active question appears in the top banner; wave, score, and lives appear in stat pills below it.
 - On mobile, tap `TITLE` to return to the title menu.
-- On mobile, use the enlarged gate number pad; tap `OK` to submit answers (portrait mobile ignores keyboard `Enter` for submit).
+- On mobile, use the enlarged gate number pad and `OK` button to submit answers.
 
 Reading Snake controls:
 
@@ -140,7 +117,7 @@ Reading Snake Nightmare rules:
 Spelling-list entry controls:
 
 - Start list entry from title: `L`
-- Type `word: definition` pairs separated by semicolons, then press `Enter` (semicolons separate entries only; use a comma or period inside a definition if it needs more than one clause)
+- Type `word: definition` pairs separated by semicolons, then press `Enter`
 - Press `N` from list entry to play Nightmare with the typed list
 - Plain word lists separated by spaces or commas still work
 - Delete typed characters with `Backspace`
@@ -150,14 +127,13 @@ Spelling-list entry controls:
 - On mobile, tap `NIGHT` to start Nightmare Snake with the typed list.
 - On mobile, tap `TITLE` to return to the title menu.
 
-Math Orbit (Math Pong) controls:
+Math Pong controls:
 
 - Move paddle: `Left` / `Right` arrow keys or `A` / `D`
 - Launch ball: `Space` or `Enter`
 - Restart after game over: `Enter` or `Space`
 - Return to title: `Esc`
-- On mobile, drag or tap in the gameplay band near the lower play area to move the paddle.
-- On mobile, launch with a second gameplay-band tap or by tapping `START`; the first tap positions the paddle only.
+- On mobile, drag or hold in the gameplay band near the lower play area to move the paddle, then tap `START` to launch the ball.
 - On mobile, the question card appears at the top of the screen; wider answer targets and `Q`, `Lives`, and `Score` stat pills sit below it.
 - On mobile, tap `TITLE` to return to the title menu.
 
@@ -167,10 +143,6 @@ Math Orbit (Math Pong) controls:
 - Cargo
 
 Install Rust from <https://www.rust-lang.org/tools/install> if needed.
-
-## License
-
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## Run The Game
 
@@ -195,7 +167,7 @@ cargo check
 ```text
 run-game             Convenience launcher that loads rustup environment and runs Cargo
 src/main.rs          Game state machine and update/draw loop
-src/screen.rs        Window configuration, virtual camera, portrait scaling, and shared touch mapping
+src/screen.rs        Window configuration, virtual camera (1280×720 desktop / 720×1280 portrait), and shared touch mapping
 src/platform.rs      Optional parent-shell event bridge for embedded web deployments
 src/levels.rs        Grade progression and difficulty configuration
 src/question.rs      Grade-specific math question generation
@@ -207,6 +179,8 @@ src/player.rs        Player ship, player bullets, enemy bullets
 src/ui.rs            HUD, title, mobile touch buttons, game over, victory, and question gate UI
 src/assets.rs        Procedural drawing helpers for ships, enemies, stars, effects
 star-crusher.wasm    Checked-in WASM artifact used by the static landing page
+star-crusher.wasm.buildinfo.json  WASM hash, build time, and git SHA (relative paths only)
+build-wasm.ps1       Build, copy, verify, and record WASM freshness for local/CI checks
 mq_js_bundle.js      Vendored Macroquad/Miniquad browser loader for the WASM build
 index.html           Static landing page and local WASM loader bootstrap
 ```
@@ -341,20 +315,19 @@ Math Invaders:
 11. Clear all numbered targets, then answer typed math questions at the wave-complete gate.
 12. Advance through each grade until the 5th Grade wave is completed.
 
-Math Orbit (Math Pong):
+Math Pong:
 
 1. Choose `Mission Select`, then choose `Math Orbit`, or press `P` from Mission Select.
 2. Read the math question in the top banner on portrait mobile and identify the correct widened numbered target.
 3. Move the paddle under the correct number before launching the ball.
-4. On portrait mobile, tap once in the gameplay band to position the paddle, then tap again or press `START` to launch straight upward into the correct number.
-5. On desktop, launch with `Space` or `Enter` after lining up the paddle.
-6. Clear five questions to advance to the next grade.
+4. Launch straight upward into the correct number to clear the question.
+5. Clear five questions to advance to the next grade.
 
 Reading Snake:
 
 1. Choose `Mission Select`, then choose `Reading Planet`, or press `R`, to play with the default word list.
 2. Or choose `Word Cargo`, type weekly spelling words with definitions, then press `Enter`.
-3. Use the format `apple: a fruit; moon: shines at night` for custom definitions. Semicolons separate word entries, so compound definitions should use commas or periods instead of semicolons.
+3. Use the format `apple: a fruit; moon: shines at night` for custom definitions.
 4. Read the definition card, then press `Enter` or `Space` to start spelling.
 5. Use the visible definition above the board and follow the blank word prompt below the board.
 6. Steer the snake into the next correct letter; on portrait mobile, tap or swipe on the board to choose direction.
@@ -377,8 +350,7 @@ Reading Snake Nightmare:
 - The game uses `macroquad` for windowing, input, and drawing, and `rand` for question/enemy randomization.
 - CI runs `cargo audit` before each Pages deploy. Local check: `cargo audit --ignore RUSTSEC-2025-0035`.
 - The static web shell uses a restrictive Content Security Policy in `index.html`; `wasm-unsafe-eval` and inline script/style allowances are required for the Macroquad WASM loader.
-- The optional `boohw.starcrusher.event` parent-frame bridge in `index.html` and `src/platform.rs` emits gameplay JSON to an embedding site when present; it is inert on standalone GitHub Pages play.
-- Custom spelling input is capped at 64 words, 12 characters per word, and 180 characters per definition. Word Cargo splits on semicolons between entries, not within a single definition.
+- Custom spelling input is capped at 64 words, 12 characters per word, and 180 characters per definition.
 
 ## Web Deployment (GitHub Pages)
 
@@ -410,6 +382,20 @@ The repository includes a `CNAME` file for **www.boohw.com**. To complete or ver
 
 ### Local WASM Build
 
+Use the project build script (recommended — unsets sandbox `CARGO_TARGET_DIR`, copies WASM, verifies markers, writes buildinfo):
+
+```powershell
+powershell -File build-wasm.ps1
+```
+
+Verify an existing root WASM without rebuilding:
+
+```powershell
+powershell -File build-wasm.ps1 -VerifyOnly
+```
+
+Manual build (only if you unset `CARGO_TARGET_DIR` yourself):
+
 ```bash
 rustup target add wasm32-unknown-unknown
 cargo build --target wasm32-unknown-unknown --release
@@ -421,6 +407,18 @@ To update the static landing-page artifact after a local WASM build:
 ```powershell
 Copy-Item -LiteralPath target\wasm32-unknown-unknown\release\star-crusher.wasm -Destination star-crusher.wasm
 ```
+
+The build script also writes `star-crusher.wasm.buildinfo.json` (hash, UTC time, git SHA, relative paths) for freshness checks.
+
+## Security
+
+This repository is intended for public GitHub Pages deployment. Before publishing:
+
+- **No secrets in repo:** Do not commit `.env`, API keys, tokens, or private paths. `star-crusher.wasm.buildinfo.json` uses relative paths only.
+- **Content Security Policy:** `index.html` restricts scripts/styles to `'self'` with `wasm-unsafe-eval` required for WebAssembly.
+- **postMessage:** Platform events forwarded to a parent frame use `window.location.origin` (not `*`).
+- **Dependencies:** CI runs `cargo audit` on push to `main` (see `.github/workflows/pages.yml`).
+- **Static site:** The game runs client-side only; no server-side user data collection in this repo.
 
 Then open `index.html` in a browser through a local server because WASM module loading is restricted from direct file URLs:
 
