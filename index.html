@@ -310,6 +310,10 @@
         @media (max-width: 700px) {
             .game-shell.active {
                 display: block;
+                width: 100%;
+                height: 100%;
+                height: 100dvh;
+                height: 100svh;
                 gap: 0;
                 padding-bottom: 0;
             }
@@ -328,20 +332,20 @@
                 border-radius: 7px;
             }
 
-            #glcanvas {
-                width: 100dvw;
+            .game-shell.active #glcanvas {
+                position: fixed;
+                inset: 0;
+                width: 100%;
+                height: 100%;
                 height: 100dvh;
+                height: 100svh;
+                max-height: none;
                 flex: none;
             }
         }
 
         #glcanvas {
             display: block;
-            flex: 1 1 auto;
-            width: 100%;
-            width: 100dvw;
-            height: auto;
-            min-height: 0;
             margin: 0;
             padding: 0;
             border: 0;
@@ -354,9 +358,14 @@
         .game-shell.active #glcanvas {
             flex: 1 1 auto;
             width: 100%;
-            height: auto;
             min-height: 0;
-            max-height: 100dvh;
+        }
+
+        @media (min-width: 701px) {
+            .game-shell.active #glcanvas {
+                height: auto;
+                max-height: 100dvh;
+            }
         }
 
         @media (max-width: 1080px) {
@@ -547,6 +556,39 @@
         let gameInputState = 'site';
 
         const virtualScreen = { w: 1280, h: 720 };
+        const mobileShellQuery = window.matchMedia('(max-width: 700px)');
+
+        function isMobileShell() {
+            return mobileShellQuery.matches;
+        }
+
+        function syncGameCanvasSize() {
+            if (!shell.classList.contains('active')) {
+                return;
+            }
+
+            if (isMobileShell()) {
+                const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+                glcanvas.style.position = 'fixed';
+                glcanvas.style.left = '0';
+                glcanvas.style.top = '0';
+                glcanvas.style.right = '0';
+                glcanvas.style.bottom = '0';
+                glcanvas.style.width = '100%';
+                glcanvas.style.height = `${Math.round(viewportHeight)}px`;
+            } else {
+                glcanvas.style.position = '';
+                glcanvas.style.left = '';
+                glcanvas.style.top = '';
+                glcanvas.style.right = '';
+                glcanvas.style.bottom = '';
+                glcanvas.style.width = '';
+                glcanvas.style.height = '';
+            }
+
+            window.dispatchEvent(new Event('resize'));
+        }
+
         const mobileTitleRows = {
             x: 160,
             y: 318,
@@ -790,6 +832,7 @@
             siteExit.classList.add('visible');
             document.body.style.overflow = 'hidden';
             document.documentElement.style.overflow = 'hidden';
+            syncGameCanvasSize();
             glcanvas.focus();
 
             const script = document.createElement('script');
@@ -801,7 +844,10 @@
                         throw new Error('Macroquad loader did not initialize.');
                     }
                     registerStarCrusherPlatformBridge();
-                    window.load('star-crusher.wasm?v=1.5.12');
+                    window.load('star-crusher.wasm?v=1.5.14');
+                    syncGameCanvasSize();
+                    setTimeout(syncGameCanvasSize, 100);
+                    setTimeout(syncGameCanvasSize, 500);
                     if (game) {
                         const keyMap = { mathinv: 'm', mathpong: 'p', readsnake: 'r' };
                         const key = keyMap[game];
@@ -832,7 +878,12 @@
             status.textContent = 'Launch failed. Please refresh and try again.';
         }
 
-        window.addEventListener('resize', resizeStars);
+        window.addEventListener('resize', () => {
+            resizeStars();
+            syncGameCanvasSize();
+        });
+        window.visualViewport?.addEventListener('resize', syncGameCanvasSize);
+        mobileShellQuery.addEventListener('change', syncGameCanvasSize);
         window.addEventListener('touchmove', (event) => {
             if (shell.classList.contains('active')) {
                 event.preventDefault();

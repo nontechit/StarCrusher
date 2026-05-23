@@ -134,13 +134,14 @@ pub fn draw_mobile_back_button(label: &str) {
         return;
     }
 
+    let fill = Color::new(0.22, 0.23, 0.3, 0.98);
     draw_rounded_rect(
         MOBILE_BACK_X,
         MOBILE_BACK_Y,
         MOBILE_BACK_W,
         MOBILE_BACK_H,
         23.0,
-        Color::new(0.11, 0.115, 0.13, 0.92),
+        fill,
     );
     let shown = if label == "BACK" { "<" } else { "X" };
     centered_text_in(
@@ -148,8 +149,8 @@ pub fn draw_mobile_back_button(label: &str) {
         MOBILE_BACK_X,
         MOBILE_BACK_Y + 31.0,
         MOBILE_BACK_W,
-        22,
-        Color::new(0.92, 0.92, 0.94, 1.0),
+        screen::mobile_text_size(26),
+        Color::new(0.98, 0.98, 1.0, 1.0),
     );
 }
 
@@ -172,7 +173,7 @@ pub fn draw_mobile_action_button(label: &str) {
         MOBILE_ACTION_X,
         MOBILE_ACTION_Y + 37.0,
         MOBILE_ACTION_W,
-        30,
+        screen::mobile_text_size(32),
         Color::new(0.9, 1.0, 1.0, 1.0),
     );
 }
@@ -236,7 +237,7 @@ pub fn draw_mobile_question_card(text: &str, banner_y: f32) -> f32 {
     let lines: Vec<&str> = text.lines().collect();
     let banner_w = 884.0;
     let banner_x = CENTER_X - banner_w / 2.0;
-    let font_size = if lines.len() > 2 { 18 } else { 24 };
+    let font_size = screen::mobile_text_size(if lines.len() > 2 { 22 } else { 28 });
     let line_h = font_size as f32 + 8.0;
     let banner_h = (lines.len() as f32 * line_h + 28.0).max(70.0);
 
@@ -265,13 +266,14 @@ pub fn draw_mobile_question_card(text: &str, banner_y: f32) -> f32 {
 }
 
 fn draw_mobile_corner_stat(left: &str, right: &str, y: f32) {
-    draw_text(left, 82.0, y, 16.0, Color::new(0.62, 0.88, 1.0, 1.0));
-    let tm = measure_text(right, None, 16, 1.0);
+    let font_size = screen::mobile_text_size(20);
+    draw_text(left, 82.0, y, font_size as f32, Color::new(0.62, 0.88, 1.0, 1.0));
+    let tm = measure_text(right, None, font_size, 1.0);
     draw_text(
         right,
         SCREEN_W - tm.w - 82.0,
         y,
-        16.0,
+        font_size as f32,
         Color::new(0.74, 1.0, 0.72, 1.0),
     );
 }
@@ -449,8 +451,13 @@ fn draw_mobile_title_screen(showing_mini_games: bool, selected_index: usize) {
         150.0, 112.0, 980.0, 164.0, panel, panel_edge, moon, amber, cyan, rose,
     );
 
-    centered_text("STAR CRUSHER", 72.0, 40, moon);
-    centered_text("PLANET DUNGEON CREW", 108.0, 16, cyan);
+    centered_text("STAR CRUSHER", 72.0, screen::mobile_text_size(40), moon);
+    centered_text(
+        "PLANET DUNGEON CREW",
+        108.0,
+        screen::mobile_text_size(20),
+        cyan,
+    );
 
     draw_mobile_adventure_menu(
         showing_mini_games,
@@ -468,7 +475,7 @@ fn draw_mobile_title_screen(showing_mini_games: bool, selected_index: usize) {
             "Choose a destination"
         },
         624.0,
-        16,
+        screen::mobile_text_size(20),
         moon,
     );
 
@@ -609,7 +616,7 @@ fn draw_mobile_adventure_menu(
             "LAUNCH DECK"
         },
         306.0,
-        18,
+        screen::mobile_text_size(22),
         amber,
     );
 
@@ -676,18 +683,20 @@ fn draw_mobile_menu_button(
         7.0,
         icon_color,
     );
+    let label_size = screen::mobile_text_size(28);
+    let detail_size = screen::mobile_text_size(18);
     draw_text(
         label,
         MOBILE_TITLE_MENU_X + 76.0,
         y + 35.0,
-        25.0,
+        label_size as f32,
         text_color,
     );
     draw_text(
         detail,
         MOBILE_TITLE_MENU_X + 76.0,
         y + 58.0,
-        13.0,
+        detail_size as f32,
         detail_color,
     );
 }
@@ -1011,13 +1020,13 @@ fn draw_mobile_adventure_intro(page: usize) {
     clear_background(Color::new(0.01, 0.015, 0.04, 1.0));
     draw_star_map_background();
 
-    centered_text("STAR CRUSHER VOYAGE", 74.0, 30, moon);
+    centered_text("STAR CRUSHER VOYAGE", 74.0, screen::mobile_text_size(32), moon);
     centered_text_in(
         &format!("PAGE {} / {}", page + 1, ADVENTURE_INTRO_PAGES.len()),
         900.0,
         78.0,
         180.0,
-        14,
+        screen::mobile_text_size(18),
         Color::new(0.7, 0.9, 1.0, 1.0),
     );
 
@@ -1040,8 +1049,22 @@ fn draw_mobile_adventure_intro(page: usize) {
         Color::new(0.07, 0.055, 0.12, 0.96),
         Color::new(1.0, 0.82, 0.36, 0.9),
     );
-    centered_text_in(line_one, 220.0, 490.0, 840.0, 24, amber);
-    centered_text_in(line_two, 220.0, 528.0, 840.0, 18, moon);
+    centered_text_in(
+        line_one,
+        220.0,
+        490.0,
+        840.0,
+        screen::mobile_text_size(28),
+        amber,
+    );
+    centered_text_in(
+        line_two,
+        220.0,
+        528.0,
+        840.0,
+        screen::mobile_text_size(22),
+        moon,
+    );
 
     draw_mobile_action_button(if page + 1 >= ADVENTURE_INTRO_PAGES.len() {
         "START"
@@ -1063,20 +1086,25 @@ pub fn draw_spelling_list_screen(input: &str) {
     centered_text(
         "WEEKLY SPELLING LIST",
         100.0,
-        36,
+        screen::mobile_text_size(36),
         Color::new(0.4, 1.0, 0.65, 1.0),
     );
     centered_text(
         "Type word: definition pairs separated by semicolons.",
         148.0,
-        20,
+        screen::mobile_text_size(22),
         WHITE,
     );
-    centered_text("Plain word lists still work too.", 176.0, 18, GRAY);
+    centered_text(
+        "Plain word lists still work too.",
+        176.0,
+        screen::mobile_text_size(20),
+        GRAY,
+    );
     centered_text(
         "ENTER plays Reading Snake   N starts Nightmare",
         218.0,
-        20,
+        screen::mobile_text_size(22),
         WHITE,
     );
 
@@ -1158,6 +1186,31 @@ fn draw_spelling_action_button(x: f32, label: &str, color: Color) {
 fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
     let tm = measure_text(text, None, font_size, 1.0);
     draw_text(text, CENTER_X - tm.w / 2.0, y, font_size as f32, color);
+}
+
+fn draw_wrapped_centered_text(text: &str, y: f32, max_width: f32, font_size: u16, color: Color) {
+    let mut line = String::new();
+    let mut line_y = y;
+
+    for word in text.split_whitespace() {
+        let next = if line.is_empty() {
+            word.to_string()
+        } else {
+            format!("{} {}", line, word)
+        };
+
+        if measure_text(&next, None, font_size, 1.0).w > max_width && !line.is_empty() {
+            centered_text(&line, line_y, font_size, color);
+            line = word.to_string();
+            line_y += font_size as f32 + 8.0;
+        } else {
+            line = next;
+        }
+    }
+
+    if !line.is_empty() {
+        centered_text(&line, line_y, font_size, color);
+    }
 }
 
 pub fn gate_question_text_size() -> u16 {
@@ -1337,19 +1390,23 @@ fn draw_mobile_question_gate(grade: &Grade, math_topics: &str, show_start_button
         Color::new(0.42, 0.86, 1.0, 0.84),
     );
 
-    centered_text("Planet Gate", 158.0, 34, Color::new(0.42, 0.92, 1.0, 1.0));
+    centered_text(
+        "Planet Gate",
+        158.0,
+        screen::mobile_text_size(36),
+        Color::new(0.42, 0.92, 1.0, 1.0),
+    );
     centered_text(
         &format!("Next: {}", grade.display_name()),
         220.0,
-        28,
+        screen::mobile_text_size(30),
         Color::new(1.0, 0.82, 0.34, 1.0),
     );
-    draw_wrapped_text(
+    draw_wrapped_centered_text(
         &format!("Topics: {}", math_topics),
-        272.0,
         270.0,
         736.0,
-        18,
+        screen::mobile_text_size(22),
         Color::new(0.92, 0.98, 1.0, 1.0),
     );
 
@@ -1361,8 +1418,18 @@ fn draw_mobile_question_gate(grade: &Grade, math_topics: &str, show_start_button
     } else {
         ("Use the number pad.", "Tap OK to submit your answer.")
     };
-    centered_text(line_one, 330.0, 19, Color::new(0.74, 1.0, 0.72, 1.0));
-    centered_text(line_two, 354.0, 17, Color::new(0.7, 0.82, 0.94, 1.0));
+    centered_text(
+        line_one,
+        330.0,
+        screen::mobile_text_size(22),
+        Color::new(0.74, 1.0, 0.72, 1.0),
+    );
+    centered_text(
+        line_two,
+        354.0,
+        screen::mobile_text_size(20),
+        Color::new(0.7, 0.82, 0.94, 1.0),
+    );
 
     if show_start_button {
         draw_mobile_action_button("START");
@@ -1565,9 +1632,19 @@ fn draw_mobile_end_overlay(title: &str, score: &str, detail: &str, accent: Color
         Color::new(0.045, 0.06, 0.14, 0.98),
         accent,
     );
-    centered_text(title, 252.0, 42, accent);
-    centered_text(score, 332.0, 28, Color::new(1.0, 0.82, 0.34, 1.0));
-    centered_text(detail, 382.0, 20, Color::new(0.93, 0.98, 1.0, 1.0));
+    centered_text(title, 252.0, screen::mobile_text_size(44), accent);
+    centered_text(
+        score,
+        332.0,
+        screen::mobile_text_size(30),
+        Color::new(1.0, 0.82, 0.34, 1.0),
+    );
+    centered_text(
+        detail,
+        382.0,
+        screen::mobile_text_size(22),
+        Color::new(0.93, 0.98, 1.0, 1.0),
+    );
     draw_mobile_action_button("START");
     set_default_color();
 }

@@ -6,8 +6,9 @@ pub const WINDOW_W: i32 = 1920;
 pub const WINDOW_H: i32 = 1080;
 
 pub fn mobile_text_size(base: u16) -> u16 {
-    if screen_height() > screen_width() * 1.15 {
-        (base as f32 * 0.72).max(12.0) as u16
+    if portrait_layout() {
+        // Portrait phones stretch the 1280x720 playfield to a tall viewport; keep copy readable.
+        base.max(20)
     } else {
         base
     }
