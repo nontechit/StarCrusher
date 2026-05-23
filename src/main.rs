@@ -561,7 +561,7 @@ impl Game {
             }
         }
 
-        if is_key_pressed(KeyCode::Enter) {
+        if is_key_pressed(KeyCode::Enter) && !screen::portrait_layout() {
             submit_answer = true;
         }
 

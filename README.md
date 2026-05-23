@@ -1,11 +1,15 @@
 # Star Crusher
 
-Star Crusher is an educational arcade collection about two young space travelers flying between dungeon planets. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
+Star Crusher is an educational arcade collection about two young space travelers flying between dungeon planets. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Orbit (Math Pong), and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.5.9`
+Current build: `1.5.10`
 
 ## Latest Mobile Release
 
+- Removed the global web touch-bridge keypad intercept so right-side taps reach Math Orbit, Math Invaders, Reading Snake, and gate screens instead of firing stray `Enter`/digit keys.
+- Math Orbit on iPhone now separates aim from launch: first gameplay-band tap moves the paddle, a second tap or `START` launches the ball.
+- Math Orbit expands the mobile paddle touch band through the visible paddle row and updates footer copy for the two-tap launch flow.
+- Gate questions on portrait mobile submit only through the on-screen `OK` pad tap; desktop keyboard submit is unchanged.
 - Desktop web shell places `Back to Site` below the canvas so it no longer overlaps footer hints; mobile keeps `Site` in the top-right corner.
 - Desktop Math Pong removes the blue question box and anchors question text below the target row.
 - Title screen footer hints move up slightly for desktop clearance above the site button.
@@ -20,7 +24,7 @@ Current build: `1.5.9`
 - Reading Snake portrait mode removes the thumb D-pad; tap or swipe on the board to steer toward the next letter.
 - Reading Snake portrait layout uses a clearer Reading Planet header, compact stat pills, a goal banner, a larger high-contrast board, and a footer hint: `Tap or swipe on the board to steer`.
 - Reading Snake portrait mode now sizes the goal banner from wrapped definition text, keeps the board below the header stack, and tucks the steer hint inside the footer card so it does not collide with `START`.
-- Added a web touch bridge so iPhone Safari taps on canvas buttons trigger the matching game controls.
+- Added a web touch bridge so iPhone Safari taps on shell controls (menus, `START`, `BACK`, spelling-list buttons) trigger the matching game keys; in-game touch for ships, paddles, boards, and gate keypads is handled in Rust.
 - Migrated the virtual playfield from the older 1024x768 4:3 layout to a 1280x720 16:9 baseline.
 - Reworked portrait mobile menus into large rounded tap targets, matching the web `Site` button style.
 - Added explicit mobile `CONTINUE`, `START`, `BACK`, and `TITLE` buttons so players do not have to guess at swipe or keyboard prompts.
@@ -41,8 +45,9 @@ Current build: `1.5.9`
 - Kindergarten number-recognition prompts use words, such as `Shoot number three`, while targets remain numeric.
 - Question gates between waves that require typed answers to advance.
 - Question gate prompts and answer input are spaced to avoid overlapping the wave-complete instructions.
-- Question gates use larger portrait-mode number pad targets for phone play.
-- Math Pong mode for launching a straight ball into randomly placed numbered targets.
+- Question gates use larger portrait-mode number pad targets for phone play; portrait mobile submits through the on-screen `OK` pad tap.
+- Math Orbit (Math Pong) mode for launching a straight ball into randomly placed numbered targets.
+- Math Orbit on portrait mobile uses a two-tap launch flow: first gameplay-band tap moves the paddle, then a second tap or `START` launches the ball.
 - Reading Snake mini game for letter order, word recognition, and definition practice, with randomized default or custom spelling lists and Nightmare mode.
 - Reading Snake shows definition cards, keeps the active definition visible above the board, and keeps new letter tiles away from the snake head.
 - Reading Snake supports portrait tap-or-swipe steering on the board; arrow keys and WASD remain available as fallback controls.
@@ -91,7 +96,7 @@ Math Invaders controls:
 - On mobile, hold or drag in the lower play area to move and fire.
 - On mobile, the active question appears in the top banner; wave, score, and lives appear in stat pills below it.
 - On mobile, tap `TITLE` to return to the title menu.
-- On mobile, use the enlarged gate number pad and `OK` button to submit answers.
+- On mobile, use the enlarged gate number pad; tap `OK` to submit answers (portrait mobile ignores keyboard `Enter` for submit).
 
 Reading Snake controls:
 
@@ -129,13 +134,14 @@ Spelling-list entry controls:
 - On mobile, tap `NIGHT` to start Nightmare Snake with the typed list.
 - On mobile, tap `TITLE` to return to the title menu.
 
-Math Pong controls:
+Math Orbit (Math Pong) controls:
 
 - Move paddle: `Left` / `Right` arrow keys or `A` / `D`
 - Launch ball: `Space` or `Enter`
 - Restart after game over: `Enter` or `Space`
 - Return to title: `Esc`
-- On mobile, drag or hold in the gameplay band near the lower play area to move the paddle, then tap `START` to launch the ball.
+- On mobile, drag or tap in the gameplay band near the lower play area to move the paddle.
+- On mobile, launch with a second gameplay-band tap or by tapping `START`; the first tap positions the paddle only.
 - On mobile, the question card appears at the top of the screen; wider answer targets and `Q`, `Lives`, and `Score` stat pills sit below it.
 - On mobile, tap `TITLE` to return to the title menu.
 
@@ -145,6 +151,10 @@ Math Pong controls:
 - Cargo
 
 Install Rust from <https://www.rust-lang.org/tools/install> if needed.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## Run The Game
 
@@ -170,6 +180,7 @@ cargo check
 run-game             Convenience launcher that loads rustup environment and runs Cargo
 src/main.rs          Game state machine and update/draw loop
 src/screen.rs        Window configuration, virtual camera, portrait scaling, and shared touch mapping
+src/platform.rs      Optional parent-shell event bridge for embedded web deployments
 src/levels.rs        Grade progression and difficulty configuration
 src/question.rs      Grade-specific math question generation
 src/random.rs        Shared randomization helpers
@@ -314,13 +325,14 @@ Math Invaders:
 11. Clear all numbered targets, then answer typed math questions at the wave-complete gate.
 12. Advance through each grade until the 5th Grade wave is completed.
 
-Math Pong:
+Math Orbit (Math Pong):
 
 1. Choose `Mission Select`, then choose `Math Orbit`, or press `P` from Mission Select.
 2. Read the math question in the top banner on portrait mobile and identify the correct widened numbered target.
 3. Move the paddle under the correct number before launching the ball.
-4. Launch straight upward into the correct number to clear the question.
-5. Clear five questions to advance to the next grade.
+4. On portrait mobile, tap once in the gameplay band to position the paddle, then tap again or press `START` to launch straight upward into the correct number.
+5. On desktop, launch with `Space` or `Enter` after lining up the paddle.
+6. Clear five questions to advance to the next grade.
 
 Reading Snake:
 
@@ -349,6 +361,7 @@ Reading Snake Nightmare:
 - The game uses `macroquad` for windowing, input, and drawing, and `rand` for question/enemy randomization.
 - CI runs `cargo audit` before each Pages deploy. Local check: `cargo audit --ignore RUSTSEC-2025-0035`.
 - The static web shell uses a restrictive Content Security Policy in `index.html`; `wasm-unsafe-eval` and inline script/style allowances are required for the Macroquad WASM loader.
+- The optional `boohw.starcrusher.event` parent-frame bridge in `index.html` and `src/platform.rs` emits gameplay JSON to an embedding site when present; it is inert on standalone GitHub Pages play.
 - Custom spelling input is capped at 64 words, 12 characters per word, and 180 characters per definition.
 
 ## Web Deployment (GitHub Pages)

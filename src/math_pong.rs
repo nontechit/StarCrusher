@@ -16,7 +16,7 @@ const DESKTOP_QUESTION_LINE_GAP: f32 = 20.0;
 const DESKTOP_MESSAGE_GAP: f32 = 8.0;
 const MOBILE_TARGET_Y: f32 = 214.0;
 const MOBILE_PADDLE_TOUCH_MIN_Y: f32 = 260.0;
-const MOBILE_PADDLE_TOUCH_MAX_Y: f32 = 610.0;
+const MOBILE_PADDLE_TOUCH_MAX_Y: f32 = 638.0;
 const TARGET_W: f32 = 76.0;
 const TARGET_H: f32 = 42.0;
 const MOBILE_TARGET_W: f32 = 118.0;
@@ -54,6 +54,7 @@ pub struct MathPong {
     message: &'static str,
     game_over: bool,
     victory: bool,
+    mobile_positioned: bool,
 }
 
 impl MathPong {
@@ -75,6 +76,7 @@ impl MathPong {
             message: "Aim the ball at the correct number.",
             game_over: false,
             victory: false,
+            mobile_positioned: false,
         };
         game.spawn_targets();
         game
@@ -152,11 +154,7 @@ impl MathPong {
             self.paddle_x += speed;
         }
         if let Some(pointer) = primary_pointer_position() {
-            let in_paddle_zone = if portrait_layout() {
-                pointer.y >= MOBILE_PADDLE_TOUCH_MIN_Y && pointer.y <= MOBILE_PADDLE_TOUCH_MAX_Y
-            } else {
-                pointer.y > 400.0
-            };
+            let in_paddle_zone = mobile_paddle_zone_contains(pointer);
             if in_paddle_zone {
                 self.paddle_x = pointer.x - self.paddle_w / 2.0;
             }
@@ -166,20 +164,40 @@ impl MathPong {
 
         if !self.ball_launched {
             self.ball_pos = vec2(self.paddle_x + self.paddle_w / 2.0, PADDLE_Y - 14.0);
-            let mobile_start =
-                primary_tap_position().is_some_and(ui::mobile_action_button_contains);
-            let touch_launch = if portrait_layout() {
-                mobile_start
-            } else {
-                primary_release_position().is_some()
-            };
-            if is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Enter) || touch_launch {
+            let touch_launch = self.mobile_touch_launch();
+            let keyboard_launch = !portrait_layout()
+                && (is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Enter));
+            if keyboard_launch || touch_launch {
                 let grade_speed = 4.8 + self.grade.index() as f32 * 0.35;
                 self.ball_vel = vec2(0.0, -grade_speed);
                 self.ball_launched = true;
+                self.mobile_positioned = false;
                 self.message = "Bounce into the correct number.";
             }
         }
+    }
+
+    fn mobile_touch_launch(&mut self) -> bool {
+        if !portrait_layout() {
+            return primary_release_position().is_some();
+        }
+
+        let Some(tap) = primary_tap_position() else {
+            return false;
+        };
+
+        if ui::mobile_action_button_contains(tap) {
+            return true;
+        }
+
+        if mobile_paddle_zone_contains(tap) {
+            if self.mobile_positioned {
+                return true;
+            }
+            self.mobile_positioned = true;
+        }
+
+        false
     }
 
     fn update_ball(&mut self) {
@@ -262,6 +280,7 @@ impl MathPong {
     fn reset_ball(&mut self) {
         self.ball_launched = false;
         self.ball_vel = Vec2::ZERO;
+        self.mobile_positioned = false;
         self.ball_pos = vec2(self.paddle_x + self.paddle_w / 2.0, PADDLE_Y - 14.0);
     }
 
@@ -480,7 +499,7 @@ impl MathPong {
     fn draw_mobile_footer(&self) {
         centered_text(self.message, 524.0, 22, Color::new(0.94, 0.98, 1.0, 1.0));
         centered_text(
-            "Drag paddle. Tap START to launch.",
+            "Drag paddle. Tap again or press START to launch.",
             556.0,
             18,
             Color::new(0.72, 0.84, 1.0, 1.0),
@@ -494,6 +513,14 @@ impl MathPong {
 
 fn portrait_layout() -> bool {
     screen::portrait_layout()
+}
+
+fn mobile_paddle_zone_contains(point: Vec2) -> bool {
+    if portrait_layout() {
+        point.y >= MOBILE_PADDLE_TOUCH_MIN_Y && point.y <= MOBILE_PADDLE_TOUCH_MAX_Y
+    } else {
+        point.y > 400.0
+    }
 }
 
 fn draw_mobile_stat_pill(x: f32, y: f32, w: f32, text: &str, fill: Color, text_color: Color) {

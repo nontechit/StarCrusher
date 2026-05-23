@@ -540,7 +540,6 @@
         const mobileAction = { x: 190, y: 640, w: 900, h: 54 };
         const spellingPlay = { x: 390, y: 536, w: 220, h: 74 };
         const spellingNight = { x: 670, y: 536, w: 220, h: 74 };
-        const mobileKeypad = { x: 930, y: 404, key: 64, gap: 8 };
 
         function resizeStars() {
             const scale = Math.min(window.devicePixelRatio || 1, 2);
@@ -615,10 +614,6 @@
 
         function sendBackspace() {
             sendGameKey('Backspace', 'Backspace');
-        }
-
-        function sendDigit(digit) {
-            sendGameKey(digit, `Digit${digit}`);
         }
 
         const BOOHW_STARCRUSHER_EVENT_VERSION = 1;
@@ -699,26 +694,6 @@
             return -1;
         }
 
-        function keypadKeyAt(point) {
-            const labels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'del', '0', 'ok'];
-
-            for (let index = 0; index < labels.length; index += 1) {
-                const col = index % 3;
-                const row = Math.floor(index / 3);
-                const rect = {
-                    x: mobileKeypad.x + col * (mobileKeypad.key + mobileKeypad.gap),
-                    y: mobileKeypad.y + row * (mobileKeypad.key + mobileKeypad.gap),
-                    w: mobileKeypad.key,
-                    h: mobileKeypad.key
-                };
-                if (contains(rect, point)) {
-                    return labels[index];
-                }
-            }
-
-            return '';
-        }
-
         function bridgeCanvasTap(clientX, clientY) {
             if (!shell.classList.contains('active')) {
                 return false;
@@ -774,18 +749,6 @@
                 }
             }
 
-            const keypadKey = keypadKeyAt(point);
-            if (keypadKey) {
-                if (keypadKey === 'del') {
-                    sendBackspace();
-                } else if (keypadKey === 'ok') {
-                    sendEnter();
-                } else {
-                    sendDigit(keypadKey);
-                }
-                return true;
-            }
-
             if (contains(mobileAction, point)) {
                 sendEnter();
                 return true;
@@ -820,7 +783,7 @@
                         throw new Error('Macroquad loader did not initialize.');
                     }
                     registerStarCrusherPlatformBridge();
-                    window.load('star-crusher.wasm?v=20260523-159');
+                    window.load('star-crusher.wasm?v=20260523-160');
                     if (game) {
                         const keyMap = { mathinv: 'm', mathpong: 'p', readsnake: 'r' };
                         const key = keyMap[game];
