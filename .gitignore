@@ -1,4 +1,6 @@
 /target/
 /.opencode/
+/.cursor/
+/rebase-log.txt
 /opencode.json
 *.pdb
