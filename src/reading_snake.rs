@@ -3,14 +3,22 @@ use crate::screen::{self, primary_tap_position, to_virtual_position, SCREEN_H, S
 use crate::ui;
 use macroquad::prelude::*;
 
-const GRID_W: i32 = 14;
-const GRID_H: i32 = 14;
-const CELL: f32 = 27.0;
-const BOARD_X: f32 = 451.0;
-const BOARD_Y: f32 = 148.0;
+const MOBILE_GRID_W: i32 = 14;
+const MOBILE_GRID_H: i32 = 14;
+const DESKTOP_GRID_W: i32 = 26;
+const DESKTOP_GRID_H: i32 = 12;
+const DESKTOP_PANEL_W: f32 = 1240.0;
+const DESKTOP_PANEL_X: f32 = (SCREEN_W - DESKTOP_PANEL_W) / 2.0;
+const DESKTOP_PANEL_TOP: f32 = 6.0;
+const DESKTOP_HEADER_H: f32 = 76.0;
+const DESKTOP_FOOTER_ZONE: f32 = 78.0;
+const DESKTOP_BOARD_FRAME_BOTTOM: f32 = 10.0;
+const DESKTOP_FOOTER_GAP: f32 = 28.0;
+const DESKTOP_BOTTOM_CHROME: f32 = 0.0;
+const DESKTOP_PANEL_BOTTOM_PAD: f32 = 8.0;
 const MOBILE_CELL_W: f32 = 62.0;
 const MOBILE_CELL_H: f32 = 23.0;
-const MOBILE_BOARD_X: f32 = (SCREEN_W - GRID_W as f32 * MOBILE_CELL_W) / 2.0;
+const MOBILE_BOARD_X: f32 = (SCREEN_W - MOBILE_GRID_W as f32 * MOBILE_CELL_W) / 2.0;
 const MOBILE_GOAL_CARD_Y: f32 = 116.0;
 const MOBILE_GOAL_TEXT_Y: f32 = 150.0;
 const MOBILE_GOAL_TEXT_W: f32 = 940.0;
@@ -38,7 +46,7 @@ const WORDS: &[(&str, &str, &str)] = &[
     ("KEY", "noun", "A small tool used to open a lock."),
     ("BUMPY", "adjective", "Not smooth; full of bumps."),
     ("PUPPY", "noun", "A young dog."),
-    ("FUNNY", "adjective", "Something that makes you laugh."),
+    ("FUNNY", "adjective", "Causing laughter or amusement."),
     ("PENNY", "noun", "A coin worth one cent."),
     ("SANDY", "adjective", "Covered with or made of sand."),
     ("MY", "adjective", "Belonging to me."),
@@ -47,17 +55,12 @@ const WORDS: &[(&str, &str, &str)] = &[
     (
         "WOULD",
         "helping verb",
-        "A helping word used to tell what might happen.",
+        "Used to express a conditional action or hypothetical situation.",
     ),
     ("FOUND", "verb", "Discovered or located something."),
-    ("HARD", "adjective", "Firm, difficult, or not easy."),
-    ("NEAR", "preposition", "Close by."),
+    ("HARD", "adjective", "Solid and firm; difficult to do or deal with."),
+    ("NEAR", "preposition", "At a short distance from; not far away."),
     ("WOMAN", "noun", "An adult female person."),
-    (
-        "WOULD",
-        "helping verb",
-        "A helping word used to tell what might happen.",
-    ),
     ("WRITE", "verb", "To make words with letters."),
 ];
 
@@ -258,13 +261,16 @@ impl ReadingSnake {
     }
 
     pub fn draw(&self) {
+        let palette = reading_palette(self.nightmare_mode);
         clear_background(if screen::portrait_layout() {
             Color::new(0.018, 0.02, 0.028, 1.0)
         } else {
-            Color::new(0.02, 0.04, 0.03, 1.0)
+            palette.desktop_clear
         });
         if screen::portrait_layout() {
             draw_mobile_space_background();
+        } else {
+            draw_desktop_playfield_backdrop(self.nightmare_mode);
         }
         self.draw_header();
         self.draw_board();
@@ -281,7 +287,13 @@ impl ReadingSnake {
                 Color::new(0.0, 0.0, 0.0, 0.75),
             );
             let title = if self.completed {
-                "READING SNAKE COMPLETE"
+                if self.nightmare_mode {
+                    "NIGHTMARE SNAKE COMPLETE"
+                } else {
+                    "READING SNAKE COMPLETE"
+                }
+            } else if self.nightmare_mode {
+                "NIGHTMARE SNAKE OVER"
             } else {
                 "READING SNAKE OVER"
             };
@@ -297,10 +309,13 @@ impl ReadingSnake {
                 );
                 ui::draw_mobile_action_button("START");
             } else {
-                centered_text(title, 288.0, 42, title_color);
-                centered_text(&format!("Final Score: {}", self.score), 352.0, 28, YELLOW);
-                centered_text("Press ENTER to play again", 412.0, 22, WHITE);
-                centered_text("Press ESC for title", 446.0, 18, GRAY);
+                let overlay_x = DESKTOP_PANEL_X + 36.0;
+                let overlay_w = DESKTOP_PANEL_W - 72.0;
+                draw_surface_card(overlay_x, 228.0, overlay_w, 228.0, 26.0, elevated_surface());
+                centered_text(title, 300.0, 42, title_color);
+                centered_text(&format!("Final Score: {}", self.score), 364.0, 28, YELLOW);
+                centered_text("Press ENTER to play again", 418.0, 22, WHITE);
+                centered_text("Press ESC for title", 448.0, 18, GRAY);
             }
         } else if self.showing_definition_card {
             self.draw_definition_card();
@@ -321,7 +336,11 @@ impl ReadingSnake {
         self.definition = word_entry.definition;
         self.letter_index = 0;
         self.showing_definition_card = true;
-        self.message = "Spell the word in order.";
+        self.message = if self.nightmare_mode {
+            "All letters look the same. Spell in order."
+        } else {
+            "Spell the word in order."
+        };
     }
 
     fn handle_input(&mut self) {
@@ -409,7 +428,8 @@ impl ReadingSnake {
             let layout = self.mobile_layout();
             (MOBILE_BOARD_X, layout.board_y, MOBILE_CELL_W, layout.cell_h)
         } else {
-            (BOARD_X, BOARD_Y, CELL, CELL)
+            let (board_x, board_y, cell_w, cell_h) = board_metrics();
+            (board_x, board_y, cell_w, cell_h)
         }
     }
 
@@ -419,7 +439,7 @@ impl ReadingSnake {
 
     fn mobile_footer_top(&self) -> f32 {
         let (_, board_y, _, cell_h) = self.playfield_metrics();
-        board_y + GRID_H as f32 * cell_h + MOBILE_FOOTER_GAP
+        board_y + MOBILE_GRID_H as f32 * cell_h + MOBILE_FOOTER_GAP
     }
 
     fn steer_from_tap(&mut self, tap: Vec2) {
@@ -450,10 +470,12 @@ impl ReadingSnake {
 
     fn point_in_board(&self, point: Vec2) -> bool {
         let (board_x, board_y, cell_w, cell_h) = self.playfield_metrics();
+        let grid_w = grid_width();
+        let grid_h = grid_height();
         point.x >= board_x
-            && point.x <= board_x + GRID_W as f32 * cell_w
+            && point.x <= board_x + grid_w as f32 * cell_w
             && point.y >= board_y
-            && point.y <= board_y + GRID_H as f32 * cell_h
+            && point.y <= board_y + grid_h as f32 * cell_h
     }
 
     fn set_next_dir(&mut self, next: CellPos) {
@@ -468,9 +490,9 @@ impl ReadingSnake {
         let next = CellPos::new(head.x + self.dir.x, head.y + self.dir.y);
 
         if next.x < 0
-            || next.x >= GRID_W
+            || next.x >= grid_width()
             || next.y < 0
-            || next.y >= GRID_H
+            || next.y >= grid_height()
             || self.snake.contains(&next)
         {
             self.miss("Watch the walls and your tail.");
@@ -575,10 +597,12 @@ impl ReadingSnake {
     }
 
     fn reset_snake_to_spawn(&mut self) {
+        let mid_x = grid_width() / 2;
+        let mid_y = grid_height() / 2;
         self.snake = vec![
-            CellPos::new(GRID_W / 2, GRID_H / 2),
-            CellPos::new(GRID_W / 2 - 1, GRID_H / 2),
-            CellPos::new(GRID_W / 2 - 2, GRID_H / 2),
+            CellPos::new(mid_x, mid_y),
+            CellPos::new(mid_x - 1, mid_y),
+            CellPos::new(mid_x - 2, mid_y),
         ];
         self.dir = CellPos::new(1, 0);
         self.next_dir = self.dir;
@@ -612,8 +636,8 @@ impl ReadingSnake {
     fn random_empty_cell(&self, reserved: &[CellPos]) -> CellPos {
         loop {
             let pos = CellPos::new(
-                random::i32_inclusive(0, GRID_W - 1),
-                random::i32_inclusive(0, GRID_H - 1),
+                random::i32_inclusive(0, grid_width() - 1),
+                random::i32_inclusive(0, grid_height() - 1),
             );
             if !self.snake.contains(&pos)
                 && !reserved.contains(&pos)
@@ -636,40 +660,40 @@ impl ReadingSnake {
             return;
         }
 
-        let title_size = screen::mobile_text_size(36);
+        self.draw_desktop_header();
+    }
+
+    fn draw_desktop_header(&self) {
         let def_size = screen::mobile_text_size(20);
         let stat_size = screen::mobile_text_size(20);
-
-        let title = if self.nightmare_mode {
-            if self.bonus_round {
-                "READING SNAKE BONUS NIGHTMARE"
-            } else {
-                "READING SNAKE NIGHTMARE"
-            }
-        } else {
-            "READING SNAKE"
+        let header_baseline = {
+            let metrics = measure_text("Ag", None, stat_size, 1.0);
+            DESKTOP_PANEL_TOP + DESKTOP_HEADER_H / 2.0 + metrics.height / 2.5
         };
-        centered_text(title, 40.0, title_size, Color::new(0.4, 1.0, 0.65, 1.0));
-
-        draw_text(
-            &format!("Score: {}", self.score),
-            24.0,
-            72.0,
-            stat_size as f32,
-            YELLOW,
-        );
-        draw_text(
-            &format!("Lives: {}", self.lives),
-            1040.0,
-            72.0,
-            stat_size as f32,
-            WHITE,
-        );
 
         centered_text(
             &format!("Definition: {}", self.definition),
-            100.0,
+            header_baseline,
             def_size,
+            WHITE,
+        );
+
+        let score_txt = format!("Score: {}", self.score);
+        draw_text(
+            &score_txt,
+            DESKTOP_PANEL_X + 28.0,
+            header_baseline,
+            stat_size as f32,
+            YELLOW,
+        );
+
+        let lives_txt = format!("Lives: {}", self.lives);
+        let lives_w = measure_text(&lives_txt, None, stat_size, 1.0).width;
+        draw_text(
+            &lives_txt,
+            DESKTOP_PANEL_X + DESKTOP_PANEL_W - lives_w - 28.0,
+            header_baseline,
+            stat_size as f32,
             WHITE,
         );
     }
@@ -704,7 +728,11 @@ impl ReadingSnake {
             270.0,
             "Next",
             &self.next_letter_label(),
-            soft_cyan(),
+            if self.nightmare_mode {
+                planet_pink()
+            } else {
+                soft_cyan()
+            },
         );
 
         draw_surface_card(
@@ -727,28 +755,40 @@ impl ReadingSnake {
     }
 
     fn draw_board(&self) {
+        let palette = reading_palette(self.nightmare_mode);
         let (board_x, board_y, cell_w, cell_h) = self.playfield_metrics();
+        let grid_w = grid_width();
+        let grid_h = grid_height();
         if screen::portrait_layout() {
             draw_surface_card(
                 board_x - 26.0,
                 board_y - 24.0,
-                GRID_W as f32 * cell_w + 52.0,
-                GRID_H as f32 * cell_h + 48.0,
+                grid_w as f32 * cell_w + 52.0,
+                grid_h as f32 * cell_h + 48.0,
                 28.0,
                 Color::new(0.095, 0.105, 0.15, 0.98),
             );
             draw_round_rect(
                 board_x - 26.0,
                 board_y - 24.0,
-                GRID_W as f32 * cell_w + 52.0,
+                grid_w as f32 * cell_w + 52.0,
                 7.0,
                 4.0,
-                Color::new(0.48, 0.29, 1.0, 0.92),
+                palette.desktop_accent,
+            );
+        } else {
+            draw_surface_card(
+                board_x - 12.0,
+                board_y - 10.0,
+                grid_w as f32 * cell_w + 24.0,
+                grid_h as f32 * cell_h + 20.0,
+                16.0,
+                palette.desktop_board_shell,
             );
         }
 
-        for x in 0..GRID_W {
-            for y in 0..GRID_H {
+        for x in 0..grid_w {
+            for y in 0..grid_h {
                 let color = if screen::portrait_layout() {
                     if (x + y) % 2 == 0 {
                         Color::new(0.12, 0.15, 0.2, 0.98)
@@ -756,9 +796,9 @@ impl ReadingSnake {
                         Color::new(0.09, 0.12, 0.17, 0.98)
                     }
                 } else if (x + y) % 2 == 0 {
-                    Color::new(0.08, 0.17, 0.13, 0.92)
+                    palette.desktop_cell_a
                 } else {
-                    Color::new(0.055, 0.125, 0.12, 0.92)
+                    palette.desktop_cell_b
                 };
                 draw_rectangle(
                     board_x + x as f32 * cell_w,
@@ -772,13 +812,14 @@ impl ReadingSnake {
     }
 
     fn draw_tiles(&self) {
+        let palette = reading_palette(self.nightmare_mode);
         let target_color = if self.nightmare_mode {
-            Color::new(0.55, 0.75, 1.0, 1.0)
+            palette.letter_tile
         } else {
             Color::new(1.0, 0.86, 0.2, 1.0)
         };
         let decoy_color = if self.nightmare_mode {
-            target_color
+            palette.letter_tile
         } else {
             Color::new(0.8, 0.25, 0.25, 1.0)
         };
@@ -792,7 +833,11 @@ impl ReadingSnake {
     fn draw_tile(&self, tile: &LetterTile, color: Color) {
         let (board_x, board_y, cell_w, cell_h) = self.playfield_metrics();
         let mobile = screen::portrait_layout();
-        let letter_size = if mobile { 28 } else { 22 };
+        let letter_size = if mobile {
+            28
+        } else {
+            (cell_w * 0.58).clamp(18.0, 32.0) as u16
+        };
         let x = board_x + tile.pos.x as f32 * cell_w;
         let y = board_y + tile.pos.y as f32 * cell_h;
         let inset_x = if mobile { 6.0 } else { 2.0 };
@@ -827,6 +872,7 @@ impl ReadingSnake {
     }
 
     fn draw_snake(&self) {
+        let palette = reading_palette(self.nightmare_mode);
         let (board_x, board_y, cell_w, cell_h) = self.playfield_metrics();
         let mobile = screen::portrait_layout();
         for (idx, part) in self.snake.iter().enumerate() {
@@ -836,10 +882,12 @@ impl ReadingSnake {
                 if mobile {
                     soft_cyan()
                 } else {
-                    mint()
+                    palette.desktop_snake_head
                 }
-            } else {
+            } else if mobile {
                 Color::new(0.38, 0.86, 0.58, 1.0)
+            } else {
+                palette.desktop_snake_body
             };
             let inset_x = if mobile { 6.0 } else { 3.0 };
             let inset_y = if mobile { 2.5 } else { 3.0 };
@@ -860,26 +908,31 @@ impl ReadingSnake {
             return;
         }
 
+        let (_, board_y, _, cell_h) = board_metrics();
+        let grid_h = grid_height();
+        let board_bottom = board_y + grid_h as f32 * cell_h + DESKTOP_BOARD_FRAME_BOTTOM;
+        let footer_y = board_bottom + DESKTOP_FOOTER_GAP;
         let progress_size = screen::mobile_text_size(26);
-        let message_size = screen::mobile_text_size(22);
-        let hint_size = screen::mobile_text_size(18);
-        let controls_size = screen::mobile_text_size(16);
-
+        let message_size = screen::mobile_text_size(18);
         let progress = format_word_progress(&self.word, self.letter_index);
-        centered_text(&format!("Word: {}", progress), 550.0, progress_size, YELLOW);
-        centered_text(self.message, 584.0, message_size, WHITE);
-        centered_text(
-            "Meaning: Read the card, then spell the word.",
-            614.0,
-            hint_size,
-            WHITE,
+        let label = "Word";
+        let label_size = 26_u16;
+        let progress_size_u16 = progress_size;
+        let label_w = measure_text(label, None, label_size, 1.0).width;
+        let progress_w = measure_text(&progress, None, progress_size_u16, 1.0).width;
+        let row_gap = 14.0;
+        let row_w = label_w + row_gap + progress_w;
+        let row_x = SCREEN_W / 2.0 - row_w / 2.0;
+
+        draw_text(label, row_x, footer_y + 2.0, label_size as f32, muted_text());
+        draw_text(
+            &progress,
+            row_x + label_w + row_gap,
+            footer_y,
+            progress_size as f32,
+            star_yellow(),
         );
-        let controls = if self.nightmare_mode {
-            "Nightmare: all letters look alike   ESC returns to title"
-        } else {
-            "Arrow Keys / WASD to move   ESC returns to title"
-        };
-        centered_text(controls, 642.0, controls_size, GRAY);
+        centered_text(self.message, footer_y + 34.0, message_size, soft_white());
     }
 
     fn draw_mobile_footer(&self) {
@@ -922,6 +975,7 @@ impl ReadingSnake {
         let title_size = screen::mobile_text_size(42);
         let pos_size = screen::mobile_text_size(24);
         let def_size = screen::mobile_text_size(30);
+        let palette = reading_palette(self.nightmare_mode);
 
         draw_rectangle(
             0.0,
@@ -930,31 +984,68 @@ impl ReadingSnake {
             SCREEN_H,
             Color::new(0.0, 0.0, 0.0, 0.65),
         );
-        draw_rectangle(
-            260.0,
-            164.0,
-            760.0,
-            360.0,
-            Color::new(0.06, 0.14, 0.1, 0.98),
+
+        let (_, board_y, _, cell_h) = board_metrics();
+        let board_h = grid_height() as f32 * cell_h;
+        let card_w = DESKTOP_PANEL_W - 96.0;
+        let card_x = DESKTOP_PANEL_X + 48.0;
+        let card_h = 304.0;
+        let card_y = board_y + (board_h - card_h) / 2.0;
+        let accent_inset = 22.0;
+        let accent_color = palette.desktop_accent;
+        let content_w = card_w - 112.0;
+
+        draw_surface_card(
+            card_x,
+            card_y,
+            card_w,
+            card_h,
+            22.0,
+            palette.desktop_card_fill,
         );
-        draw_rectangle_lines(
-            260.0,
-            164.0,
-            760.0,
-            360.0,
-            4.0,
-            Color::new(0.4, 1.0, 0.65, 1.0),
+        draw_round_rect(
+            card_x + accent_inset,
+            card_y + accent_inset,
+            card_w - accent_inset * 2.0,
+            3.0,
+            1.5,
+            accent_color,
+        );
+        draw_round_rect(
+            card_x + accent_inset,
+            card_y + card_h - accent_inset - 3.0,
+            card_w - accent_inset * 2.0,
+            3.0,
+            1.5,
+            accent_color,
         );
 
-        centered_text(self.definition_card_title, 230.0, title_size, YELLOW);
+        let content_top = card_y + accent_inset + 28.0;
+        centered_text(
+            self.definition_card_title,
+            content_top + 18.0,
+            title_size,
+            palette.desktop_card_title,
+        );
         centered_text(
             &format!("Part of speech: {}", self.part_of_speech),
-            292.0,
+            content_top + 82.0,
             pos_size,
-            Color::new(0.4, 1.0, 0.65, 1.0),
+            accent_color,
         );
-        draw_wrapped_centered_text(&self.definition, 360.0, 700.0, def_size, WHITE);
-        ui::draw_mobile_action_button("START");
+        draw_wrapped_centered_text(
+            &self.definition,
+            content_top + 126.0,
+            content_w,
+            def_size,
+            WHITE,
+        );
+        centered_text(
+            "Press ENTER to start",
+            card_y + card_h - accent_inset - 18.0,
+            20,
+            GRAY,
+        );
     }
 
     fn draw_mobile_definition_card(&self) {
@@ -1089,16 +1180,16 @@ fn mobile_playfield_layout(definition: &str) -> MobilePlayfieldLayout {
     let mut board_y = header_bottom + MOBILE_BOARD_GAP;
     let mut cell_h = MOBILE_CELL_H;
 
-    let mut board_h = GRID_H as f32 * cell_h;
+    let mut board_h = MOBILE_GRID_H as f32 * cell_h;
     let mut footer_top = board_y + board_h + MOBILE_FOOTER_GAP;
     let mut stack_bottom = footer_top + MOBILE_FOOTER_H;
 
     if stack_bottom > MOBILE_PLAYFIELD_BOTTOM {
         let max_board_h =
             MOBILE_PLAYFIELD_BOTTOM - MOBILE_FOOTER_GAP - MOBILE_FOOTER_H - board_y;
-        if max_board_h >= GRID_H as f32 * 18.0 {
-            cell_h = (max_board_h / GRID_H as f32).floor().max(18.0);
-            board_h = GRID_H as f32 * cell_h;
+        if max_board_h >= MOBILE_GRID_H as f32 * 18.0 {
+            cell_h = (max_board_h / MOBILE_GRID_H as f32).floor().max(18.0);
+            board_h = MOBILE_GRID_H as f32 * cell_h;
             footer_top = board_y + board_h + MOBILE_FOOTER_GAP;
             stack_bottom = footer_top + MOBILE_FOOTER_H;
         }
@@ -1115,6 +1206,112 @@ fn mobile_playfield_layout(definition: &str) -> MobilePlayfieldLayout {
         goal_text,
         board_y,
         cell_h,
+    }
+}
+
+fn grid_width() -> i32 {
+    if screen::portrait_layout() {
+        MOBILE_GRID_W
+    } else {
+        DESKTOP_GRID_W
+    }
+}
+
+fn grid_height() -> i32 {
+    if screen::portrait_layout() {
+        MOBILE_GRID_H
+    } else {
+        DESKTOP_GRID_H
+    }
+}
+
+fn desktop_cell_size() -> f32 {
+    let inner_w = DESKTOP_PANEL_W - 40.0;
+    let inner_h = SCREEN_H
+        - DESKTOP_PANEL_TOP
+        - DESKTOP_HEADER_H
+        - DESKTOP_FOOTER_ZONE
+        - DESKTOP_BOTTOM_CHROME
+        - 8.0;
+    let from_w = inner_w / DESKTOP_GRID_W as f32;
+    let from_h = inner_h / DESKTOP_GRID_H as f32;
+    from_w.min(from_h)
+}
+
+fn board_metrics() -> (f32, f32, f32, f32) {
+    let cell = desktop_cell_size();
+    let board_w = DESKTOP_GRID_W as f32 * cell;
+    let board_x = DESKTOP_PANEL_X + (DESKTOP_PANEL_W - board_w) / 2.0;
+    let board_y = DESKTOP_PANEL_TOP + DESKTOP_HEADER_H;
+    (board_x, board_y, cell, cell)
+}
+
+fn desktop_board_bottom() -> f32 {
+    let (_, board_y, _, cell_h) = board_metrics();
+    board_y + grid_height() as f32 * cell_h + DESKTOP_BOARD_FRAME_BOTTOM
+}
+
+fn desktop_panel_bottom() -> f32 {
+    desktop_board_bottom() + DESKTOP_FOOTER_GAP + DESKTOP_FOOTER_ZONE + DESKTOP_PANEL_BOTTOM_PAD
+}
+
+fn draw_desktop_playfield_backdrop(nightmare_mode: bool) {
+    let panel_h = desktop_panel_bottom() - DESKTOP_PANEL_TOP + 8.0;
+    let panel_fill = if nightmare_mode {
+        Color::new(0.08, 0.07, 0.12, 0.97)
+    } else {
+        surface()
+    };
+    draw_surface_card(
+        DESKTOP_PANEL_X,
+        DESKTOP_PANEL_TOP,
+        DESKTOP_PANEL_W,
+        panel_h,
+        28.0,
+        panel_fill,
+    );
+}
+
+struct ReadingPalette {
+    desktop_clear: Color,
+    desktop_board_shell: Color,
+    desktop_cell_a: Color,
+    desktop_cell_b: Color,
+    desktop_accent: Color,
+    desktop_card_fill: Color,
+    desktop_card_title: Color,
+    desktop_snake_head: Color,
+    desktop_snake_body: Color,
+    letter_tile: Color,
+}
+
+fn reading_palette(nightmare_mode: bool) -> ReadingPalette {
+    if nightmare_mode {
+        ReadingPalette {
+            desktop_clear: Color::new(0.018, 0.02, 0.035, 1.0),
+            desktop_board_shell: Color::new(0.11, 0.09, 0.16, 0.96),
+            desktop_cell_a: Color::new(0.12, 0.15, 0.2, 0.98),
+            desktop_cell_b: Color::new(0.09, 0.12, 0.17, 0.98),
+            desktop_accent: Color::new(0.48, 0.29, 1.0, 0.88),
+            desktop_card_fill: Color::new(0.09, 0.08, 0.13, 0.98),
+            desktop_card_title: planet_pink(),
+            desktop_snake_head: soft_cyan(),
+            desktop_snake_body: Color::new(0.35, 0.55, 0.95, 1.0),
+            letter_tile: Color::new(0.55, 0.75, 1.0, 1.0),
+        }
+    } else {
+        ReadingPalette {
+            desktop_clear: Color::new(0.02, 0.04, 0.03, 1.0),
+            desktop_board_shell: Color::new(0.08, 0.17, 0.13, 0.96),
+            desktop_cell_a: Color::new(0.08, 0.17, 0.13, 0.92),
+            desktop_cell_b: Color::new(0.055, 0.125, 0.12, 0.92),
+            desktop_accent: Color::new(0.4, 1.0, 0.65, 0.88),
+            desktop_card_fill: Color::new(0.06, 0.14, 0.1, 0.98),
+            desktop_card_title: YELLOW,
+            desktop_snake_head: mint(),
+            desktop_snake_body: Color::new(0.38, 0.86, 0.58, 1.0),
+            letter_tile: Color::new(1.0, 0.86, 0.2, 1.0),
+        }
     }
 }
 
