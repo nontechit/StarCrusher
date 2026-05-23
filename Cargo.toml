@@ -1,6 +1,6 @@
 [package]
 name = "star-crusher"
-version = "1.5.8"
+version = "1.5.9"
 edition = "2021"
 description = "An educational arcade collection with K-5 math and reading games"
 

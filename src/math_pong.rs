@@ -11,6 +11,9 @@ use crate::ui;
 
 const PADDLE_Y: f32 = 616.0;
 const TARGET_Y: f32 = 116.0;
+const DESKTOP_QUESTION_GAP_BELOW_TARGETS: f32 = 8.0;
+const DESKTOP_QUESTION_LINE_GAP: f32 = 20.0;
+const DESKTOP_MESSAGE_GAP: f32 = 8.0;
 const MOBILE_TARGET_Y: f32 = 214.0;
 const MOBILE_PADDLE_TOUCH_MIN_Y: f32 = 260.0;
 const MOBILE_PADDLE_TOUCH_MAX_Y: f32 = 610.0;
@@ -447,63 +450,31 @@ impl MathPong {
         }
 
         let lines: Vec<&str> = self.question.text.lines().collect();
-        let mobile = portrait_layout();
         let question_size = screen::mobile_text_size(22);
         let message_size = screen::mobile_text_size(18);
         let controls_size = screen::mobile_text_size(14);
-        let question_gap = if mobile { 38.0 } else { 22.0 };
-        let box_h = if mobile {
-            116.0 + (lines.len().saturating_sub(1) as f32 * question_gap)
-        } else {
-            62.0 + (lines.len().saturating_sub(1) as f32 * question_gap)
-        };
-        let box_x = 120.0;
-        let box_y = if mobile { 402.0 } else { 418.0 };
-        let box_w = SCREEN_W - box_x * 2.0;
-        draw_rectangle(
-            box_x,
-            box_y,
-            box_w,
-            box_h,
-            Color::new(0.05, 0.08, 0.18, 0.88),
-        );
-        draw_rectangle_lines(
-            box_x,
-            box_y,
-            box_w,
-            box_h,
-            2.0,
-            Color::new(0.4, 0.7, 1.0, 1.0),
-        );
+        let question_top = TARGET_Y + TARGET_H + DESKTOP_QUESTION_GAP_BELOW_TARGETS;
 
         for (idx, line) in lines.iter().enumerate() {
             centered_text(
                 line,
-                if mobile { 440.0 } else { 456.0 } + idx as f32 * question_gap,
+                question_top + idx as f32 * DESKTOP_QUESTION_LINE_GAP,
                 question_size,
                 YELLOW,
             );
         }
         centered_text(
             self.message,
-            if mobile { 536.0 } else { 500.0 },
+            question_top + lines.len() as f32 * DESKTOP_QUESTION_LINE_GAP + DESKTOP_MESSAGE_GAP,
             message_size,
             WHITE,
         );
-        let controls = if mobile {
-            "Drag to aim, then tap START."
-        } else {
-            "Move: Arrow Keys / A,D or touch   Launch: Space/Enter or release touch   ESC: Title"
-        };
         centered_text(
-            controls,
-            if mobile { 588.0 } else { 576.0 },
+            "Move: Arrow Keys / A,D or touch   Launch: Space/Enter or release touch   ESC: Title",
+            PADDLE_Y - 34.0,
             controls_size,
             GRAY,
         );
-        if mobile && !self.ball_launched {
-            ui::draw_mobile_action_button("START");
-        }
     }
 
     fn draw_mobile_footer(&self) {
