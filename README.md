@@ -2,7 +2,7 @@
 
 Star Crusher is an educational arcade collection about two young space travelers flying between dungeon planets. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.5.6`
+Current build: `1.5.8`
 
 ## Latest Mobile Release
 
@@ -16,6 +16,7 @@ Current build: `1.5.6`
 - Math Pong paddle touch input is limited to the gameplay band so header and footer taps do not yank the paddle sideways.
 - Reading Snake portrait mode removes the thumb D-pad; tap or swipe on the board to steer toward the next letter.
 - Reading Snake portrait layout uses a clearer Reading Planet header, compact stat pills, a goal banner, a larger high-contrast board, and a footer hint: `Tap or swipe on the board to steer`.
+- Reading Snake portrait mode now sizes the goal banner from wrapped definition text, keeps the board below the header stack, and tucks the steer hint inside the footer card so it does not collide with `START`.
 - Added a web touch bridge so iPhone Safari taps on canvas buttons trigger the matching game controls.
 - Migrated the virtual playfield from the older 1024x768 4:3 layout to a 1280x720 16:9 baseline.
 - Reworked portrait mobile menus into large rounded tap targets, matching the web `Site` button style.

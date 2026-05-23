@@ -11,9 +11,24 @@ const BOARD_Y: f32 = 148.0;
 const MOBILE_CELL_W: f32 = 62.0;
 const MOBILE_CELL_H: f32 = 23.0;
 const MOBILE_BOARD_X: f32 = (SCREEN_W - GRID_W as f32 * MOBILE_CELL_W) / 2.0;
-const MOBILE_BOARD_Y: f32 = 190.0;
-const MOBILE_HEADER_BOTTOM: f32 = 178.0;
+const MOBILE_GOAL_CARD_Y: f32 = 116.0;
+const MOBILE_GOAL_TEXT_Y: f32 = 150.0;
+const MOBILE_GOAL_TEXT_W: f32 = 940.0;
+const MOBILE_GOAL_TEXT_SIZE: u16 = 24;
+const MOBILE_GOAL_MAX_LINES: usize = 3;
+const MOBILE_BOARD_GAP: f32 = 18.0;
+const MOBILE_FOOTER_GAP: f32 = 24.0;
+const MOBILE_FOOTER_H: f32 = 70.0;
+const MOBILE_PLAYFIELD_BOTTOM: f32 = ui::MOBILE_ACTION_Y - 10.0;
 const MOBILE_SWIPE_THRESHOLD: f32 = 34.0;
+
+struct MobilePlayfieldLayout {
+    header_bottom: f32,
+    goal_card_h: f32,
+    goal_text: String,
+    board_y: f32,
+    cell_h: f32,
+}
 const STEP_SECONDS: f64 = 0.25;
 const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
 const MAX_LIVES: u8 = 9;
@@ -379,14 +394,36 @@ impl ReadingSnake {
     }
 
     fn tap_in_ui_chrome(&self, tap: Vec2) -> bool {
+        if !screen::portrait_layout() {
+            return false;
+        }
+
         ui::mobile_back_button_contains(tap)
             || ui::mobile_action_button_contains(tap)
-            || tap.y < MOBILE_HEADER_BOTTOM
-            || tap.y > mobile_footer_top()
+            || tap.y < self.mobile_layout().header_bottom
+            || tap.y > self.mobile_footer_top()
+    }
+
+    fn playfield_metrics(&self) -> (f32, f32, f32, f32) {
+        if screen::portrait_layout() {
+            let layout = self.mobile_layout();
+            (MOBILE_BOARD_X, layout.board_y, MOBILE_CELL_W, layout.cell_h)
+        } else {
+            (BOARD_X, BOARD_Y, CELL, CELL)
+        }
+    }
+
+    fn mobile_layout(&self) -> MobilePlayfieldLayout {
+        mobile_playfield_layout(&self.definition)
+    }
+
+    fn mobile_footer_top(&self) -> f32 {
+        let (_, board_y, _, cell_h) = self.playfield_metrics();
+        board_y + GRID_H as f32 * cell_h + MOBILE_FOOTER_GAP
     }
 
     fn steer_from_tap(&mut self, tap: Vec2) {
-        let (board_x, board_y, cell_w, cell_h) = board_metrics();
+        let (board_x, board_y, cell_w, cell_h) = self.playfield_metrics();
 
         if screen::portrait_layout() && !self.point_in_board(tap) {
             return;
@@ -412,7 +449,7 @@ impl ReadingSnake {
     }
 
     fn point_in_board(&self, point: Vec2) -> bool {
-        let (board_x, board_y, cell_w, cell_h) = board_metrics();
+        let (board_x, board_y, cell_w, cell_h) = self.playfield_metrics();
         point.x >= board_x
             && point.x <= board_x + GRID_W as f32 * cell_w
             && point.y >= board_y
@@ -642,14 +679,15 @@ impl ReadingSnake {
             if self.bonus_round {
                 "Night Reading"
             } else {
-                "Nightmare Reading"
+                "Night Planet"
             }
         } else {
             "Reading Planet"
         };
+        let layout = self.mobile_layout();
 
         draw_mobile_header_band();
-        draw_text(title, 154.0, 48.0, 36.0, soft_white());
+        draw_text(title, 154.0, 48.0, 34.0, soft_white());
 
         draw_stat_chip(
             82.0,
@@ -669,13 +707,27 @@ impl ReadingSnake {
             soft_cyan(),
         );
 
-        draw_surface_card(82.0, 116.0, 1116.0, 54.0, 20.0, elevated_surface());
-        draw_text("Goal", 116.0, 150.0, 20.0, muted_text());
-        draw_wrapped_text(&self.definition, 206.0, 150.0, 940.0, 24, soft_white());
+        draw_surface_card(
+            82.0,
+            MOBILE_GOAL_CARD_Y,
+            1116.0,
+            layout.goal_card_h,
+            20.0,
+            elevated_surface(),
+        );
+        draw_text("Goal", 116.0, MOBILE_GOAL_TEXT_Y, 20.0, muted_text());
+        draw_wrapped_text(
+            &layout.goal_text,
+            206.0,
+            MOBILE_GOAL_TEXT_Y,
+            MOBILE_GOAL_TEXT_W,
+            MOBILE_GOAL_TEXT_SIZE,
+            soft_white(),
+        );
     }
 
     fn draw_board(&self) {
-        let (board_x, board_y, cell_w, cell_h) = board_metrics();
+        let (board_x, board_y, cell_w, cell_h) = self.playfield_metrics();
         if screen::portrait_layout() {
             draw_surface_card(
                 board_x - 26.0,
@@ -738,7 +790,7 @@ impl ReadingSnake {
     }
 
     fn draw_tile(&self, tile: &LetterTile, color: Color) {
-        let (board_x, board_y, cell_w, cell_h) = board_metrics();
+        let (board_x, board_y, cell_w, cell_h) = self.playfield_metrics();
         let mobile = screen::portrait_layout();
         let letter_size = if mobile { 28 } else { 22 };
         let x = board_x + tile.pos.x as f32 * cell_w;
@@ -775,7 +827,7 @@ impl ReadingSnake {
     }
 
     fn draw_snake(&self) {
-        let (board_x, board_y, cell_w, cell_h) = board_metrics();
+        let (board_x, board_y, cell_w, cell_h) = self.playfield_metrics();
         let mobile = screen::portrait_layout();
         for (idx, part) in self.snake.iter().enumerate() {
             let x = board_x + part.x as f32 * cell_w;
@@ -831,11 +883,10 @@ impl ReadingSnake {
     }
 
     fn draw_mobile_footer(&self) {
-        let (_, board_y, _, cell_h) = board_metrics();
-        let footer_y = board_y + GRID_H as f32 * cell_h + 28.0;
+        let footer_y = self.mobile_footer_top();
         let progress = format_word_progress(&self.word, self.letter_index);
 
-        draw_surface_card(82.0, footer_y, 1116.0, 70.0, 20.0, elevated_surface());
+        draw_surface_card(82.0, footer_y, 1116.0, MOBILE_FOOTER_H, 20.0, elevated_surface());
         draw_text("Word", 122.0, footer_y + 30.0, 18.0, muted_text());
         centered_text_in_rect(
             &progress,
@@ -856,8 +907,8 @@ impl ReadingSnake {
         );
         centered_text(
             "Tap or swipe on the board to steer",
-            footer_y + 96.0,
-            18,
+            footer_y + 58.0,
+            16,
             muted_text(),
         );
     }
@@ -936,6 +987,12 @@ impl ReadingSnake {
             mint(),
         );
         draw_wrapped_text(&self.definition, 178.0, 452.0, 900.0, 42, soft_white());
+        centered_text(
+            "Tap START when you know the word",
+            ui::MOBILE_ACTION_Y - 28.0,
+            16,
+            muted_text(),
+        );
         ui::draw_mobile_action_button("START");
     }
 
@@ -1022,17 +1079,43 @@ fn shuffled_word_order(word_count: usize) -> Vec<usize> {
     order
 }
 
-fn board_metrics() -> (f32, f32, f32, f32) {
-    if screen::portrait_layout() {
-        (MOBILE_BOARD_X, MOBILE_BOARD_Y, MOBILE_CELL_W, MOBILE_CELL_H)
-    } else {
-        (BOARD_X, BOARD_Y, CELL, CELL)
-    }
-}
+fn mobile_playfield_layout(definition: &str) -> MobilePlayfieldLayout {
+    let goal_text =
+        truncate_wrapped_text(definition, MOBILE_GOAL_TEXT_W, MOBILE_GOAL_TEXT_SIZE, MOBILE_GOAL_MAX_LINES);
+    let goal_lines = wrapped_line_count(&goal_text, MOBILE_GOAL_TEXT_W, MOBILE_GOAL_TEXT_SIZE).max(1);
+    let goal_text_h = wrapped_block_height(goal_lines, MOBILE_GOAL_TEXT_SIZE);
+    let goal_card_h = (MOBILE_GOAL_TEXT_Y - MOBILE_GOAL_CARD_Y) + goal_text_h + 14.0;
+    let header_bottom = MOBILE_GOAL_CARD_Y + goal_card_h;
+    let mut board_y = header_bottom + MOBILE_BOARD_GAP;
+    let mut cell_h = MOBILE_CELL_H;
 
-fn mobile_footer_top() -> f32 {
-    let (_, board_y, _, cell_h) = board_metrics();
-    board_y + GRID_H as f32 * cell_h + 24.0
+    let mut board_h = GRID_H as f32 * cell_h;
+    let mut footer_top = board_y + board_h + MOBILE_FOOTER_GAP;
+    let mut stack_bottom = footer_top + MOBILE_FOOTER_H;
+
+    if stack_bottom > MOBILE_PLAYFIELD_BOTTOM {
+        let max_board_h =
+            MOBILE_PLAYFIELD_BOTTOM - MOBILE_FOOTER_GAP - MOBILE_FOOTER_H - board_y;
+        if max_board_h >= GRID_H as f32 * 18.0 {
+            cell_h = (max_board_h / GRID_H as f32).floor().max(18.0);
+            board_h = GRID_H as f32 * cell_h;
+            footer_top = board_y + board_h + MOBILE_FOOTER_GAP;
+            stack_bottom = footer_top + MOBILE_FOOTER_H;
+        }
+    }
+
+    if stack_bottom > MOBILE_PLAYFIELD_BOTTOM {
+        board_y = MOBILE_PLAYFIELD_BOTTOM - MOBILE_FOOTER_H - MOBILE_FOOTER_GAP - board_h;
+        board_y = board_y.max(header_bottom + MOBILE_BOARD_GAP);
+    }
+
+    MobilePlayfieldLayout {
+        header_bottom,
+        goal_card_h,
+        goal_text,
+        board_y,
+        cell_h,
+    }
 }
 
 fn draw_mobile_space_background() {
@@ -1198,6 +1281,90 @@ fn draw_wrapped_centered_text(text: &str, y: f32, max_width: f32, font_size: u16
     if !line.is_empty() {
         centered_text(&line, line_y, font_size, color);
     }
+}
+
+fn wrapped_line_count(text: &str, max_width: f32, font_size: u16) -> usize {
+    let mut line = String::new();
+    let mut lines = 0usize;
+
+    for word in text.split_whitespace() {
+        let next = if line.is_empty() {
+            word.to_string()
+        } else {
+            format!("{} {}", line, word)
+        };
+
+        if measure_text(&next, None, font_size, 1.0).width > max_width && !line.is_empty() {
+            lines += 1;
+            line = word.to_string();
+        } else {
+            line = next;
+        }
+    }
+
+    if !line.is_empty() {
+        lines += 1;
+    }
+
+    lines
+}
+
+fn wrapped_block_height(lines: usize, font_size: u16) -> f32 {
+    if lines == 0 {
+        0.0
+    } else {
+        lines as f32 * font_size as f32 + (lines.saturating_sub(1) as f32 * 8.0)
+    }
+}
+
+fn truncate_wrapped_text(text: &str, max_width: f32, font_size: u16, max_lines: usize) -> String {
+    if max_lines == 0 {
+        return String::new();
+    }
+
+    let words: Vec<&str> = text.split_whitespace().collect();
+    let mut line = String::new();
+    let mut lines: Vec<String> = Vec::new();
+    let mut word_idx = 0usize;
+    let mut truncated = false;
+
+    while word_idx < words.len() {
+        let word = words[word_idx];
+        let next = if line.is_empty() {
+            word.to_string()
+        } else {
+            format!("{} {}", line, word)
+        };
+
+        if measure_text(&next, None, font_size, 1.0).width > max_width && !line.is_empty() {
+            lines.push(line);
+            line = word.to_string();
+            if lines.len() >= max_lines {
+                truncated = word_idx + 1 < words.len() || !line.is_empty();
+                break;
+            }
+        } else {
+            line = next;
+        }
+        word_idx += 1;
+    }
+
+    if lines.len() < max_lines {
+        if !line.is_empty() {
+            lines.push(line);
+        }
+    } else {
+        truncated = true;
+    }
+
+    if truncated {
+        if let Some(last) = lines.last_mut() {
+            let trimmed = last.trim_end_matches('.').to_string();
+            *last = format!("{trimmed}...");
+        }
+    }
+
+    lines.join(" ")
 }
 
 fn draw_wrapped_text(text: &str, x: f32, y: f32, max_width: f32, font_size: u16, color: Color) {
@@ -1379,5 +1546,20 @@ mod tests {
         assert_eq!(game.word_entry(0).word, "MOON");
         assert_eq!(game.word_entry(1).word, "CAT");
         assert_eq!(game.word_entry(2).word, "DOG");
+    }
+
+    #[test]
+    fn wrapped_block_height_grows_with_line_count() {
+        assert!(wrapped_block_height(3, 24) > wrapped_block_height(1, 24));
+    }
+
+    #[test]
+    fn mobile_goal_card_bottom_accounts_for_text_block() {
+        let goal_lines = 3usize;
+        let goal_text_h = wrapped_block_height(goal_lines, MOBILE_GOAL_TEXT_SIZE);
+        let goal_card_h = (MOBILE_GOAL_TEXT_Y - MOBILE_GOAL_CARD_Y) + goal_text_h + 14.0;
+
+        assert!(goal_card_h > 54.0);
+        assert!(MOBILE_GOAL_CARD_Y + goal_card_h + MOBILE_BOARD_GAP > 190.0);
     }
 }
