@@ -1,8 +1,12 @@
 [package]
 name = "star-crusher"
-version = "1.5.9"
+version = "1.5.10"
 edition = "2021"
 description = "An educational arcade collection with K-5 math and reading games"
+license = "MIT"
+authors = ["brokencompute"]
 
 [dependencies]
 macroquad = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
