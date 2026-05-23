@@ -397,7 +397,7 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
     centered_text("PLANET DUNGEON CREW", 140.0, subtitle_size, parchment);
     centered_text(
         "Choose a path, then press ENTER or SPACE.",
-        636.0,
+        600.0,
         hint_size,
         stone_light,
     );
@@ -406,7 +406,7 @@ pub fn draw_title_screen(showing_mini_games: bool, selected_index: usize) {
     } else {
         "Shortcuts: M Math Invaders   P Missions   L Word Cargo"
     };
-    centered_text(shortcuts, 664.0, shortcut_size, parchment);
+    centered_text(shortcuts, 628.0, shortcut_size, parchment);
 
     draw_title_scene(
         120.0,

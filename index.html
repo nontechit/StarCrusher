@@ -258,14 +258,16 @@
         }
 
         .game-shell.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
 
         .site-exit {
             position: fixed;
             z-index: 4;
-            top: max(18px, env(safe-area-inset-top));
+            bottom: max(18px, env(safe-area-inset-bottom));
             left: 50%;
+            top: auto;
             transform: translateX(-50%);
             display: none;
             align-items: center;
@@ -282,6 +284,19 @@
             cursor: pointer;
         }
 
+        @media (min-width: 701px) {
+            .game-shell.active .site-exit.visible {
+                position: relative;
+                top: auto;
+                bottom: auto;
+                left: auto;
+                transform: none;
+                align-self: center;
+                flex-shrink: 0;
+                margin: 10px auto max(18px, env(safe-area-inset-bottom));
+            }
+        }
+
         .site-exit.visible {
             display: inline-flex;
         }
@@ -294,6 +309,7 @@
         @media (max-width: 700px) {
             .site-exit {
                 top: max(10px, env(safe-area-inset-top));
+                bottom: auto;
                 right: max(10px, env(safe-area-inset-right));
                 left: auto;
                 transform: none;
@@ -307,9 +323,7 @@
         #glcanvas {
             display: block;
             width: 100vw;
-            height: 100vh;
             width: 100dvw;
-            height: 100dvh;
             margin: 0;
             padding: 0;
             border: 0;
@@ -317,6 +331,14 @@
             background: #000;
             touch-action: none;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        .game-shell.active #glcanvas {
+            flex: 1 1 auto;
+            width: 100%;
+            height: auto;
+            min-height: 0;
+            max-height: 100dvh;
         }
 
         @media (max-width: 1080px) {
@@ -489,8 +511,8 @@
     </main>
 
     <section class="game-shell" id="game-shell" aria-label="StarCrusher game">
-        <button class="site-exit" id="site-exit" type="button">Back to Site</button>
         <canvas id="glcanvas" tabindex="1"></canvas>
+        <button class="site-exit" id="site-exit" type="button">Back to Site</button>
     </section>
 
     <script>
@@ -749,7 +771,7 @@
                     if (typeof window.load !== 'function') {
                         throw new Error('Macroquad loader did not initialize.');
                     }
-                    window.load('star-crusher.wasm?v=20260523-158');
+                    window.load('star-crusher.wasm?v=20260523-no-question-box');
                     if (game) {
                         const keyMap = { mathinv: 'm', mathpong: 'p', readsnake: 'r' };
                         const key = keyMap[game];
