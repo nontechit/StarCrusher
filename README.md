@@ -2,11 +2,15 @@
 
 Star Crusher is an educational arcade collection about two young space travelers flying between dungeon planets. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Orbit (Math Pong), and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.5.10`
+Current build: `1.5.12`
 
 ## Latest Mobile Release
 
-- Removed the global web touch-bridge keypad intercept so right-side taps reach Math Orbit, Math Invaders, Reading Snake, and gate screens instead of firing stray `Enter`/digit keys.
+- Updated Reading Snake default definitions for FUNNY, WOULD, HARD, and NEAR; removed duplicate MY, NIGHT, WASH, and WOULD entries from the shuffled word list.
+- Nightmare Snake uses the same desktop panel layout as Reading Snake with a purple Night Planet palette and uniform letter tiles.
+- Reading Snake desktop layout uses a wide 26×12 board inside a centered panel with Score, Definition, and Lives on one aligned header row.
+- Desktop new-word card is centered on the board with inset top/bottom accent bars and balanced text spacing.
+- Word progress and hint copy sit below the board; Back to Site sits in the web shell footer with spacing from the canvas on desktop.
 - Math Orbit on iPhone now separates aim from launch: first gameplay-band tap moves the paddle, a second tap or `START` launches the ball.
 - Math Orbit expands the mobile paddle touch band through the visible paddle row and updates footer copy for the two-tap launch flow.
 - Gate questions on portrait mobile submit only through the on-screen `OK` pad tap; desktop keyboard submit is unchanged.
@@ -124,7 +128,7 @@ Reading Snake Nightmare rules:
 Spelling-list entry controls:
 
 - Start list entry from title: `L`
-- Type `word: definition` pairs separated by semicolons, then press `Enter`
+- Type `word: definition` pairs separated by semicolons, then press `Enter` (semicolons separate entries only; use a comma or period inside a definition if it needs more than one clause)
 - Press `N` from list entry to play Nightmare with the typed list
 - Plain word lists separated by spaces or commas still work
 - Delete typed characters with `Backspace`
@@ -338,7 +342,7 @@ Reading Snake:
 
 1. Choose `Mission Select`, then choose `Reading Planet`, or press `R`, to play with the default word list.
 2. Or choose `Word Cargo`, type weekly spelling words with definitions, then press `Enter`.
-3. Use the format `apple: a fruit; moon: shines at night` for custom definitions.
+3. Use the format `apple: a fruit; moon: shines at night` for custom definitions. Semicolons separate word entries, so compound definitions should use commas or periods instead of semicolons.
 4. Read the definition card, then press `Enter` or `Space` to start spelling.
 5. Use the visible definition above the board and follow the blank word prompt below the board.
 6. Steer the snake into the next correct letter; on portrait mobile, tap or swipe on the board to choose direction.
@@ -362,7 +366,7 @@ Reading Snake Nightmare:
 - CI runs `cargo audit` before each Pages deploy. Local check: `cargo audit --ignore RUSTSEC-2025-0035`.
 - The static web shell uses a restrictive Content Security Policy in `index.html`; `wasm-unsafe-eval` and inline script/style allowances are required for the Macroquad WASM loader.
 - The optional `boohw.starcrusher.event` parent-frame bridge in `index.html` and `src/platform.rs` emits gameplay JSON to an embedding site when present; it is inert on standalone GitHub Pages play.
-- Custom spelling input is capped at 64 words, 12 characters per word, and 180 characters per definition.
+- Custom spelling input is capped at 64 words, 12 characters per word, and 180 characters per definition. Word Cargo splits on semicolons between entries, not within a single definition.
 
 ## Web Deployment (GitHub Pages)
 

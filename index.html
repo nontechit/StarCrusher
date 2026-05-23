@@ -260,15 +260,16 @@
         .game-shell.active {
             display: flex;
             flex-direction: column;
+            gap: 14px;
+            padding-bottom: max(14px, env(safe-area-inset-bottom));
         }
 
         .site-exit {
-            position: fixed;
+            position: relative;
             z-index: 4;
-            bottom: max(18px, env(safe-area-inset-bottom));
-            left: 50%;
-            top: auto;
-            transform: translateX(-50%);
+            align-self: center;
+            flex-shrink: 0;
+            margin: 0 auto;
             display: none;
             align-items: center;
             min-height: 44px;
@@ -307,23 +308,40 @@
         }
 
         @media (max-width: 700px) {
+            .game-shell.active {
+                display: block;
+                gap: 0;
+                padding-bottom: 0;
+            }
+
             .site-exit {
+                position: fixed;
                 top: max(10px, env(safe-area-inset-top));
                 bottom: auto;
                 right: max(10px, env(safe-area-inset-right));
                 left: auto;
                 transform: none;
+                margin: 0;
                 min-height: 36px;
                 padding: 0 12px;
                 font-size: 0.82rem;
                 border-radius: 7px;
             }
+
+            #glcanvas {
+                width: 100dvw;
+                height: 100dvh;
+                flex: none;
+            }
         }
 
         #glcanvas {
             display: block;
-            width: 100vw;
+            flex: 1 1 auto;
+            width: 100%;
             width: 100dvw;
+            height: auto;
+            min-height: 0;
             margin: 0;
             padding: 0;
             border: 0;
@@ -783,7 +801,7 @@
                         throw new Error('Macroquad loader did not initialize.');
                     }
                     registerStarCrusherPlatformBridge();
-                    window.load('star-crusher.wasm?v=20260523-160');
+                    window.load('star-crusher.wasm?v=1.5.12');
                     if (game) {
                         const keyMap = { mathinv: 'm', mathpong: 'p', readsnake: 'r' };
                         const key = keyMap[game];
