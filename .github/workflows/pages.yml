@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@v4
 
       - name: Install Rust + WASM target
         run: |
@@ -27,7 +27,7 @@ jobs:
           rustup default stable
 
       - name: Cache cargo registry
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -51,12 +51,20 @@ jobs:
           cp mq_js_bundle.js dist/mq_js_bundle.js
           cp target/wasm32-unknown-unknown/release/star-crusher.wasm dist/star-crusher.wasm
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
+      - name: Upload Pages artifact
+        if: github.repository == 'nontechit/StarCrusher'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
+      - name: Fork build note
+        if: github.repository != 'nontechit/StarCrusher'
+        run: |
+          echo "WASM build and audit passed on fork ${GITHUB_REPOSITORY}."
+          echo "GitHub Pages deploy runs only on nontechit/StarCrusher (www.boohw.com)."
+
   deploy:
+    if: github.repository == 'nontechit/StarCrusher'
     needs: build-and-deploy
     runs-on: ubuntu-latest
     environment:
@@ -65,4 +73,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
+        uses: actions/deploy-pages@v4
