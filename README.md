@@ -23,6 +23,7 @@ Current build: `1.5.6`
 - Refreshed the space-traveler color palette across the title, adventure intro, gates, overlays, HUDs, Math Invaders, Reading Snake, and Math Pong.
 - Rebuilt the checked-in `star-crusher.wasm` artifact for the static site.
 - The static web shell loads `star-crusher.wasm` with a cache-busting query string so deployed mobile UI changes do not get stuck behind an older browser-cached WASM file.
+- Math Invaders and Math Orbit arcade movement is frame-rate independent, preserving the original 60fps feel if browser rendering slows down.
 
 ## Features
 
@@ -48,6 +49,7 @@ Current build: `1.5.6`
 - Portrait mobile screens show an in-canvas `TITLE` / `BACK` button for touch navigation.
 - Portrait mobile menus use large rounded touch buttons styled like the site controls.
 - Portrait mobile gameplay uses compact HUD and question panels, with the browser `Site` button kept in the top-right shell control area.
+- Arcade movement uses frame-time scaling for enemies, ships, bullets, explosions, and Math Orbit ball/paddle motion so desktop and mobile pacing stay consistent across frame rates.
 - Game over and victory stat panels are centered with their score and progress text.
 - Procedural graphics only; no external assets or fonts required.
 - Launches in a 1920x1080 fullscreen window with a fixed 1280x720 virtual playfield, with 16:9 title, gate, overlay, HUD, and mini-game layouts.

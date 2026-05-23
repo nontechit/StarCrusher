@@ -141,7 +141,7 @@ impl MathPong {
     }
 
     fn update_paddle(&mut self) {
-        let speed = 7.0;
+        let speed = 7.0 * screen::frame_step();
         if is_key_down(KeyCode::Left) || is_key_down(KeyCode::A) {
             self.paddle_x -= speed;
         }
@@ -184,7 +184,7 @@ impl MathPong {
             return;
         }
 
-        self.ball_pos += self.ball_vel;
+        self.ball_pos += self.ball_vel * screen::frame_step();
 
         if self.ball_pos.x - BALL_RADIUS <= 0.0 || self.ball_pos.x + BALL_RADIUS >= SCREEN_W {
             self.ball_vel.x *= -1.0;

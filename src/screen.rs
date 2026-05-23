@@ -25,6 +25,10 @@ pub fn portrait_gameplay_scale() -> f32 {
     }
 }
 
+pub fn frame_step() -> f32 {
+    (get_frame_time() * 60.0).clamp(0.25, 2.0)
+}
+
 pub fn window_conf() -> Conf {
     Conf {
         window_title: "Star Crusher".to_string(),

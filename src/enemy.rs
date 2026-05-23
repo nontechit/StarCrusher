@@ -182,7 +182,7 @@ impl EnemyGrid {
 
     /// Updates enemy positions each frame. Returns true if any enemy reached the player zone.
     pub fn update(&mut self) -> bool {
-        let effective_speed = self.base_speed * self.speed_mult.max(0.5);
+        let effective_speed = self.base_speed * self.speed_mult.max(0.5) * screen::frame_step();
         let min_y = enemy_min_y();
         let max_y = enemy_max_y();
         let player_zone_y = enemy_player_zone_y();
@@ -348,7 +348,7 @@ impl Explosion {
 
     /// Updates explosion animation each frame. Returns true when done (fully faded).
     pub fn update(&mut self) -> bool {
-        self.progress += 0.04; // Animation speed
+        self.progress += 0.04 * screen::frame_step();
         self.progress >= 1.0
     }
 

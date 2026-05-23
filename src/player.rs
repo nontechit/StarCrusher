@@ -34,7 +34,7 @@ impl Player {
 
     /// Handles input and updates player position each frame.
     pub fn update(&mut self, screen_w: f32) {
-        let speed = 5.0;
+        let speed = 5.0 * screen::frame_step();
         if is_key_down(KeyCode::Left) || is_key_down(KeyCode::A) {
             self.x -= speed;
         }
@@ -93,7 +93,7 @@ impl Bullet {
 
     /// Updates bullet position each frame. Returns true if off-screen.
     pub fn update(&mut self) -> bool {
-        self.y -= self.speed;
+        self.y -= self.speed * screen::frame_step();
         self.y < -10.0 // Off top of screen
     }
 
@@ -137,7 +137,7 @@ impl EnemyBullet {
 
     /// Updates position each frame. Returns true if off-screen (bottom).
     pub fn update(&mut self) -> bool {
-        self.y += self.speed;
+        self.y += self.speed * screen::frame_step();
         self.y > 730.0 // Off bottom of the 1280x720 virtual screen
     }
 
