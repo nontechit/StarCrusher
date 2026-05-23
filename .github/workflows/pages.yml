@@ -51,12 +51,20 @@ jobs:
           cp mq_js_bundle.js dist/mq_js_bundle.js
           cp target/wasm32-unknown-unknown/release/star-crusher.wasm dist/star-crusher.wasm
 
-      - name: Upload artifact
+      - name: Upload Pages artifact
+        if: github.repository == 'nontechit/StarCrusher'
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
           path: dist
 
+      - name: Fork build note
+        if: github.repository != 'nontechit/StarCrusher'
+        run: |
+          echo "WASM build and audit passed on fork ${GITHUB_REPOSITORY}."
+          echo "GitHub Pages deploy runs only on nontechit/StarCrusher (www.boohw.com)."
+
   deploy:
+    if: github.repository == 'nontechit/StarCrusher'
     needs: build-and-deploy
     runs-on: ubuntu-latest
     environment:

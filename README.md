@@ -2,15 +2,27 @@
 
 Star Crusher is an educational arcade collection about two young space travelers flying between dungeon planets. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Orbit (Math Pong), and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.5.12`
+Current build: `1.5.14`
 
-## Latest Mobile Release
+## Latest Mobile Release (1.5.14)
 
-- Updated Reading Snake default definitions for FUNNY, WOULD, HARD, and NEAR; removed duplicate MY, NIGHT, WASH, and WOULD entries from the shuffled word list.
-- Nightmare Snake uses the same desktop panel layout as Reading Snake with a purple Night Planet palette and uniform letter tiles.
-- Reading Snake desktop layout uses a wide 26×12 board inside a centered panel with Score, Definition, and Lives on one aligned header row.
-- Desktop new-word card is centered on the board with inset top/bottom accent bars and balanced text spacing.
-- Word progress and hint copy sit below the board; Back to Site sits in the web shell footer with spacing from the canvas on desktop.
+Shipped after public [PR #10](https://github.com/nontechit/StarCrusher/pull/10) (`1.5.12` — desktop Reading/Nightmare layout and definition updates).
+
+- **iPhone full-screen shell:** mobile `#glcanvas` fills the viewport (`100dvh` / `visualViewport`) so portrait play is no longer letterboxed into the top third of the screen.
+- **Readable mobile text:** removed the portrait `0.72` text shrink; labels use `mobile_text_size()` with a 20px floor and centered layout on title, adventure intro, gates, spelling list, and Reading Snake screens.
+- **Reading / Nightmare new-word card:** centered word, part-of-speech, and definition copy with larger fonts; mode title (`Reading Planet` / `Night Planet`) centered at the top; gameplay HUD hidden behind the card until START.
+- **Reading Snake mobile HUD:** centered definition banner, footer word progress, and steer hint; larger stat chips and footer height.
+- **Mobile back control:** brighter `TITLE` / `BACK` pill with a larger tap target for the top-left exit button.
+- Rebuilt `star-crusher.wasm` with cache-bust `?v=1.5.14` in `index.html`.
+
+### Also in 1.5.12 (PR #10)
+
+- Reading Snake desktop wide 26×12 panel; Nightmare Snake purple palette and uniform letter tiles.
+- Desktop new-word card centered on the board with inset accent bars.
+- Updated default definitions for FUNNY, WOULD, HARD, and NEAR; removed duplicate MY, NIGHT, WASH, and WOULD from the shuffled list.
+- README Word Cargo semicolon guidance for custom definition lists.
+
+### Earlier mobile polish (1.5.8–1.5.11)
 - Math Orbit on iPhone now separates aim from launch: first gameplay-band tap moves the paddle, a second tap or `START` launches the ball.
 - Math Orbit expands the mobile paddle touch band through the visible paddle row and updates footer copy for the two-tap launch flow.
 - Gate questions on portrait mobile submit only through the on-screen `OK` pad tap; desktop keyboard submit is unchanged.
