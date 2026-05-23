@@ -10,7 +10,9 @@ Current build: `1.5.6`
 - Moved the mobile web `Site` button to the top-right of the game shell so it no longer overlaps in-canvas headers.
 - Math Invaders portrait HUD now leads with the active question card at the top; score, wave, and lives sit in corner stats instead of a separate title bar.
 - Math Invaders portrait gameplay scales the player ship and numbered targets for easier reading on phone screens.
+- Math Invaders portrait mode now uses larger stat pills below the question card and keeps the enemy field lower so the HUD does not crowd active targets.
 - Math Pong portrait HUD moves the question card to the top, centers the title and score, and keeps level progress and lives in the corners.
+- Math Orbit portrait mode now uses wider numbered targets, clearer `Q`, `Lives`, and `Score` stat pills, and stronger footer copy above the mobile `START` button.
 - Math Pong paddle touch input is limited to the gameplay band so header and footer taps do not yank the paddle sideways.
 - Reading Snake portrait mode removes the thumb D-pad; tap or swipe on the board to steer toward the next letter.
 - Reading Snake portrait layout uses a clearer Reading Planet header, compact stat pills, a goal banner, a larger high-contrast board, and a footer hint: `Tap or swipe on the board to steer`.
@@ -20,6 +22,7 @@ Current build: `1.5.6`
 - Added explicit mobile `CONTINUE`, `START`, `BACK`, and `TITLE` buttons so players do not have to guess at swipe or keyboard prompts.
 - Refreshed the space-traveler color palette across the title, adventure intro, gates, overlays, HUDs, Math Invaders, Reading Snake, and Math Pong.
 - Rebuilt the checked-in `star-crusher.wasm` artifact for the static site.
+- The static web shell loads `star-crusher.wasm` with a cache-busting query string so deployed mobile UI changes do not get stuck behind an older browser-cached WASM file.
 
 ## Features
 
@@ -27,7 +30,7 @@ Current build: `1.5.6`
 - Grade-appropriate math questions covering counting, arithmetic, multiplication, division, fractions, percentages, pre-algebra, area, volume, and ratios.
 - Launch Voyage opens a guided planet route: intro, first Math Invaders wave, Reading Snake, Math Pong, Nightmare Snake, then continued Math Invaders progression.
 - Math Invaders waves with Time Pilot-style drifting numbered targets tied to the active math question.
-- Math Invaders shows the active question in a top-centered banner on portrait mobile, with score, wave, and lives in corner stats.
+- Math Invaders shows the active question in a top-centered banner on portrait mobile, with wave, score, and lives in readable stat pills.
 - Math Invaders scales the player ship and numbered targets on portrait mobile for clearer phone play.
 - Preschool shape prompts use default-font-safe ASCII markers so shapes display reliably.
 - Kindergarten number-recognition prompts use words, such as `Shoot number three`, while targets remain numeric.
@@ -80,7 +83,7 @@ Math Invaders controls:
 - Type gate answers with number keys, then press `Enter`
 - Delete typed answer characters with `Backspace`
 - On mobile, hold or drag in the lower play area to move and fire.
-- On mobile, the active question appears in the top banner; wave and lives appear in the corner stats.
+- On mobile, the active question appears in the top banner; wave, score, and lives appear in stat pills below it.
 - On mobile, tap `TITLE` to return to the title menu.
 - On mobile, use the enlarged gate number pad and `OK` button to submit answers.
 
@@ -127,7 +130,7 @@ Math Pong controls:
 - Restart after game over: `Enter` or `Space`
 - Return to title: `Esc`
 - On mobile, drag or hold in the gameplay band near the lower play area to move the paddle, then tap `START` to launch the ball.
-- On mobile, the question card appears at the top of the screen; title and score are centered below it.
+- On mobile, the question card appears at the top of the screen; wider answer targets and `Q`, `Lives`, and `Score` stat pills sit below it.
 - On mobile, tap `TITLE` to return to the title menu.
 
 ## Requirements
@@ -299,7 +302,7 @@ Math Invaders:
 5. Complete Nightmare Snake to return to Math Invaders progression and answer the wave-complete gate.
 6. Choose `Math Invaders` from the title menu, or press `M`, to launch standalone Math Invaders immediately.
 7. Read the active math question in the top banner on portrait mobile and find the drifting target showing the correct answer.
-8. On portrait mobile, wave and lives stay visible in the corner stats below the banner.
+8. On portrait mobile, wave, score, and lives stay visible in stat pills below the banner.
 9. Shoot the correct drifting number to score and receive a new question for the remaining targets.
 10. Shooting an incorrect number costs one life and leaves that target in play.
 11. Clear all numbered targets, then answer typed math questions at the wave-complete gate.
@@ -308,7 +311,7 @@ Math Invaders:
 Math Pong:
 
 1. Choose `Mission Select`, then choose `Math Orbit`, or press `P` from Mission Select.
-2. Read the math question in the top banner on portrait mobile and identify the correct numbered target.
+2. Read the math question in the top banner on portrait mobile and identify the correct widened numbered target.
 3. Move the paddle under the correct number before launching the ball.
 4. Launch straight upward into the correct number to clear the question.
 5. Clear five questions to advance to the next grade.
