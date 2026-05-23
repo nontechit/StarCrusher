@@ -410,6 +410,14 @@ The repository includes a `CNAME` file for **www.boohw.com**. To complete or ver
 
 ### Local WASM Build
 
+Use the project build script (recommended — handles sandbox `CARGO_TARGET_DIR`, copy, and verification):
+
+```powershell
+powershell -File .cursor/skills/iphonescreenshot/scripts/build-wasm.ps1
+```
+
+Manual build (only if you unset `CARGO_TARGET_DIR` yourself):
+
 ```bash
 rustup target add wasm32-unknown-unknown
 cargo build --target wasm32-unknown-unknown --release
@@ -421,6 +429,8 @@ To update the static landing-page artifact after a local WASM build:
 ```powershell
 Copy-Item -LiteralPath target\wasm32-unknown-unknown\release\star-crusher.wasm -Destination star-crusher.wasm
 ```
+
+The build script also writes `star-crusher.wasm.buildinfo.json` (hash, UTC time, git SHA) for freshness checks.
 
 Then open `index.html` in a browser through a local server because WASM module loading is restricted from direct file URLs:
 

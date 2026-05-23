@@ -1,21 +1,45 @@
 use macroquad::prelude::*;
 
-pub const SCREEN_W: f32 = 1280.0;
-pub const SCREEN_H: f32 = 720.0;
+pub const DESKTOP_W: f32 = 1280.0;
+pub const DESKTOP_H: f32 = 720.0;
+pub const PORTRAIT_W: f32 = 720.0;
+pub const PORTRAIT_H: f32 = 1280.0;
 pub const WINDOW_W: i32 = 1920;
 pub const WINDOW_H: i32 = 1080;
 
+/// Desktop virtual canvas (legacy const aliases).
+pub const SCREEN_W: f32 = DESKTOP_W;
+pub const SCREEN_H: f32 = DESKTOP_H;
+
+/// Portrait mobile UI text multiplier.
+pub const MOBILE_TEXT_SCALE: f32 = 1.75;
+
+pub fn screen_w() -> f32 {
+    if portrait_layout() {
+        PORTRAIT_W
+    } else {
+        DESKTOP_W
+    }
+}
+
+pub fn screen_h() -> f32 {
+    if portrait_layout() {
+        PORTRAIT_H
+    } else {
+        DESKTOP_H
+    }
+}
+
 pub fn mobile_text_size(base: u16) -> u16 {
     if portrait_layout() {
-        // Portrait phones stretch the 1280x720 playfield to a tall viewport; keep copy readable.
-        base.max(20)
+        ((base as f32) * MOBILE_TEXT_SCALE).round() as u16
     } else {
         base
     }
 }
 
 pub fn portrait_layout() -> bool {
-    screen_height() > screen_width() * 1.15
+    screen_height() > screen_width() * 1.05
 }
 
 pub fn portrait_gameplay_scale() -> f32 {
@@ -47,9 +71,11 @@ pub fn use_virtual_screen() {
 }
 
 fn virtual_camera() -> Camera2D {
+    let w = screen_w();
+    let h = screen_h();
     Camera2D {
-        target: vec2(SCREEN_W / 2.0, SCREEN_H / 2.0),
-        zoom: vec2(2.0 / SCREEN_W, 2.0 / SCREEN_H),
+        target: vec2(w / 2.0, h / 2.0),
+        zoom: vec2(2.0 / w, 2.0 / h),
         ..Default::default()
     }
 }
@@ -62,7 +88,7 @@ pub fn enter_fullscreen() {
     }
 }
 
-/// Maps screen/touch coordinates to the 1280x720 virtual game space using the active camera.
+/// Maps screen/touch coordinates to the active virtual game space using the active camera.
 pub fn to_virtual_position(position: Vec2) -> Vec2 {
     virtual_camera().screen_to_world(position)
 }

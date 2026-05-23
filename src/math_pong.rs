@@ -1,22 +1,26 @@
 use macroquad::prelude::*;
 
 use crate::levels::Grade;
-use crate::question::{generate_question, Question};
+use crate::question::{generate_math_pong_question, Question};
 use crate::random;
 use crate::screen::{
-    self, primary_pointer_position, primary_release_position, primary_tap_position, SCREEN_H,
-    SCREEN_W,
+    self, primary_pointer_position, primary_release_position, primary_tap_position,
 };
 use crate::ui;
 
-const PADDLE_Y: f32 = 616.0;
+const DESKTOP_PADDLE_Y: f32 = 616.0;
+const MOBILE_PADDLE_GAP_ABOVE_START: f32 = 72.0;
+const PADDLE_H: f32 = 16.0;
 const TARGET_Y: f32 = 116.0;
-const DESKTOP_QUESTION_GAP_BELOW_TARGETS: f32 = 8.0;
-const DESKTOP_QUESTION_LINE_GAP: f32 = 20.0;
-const DESKTOP_MESSAGE_GAP: f32 = 8.0;
-const MOBILE_TARGET_Y: f32 = 214.0;
-const MOBILE_PADDLE_TOUCH_MIN_Y: f32 = 260.0;
-const MOBILE_PADDLE_TOUCH_MAX_Y: f32 = 638.0;
+const MOBILE_HUD_TOP_OFFSET: f32 = 36.0;
+const MOBILE_TITLE_Y: f32 = 42.0 + MOBILE_HUD_TOP_OFFSET;
+const MOBILE_STAT_Y: f32 = 58.0 + MOBILE_HUD_TOP_OFFSET;
+const MOBILE_STAT_H: f32 = 36.0;
+const MOBILE_STACK_GAP: f32 = 10.0;
+const MOBILE_QUESTION_GAP: f32 = 12.0;
+const MOBILE_PADDLE_TOUCH_MIN_Y: f32 = 720.0;
+const MOBILE_FOOTER_MESSAGE_SIZE: u16 = 28;
+const MOBILE_FOOTER_CONTROLS_SIZE: u16 = 24;
 const TARGET_W: f32 = 76.0;
 const TARGET_H: f32 = 42.0;
 const MOBILE_TARGET_W: f32 = 118.0;
@@ -39,6 +43,12 @@ struct Target {
     flash_until: f64,
 }
 
+struct MobileHudLayout {
+    stat_y: f32,
+    target_y: f32,
+    question_y: f32,
+}
+
 pub struct MathPong {
     grade: Grade,
     question: Question,
@@ -54,20 +64,19 @@ pub struct MathPong {
     message: &'static str,
     game_over: bool,
     victory: bool,
-    mobile_positioned: bool,
 }
 
 impl MathPong {
     pub fn new() -> Self {
         let grade = Grade::Preschool;
-        let question = generate_question(grade);
+        let question = generate_math_pong_question(grade);
         let mut game = Self {
             grade,
             question,
             targets: Vec::new(),
-            paddle_x: SCREEN_W / 2.0 - 55.0,
+            paddle_x: screen::screen_w() / 2.0 - 55.0,
             paddle_w: 110.0,
-            ball_pos: vec2(SCREEN_W / 2.0, PADDLE_Y - 14.0),
+            ball_pos: vec2(screen::screen_w() / 2.0, paddle_y() - 14.0),
             ball_vel: Vec2::ZERO,
             ball_launched: false,
             score: 0,
@@ -76,7 +85,6 @@ impl MathPong {
             message: "Aim the ball at the correct number.",
             game_over: false,
             victory: false,
-            mobile_positioned: false,
         };
         game.spawn_targets();
         game
@@ -114,6 +122,7 @@ impl MathPong {
         draw_starfield();
         self.draw_header();
         self.draw_targets();
+        self.draw_mobile_question();
         self.draw_paddle();
         self.draw_ball();
         self.draw_footer();
@@ -122,8 +131,8 @@ impl MathPong {
             draw_rectangle(
                 0.0,
                 0.0,
-                SCREEN_W,
-                SCREEN_H,
+                screen::screen_w(),
+                screen::screen_h(),
                 Color::new(0.0, 0.0, 0.0, 0.76),
             );
             let title = if self.victory {
@@ -154,50 +163,35 @@ impl MathPong {
             self.paddle_x += speed;
         }
         if let Some(pointer) = primary_pointer_position() {
-            let in_paddle_zone = mobile_paddle_zone_contains(pointer);
+            let in_paddle_zone = if portrait_layout() {
+                pointer.y >= MOBILE_PADDLE_TOUCH_MIN_Y
+                    && pointer.y <= mobile_paddle_touch_max_y()
+            } else {
+                pointer.y > 400.0
+            };
             if in_paddle_zone {
                 self.paddle_x = pointer.x - self.paddle_w / 2.0;
             }
         }
 
-        self.paddle_x = self.paddle_x.clamp(12.0, SCREEN_W - self.paddle_w - 12.0);
+        self.paddle_x = self.paddle_x.clamp(12.0, screen::screen_w() - self.paddle_w - 12.0);
 
         if !self.ball_launched {
-            self.ball_pos = vec2(self.paddle_x + self.paddle_w / 2.0, PADDLE_Y - 14.0);
-            let touch_launch = self.mobile_touch_launch();
-            let keyboard_launch = !portrait_layout()
-                && (is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Enter));
-            if keyboard_launch || touch_launch {
+            self.ball_pos = vec2(self.paddle_x + self.paddle_w / 2.0, paddle_y() - 14.0);
+            let mobile_start =
+                primary_tap_position().is_some_and(ui::mobile_action_button_contains);
+            let touch_launch = if portrait_layout() {
+                mobile_start
+            } else {
+                primary_release_position().is_some()
+            };
+            if is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Enter) || touch_launch {
                 let grade_speed = 4.8 + self.grade.index() as f32 * 0.35;
                 self.ball_vel = vec2(0.0, -grade_speed);
                 self.ball_launched = true;
-                self.mobile_positioned = false;
                 self.message = "Bounce into the correct number.";
             }
         }
-    }
-
-    fn mobile_touch_launch(&mut self) -> bool {
-        if !portrait_layout() {
-            return primary_release_position().is_some();
-        }
-
-        let Some(tap) = primary_tap_position() else {
-            return false;
-        };
-
-        if ui::mobile_action_button_contains(tap) {
-            return true;
-        }
-
-        if mobile_paddle_zone_contains(tap) {
-            if self.mobile_positioned {
-                return true;
-            }
-            self.mobile_positioned = true;
-        }
-
-        false
     }
 
     fn update_ball(&mut self) {
@@ -207,25 +201,26 @@ impl MathPong {
 
         self.ball_pos += self.ball_vel * screen::frame_step();
 
-        if self.ball_pos.x - BALL_RADIUS <= 0.0 || self.ball_pos.x + BALL_RADIUS >= SCREEN_W {
+        if self.ball_pos.x - BALL_RADIUS <= 0.0 || self.ball_pos.x + BALL_RADIUS >= screen::screen_w() {
             self.ball_vel.x *= -1.0;
-            self.ball_pos.x = self.ball_pos.x.clamp(BALL_RADIUS, SCREEN_W - BALL_RADIUS);
+            self.ball_pos.x = self.ball_pos.x.clamp(BALL_RADIUS, screen::screen_w() - BALL_RADIUS);
         }
         if self.ball_pos.y - BALL_RADIUS <= 0.0 {
             self.ball_vel.y = self.ball_vel.y.abs();
             self.ball_pos.y = BALL_RADIUS;
         }
 
-        let paddle = Rect::new(self.paddle_x, PADDLE_Y, self.paddle_w, 16.0);
+        let paddle_y = paddle_y();
+        let paddle = Rect::new(self.paddle_x, paddle_y, self.paddle_w, PADDLE_H);
         if self.ball_vel.y > 0.0 && circle_hits_rect(self.ball_pos, BALL_RADIUS, paddle) {
             let hit_ratio =
                 ((self.ball_pos.x - self.paddle_x) / self.paddle_w - 0.5).clamp(-0.5, 0.5);
             let speed = self.ball_vel.length().max(5.0);
             self.ball_vel = vec2(hit_ratio * speed * 1.5, -speed.abs());
-            self.ball_pos.y = PADDLE_Y - BALL_RADIUS;
+            self.ball_pos.y = paddle_y - BALL_RADIUS;
         }
 
-        if self.ball_pos.y - BALL_RADIUS > SCREEN_H {
+        if self.ball_pos.y - BALL_RADIUS > screen::screen_h() {
             self.lose_life("Ball missed. Try a cleaner angle.");
             return;
         }
@@ -262,7 +257,7 @@ impl MathPong {
             self.message = "Correct! New target ready.";
         }
 
-        self.question = generate_question(self.grade);
+        self.question = generate_math_pong_question(self.grade);
         self.spawn_targets();
         self.reset_ball();
     }
@@ -280,8 +275,7 @@ impl MathPong {
     fn reset_ball(&mut self) {
         self.ball_launched = false;
         self.ball_vel = Vec2::ZERO;
-        self.mobile_positioned = false;
-        self.ball_pos = vec2(self.paddle_x + self.paddle_w / 2.0, PADDLE_Y - 14.0);
+        self.ball_pos = vec2(self.paddle_x + self.paddle_w / 2.0, paddle_y() - 14.0);
     }
 
     fn spawn_targets(&mut self) {
@@ -293,9 +287,13 @@ impl MathPong {
         let target_h = if mobile { MOBILE_TARGET_H } else { TARGET_H };
         let spacing = if mobile { 30.0 } else { 28.0 };
         let total_w = count as f32 * target_w + count.saturating_sub(1) as f32 * spacing;
-        let start_x = SCREEN_W / 2.0 - total_w / 2.0;
+        let start_x = screen::screen_w() / 2.0 - total_w / 2.0;
 
-        let target_y = if mobile { MOBILE_TARGET_Y } else { TARGET_Y };
+        let target_y = if mobile {
+            mobile_hud_layout().target_y
+        } else {
+            TARGET_Y
+        };
 
         self.targets = answers
             .into_iter()
@@ -358,13 +356,12 @@ impl MathPong {
     }
 
     fn draw_mobile_header(&self) {
-        centered_text("MATH ORBIT", 42.0, 36, Color::new(0.92, 0.98, 1.0, 1.0));
+        centered_text("MATH ORBIT", MOBILE_TITLE_Y, 36, Color::new(0.92, 0.98, 1.0, 1.0));
 
-        let card_bottom = ui::draw_mobile_question_card(&self.question.text, 58.0);
-        let stat_y = card_bottom + 12.0;
+        let layout = mobile_hud_layout();
         draw_mobile_stat_pill(
             164.0,
-            stat_y,
+            layout.stat_y,
             392.0,
             &format!("Q {}/{}", self.questions_cleared + 1, QUESTIONS_PER_GRADE),
             Color::new(0.12, 0.19, 0.32, 0.92),
@@ -372,7 +369,7 @@ impl MathPong {
         );
         draw_mobile_stat_pill(
             584.0,
-            stat_y,
+            layout.stat_y,
             236.0,
             &format!("Lives {}", self.lives),
             Color::new(0.10, 0.22, 0.19, 0.92),
@@ -380,12 +377,21 @@ impl MathPong {
         );
         draw_mobile_stat_pill(
             848.0,
-            stat_y,
+            layout.stat_y,
             268.0,
             &format!("Score {}", self.score),
             Color::new(0.26, 0.18, 0.10, 0.92),
             Color::new(1.0, 0.82, 0.34, 1.0),
         );
+    }
+
+    fn draw_mobile_question(&self) {
+        if !portrait_layout() {
+            return;
+        }
+
+        let layout = mobile_hud_layout();
+        ui::draw_mobile_question_card(&self.question.text, layout.question_y);
     }
 
     fn draw_targets(&self) {
@@ -442,14 +448,15 @@ impl MathPong {
     }
 
     fn draw_paddle(&self) {
+        let paddle_y = paddle_y();
         draw_rectangle(
             self.paddle_x,
-            PADDLE_Y,
+            paddle_y,
             self.paddle_w,
-            16.0,
+            PADDLE_H,
             Color::new(0.3, 1.0, 0.75, 1.0),
         );
-        draw_rectangle_lines(self.paddle_x, PADDLE_Y, self.paddle_w, 16.0, 2.0, WHITE);
+        draw_rectangle_lines(self.paddle_x, paddle_y, self.paddle_w, PADDLE_H, 2.0, WHITE);
     }
 
     fn draw_ball(&self) {
@@ -469,39 +476,78 @@ impl MathPong {
         }
 
         let lines: Vec<&str> = self.question.text.lines().collect();
+        let mobile = portrait_layout();
         let question_size = screen::mobile_text_size(22);
         let message_size = screen::mobile_text_size(18);
         let controls_size = screen::mobile_text_size(14);
-        let question_top = TARGET_Y + TARGET_H + DESKTOP_QUESTION_GAP_BELOW_TARGETS;
+        let question_gap = if mobile { 38.0 } else { 22.0 };
+        let box_h = if mobile {
+            116.0 + (lines.len().saturating_sub(1) as f32 * question_gap)
+        } else {
+            62.0 + (lines.len().saturating_sub(1) as f32 * question_gap)
+        };
+        let box_x = 120.0;
+        let box_y = if mobile { 402.0 } else { 418.0 };
+        let box_w = screen::screen_w() - box_x * 2.0;
+        draw_rectangle(
+            box_x,
+            box_y,
+            box_w,
+            box_h,
+            Color::new(0.05, 0.08, 0.18, 0.88),
+        );
+        draw_rectangle_lines(
+            box_x,
+            box_y,
+            box_w,
+            box_h,
+            2.0,
+            Color::new(0.4, 0.7, 1.0, 1.0),
+        );
 
         for (idx, line) in lines.iter().enumerate() {
             centered_text(
                 line,
-                question_top + idx as f32 * DESKTOP_QUESTION_LINE_GAP,
+                if mobile { 440.0 } else { 456.0 } + idx as f32 * question_gap,
                 question_size,
                 YELLOW,
             );
         }
         centered_text(
             self.message,
-            question_top + lines.len() as f32 * DESKTOP_QUESTION_LINE_GAP + DESKTOP_MESSAGE_GAP,
+            if mobile { 536.0 } else { 500.0 },
             message_size,
             WHITE,
         );
+        let controls = if mobile {
+            "Drag to aim, then tap START."
+        } else {
+            "Move: Arrow Keys / A,D or touch   Launch: Space/Enter or release touch   ESC: Title"
+        };
         centered_text(
-            "Move: Arrow Keys / A,D or touch   Launch: Space/Enter or release touch   ESC: Title",
-            PADDLE_Y - 34.0,
+            controls,
+            if mobile { 588.0 } else { 576.0 },
             controls_size,
             GRAY,
         );
+        if mobile && !self.ball_launched {
+            ui::draw_mobile_action_button("START");
+        }
     }
 
     fn draw_mobile_footer(&self) {
-        centered_text(self.message, 524.0, 22, Color::new(0.94, 0.98, 1.0, 1.0));
+        let (message_y, controls_y, message_size, controls_size) =
+            mobile_footer_layout(&self.question.text);
         centered_text(
-            "Drag paddle. Tap again or press START to launch.",
-            556.0,
-            18,
+            self.message,
+            message_y,
+            message_size,
+            Color::new(0.94, 0.98, 1.0, 1.0),
+        );
+        centered_text(
+            "Drag paddle. Tap START to launch.",
+            controls_y,
+            controls_size,
             Color::new(0.72, 0.84, 1.0, 1.0),
         );
 
@@ -515,11 +561,38 @@ fn portrait_layout() -> bool {
     screen::portrait_layout()
 }
 
-fn mobile_paddle_zone_contains(point: Vec2) -> bool {
+fn paddle_y() -> f32 {
     if portrait_layout() {
-        point.y >= MOBILE_PADDLE_TOUCH_MIN_Y && point.y <= MOBILE_PADDLE_TOUCH_MAX_Y
+        ui::MOBILE_ACTION_Y - MOBILE_PADDLE_GAP_ABOVE_START - PADDLE_H
     } else {
-        point.y > 400.0
+        DESKTOP_PADDLE_Y
+    }
+}
+
+fn mobile_paddle_touch_max_y() -> f32 {
+    paddle_y() + PADDLE_H + 8.0
+}
+
+fn mobile_footer_layout(question_text: &str) -> (f32, f32, u16, u16) {
+    let message_size = MOBILE_FOOTER_MESSAGE_SIZE;
+    let controls_size = MOBILE_FOOTER_CONTROLS_SIZE;
+    let line_gap = message_size.max(controls_size) as f32 + 10.0;
+    let layout = mobile_hud_layout();
+    let question_bottom = layout.question_y + ui::mobile_question_card_height(question_text);
+    let gap_mid = (question_bottom + paddle_y()) / 2.0;
+    let message_y = gap_mid - line_gap / 2.0;
+    let controls_y = gap_mid + line_gap / 2.0;
+    (message_y, controls_y, message_size, controls_size)
+}
+
+fn mobile_hud_layout() -> MobileHudLayout {
+    let stat_y = MOBILE_STAT_Y;
+    let target_y = stat_y + MOBILE_STAT_H + MOBILE_STACK_GAP;
+    let question_y = target_y + MOBILE_TARGET_H + MOBILE_QUESTION_GAP;
+    MobileHudLayout {
+        stat_y,
+        target_y,
+        question_y,
     }
 }
 
@@ -578,8 +651,8 @@ fn circle_hits_rect(center: Vec2, radius: f32, rect: Rect) -> bool {
 
 fn draw_starfield() {
     for i in 0..70 {
-        let x = ((i * 67 + 31) % SCREEN_W as i32) as f32;
-        let y = ((i * 43 + 17) % SCREEN_H as i32) as f32;
+        let x = ((i * 67 + 31) % screen::screen_w() as i32) as f32;
+        let y = ((i * 43 + 17) % screen::screen_h() as i32) as f32;
         let brightness = (get_time() as f32 + x * 0.01).sin() * 0.25 + 0.65;
         draw_circle(
             x,
@@ -594,7 +667,7 @@ fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
     let metrics = measure_text(text, None, font_size, 1.0);
     draw_text(
         text,
-        SCREEN_W / 2.0 - metrics.width / 2.0,
+        screen::screen_w() / 2.0 - metrics.width / 2.0,
         y,
         font_size as f32,
         color,
@@ -608,7 +681,7 @@ mod tests {
     #[test]
     fn kindergarten_number_question_has_one_correct_answer() {
         let question = Question {
-            text: "What number is this?   3".to_string(),
+            text: "How many circles?".to_string(),
             correct_answer: 3,
             wrong_answers: vec![1, 2, 4],
         };

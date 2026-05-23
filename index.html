@@ -16,6 +16,20 @@
             --gold: #ffd166;
             --cyan: #3dd6d0;
             --pink: #ff5c8a;
+            /* Shared mobile chrome — keep in sync with ui.rs MOBILE_BACK_* / MOBILE_CHROME_* */
+            --mobile-chrome-x: 54px;
+            --mobile-chrome-y: 8px;
+            --mobile-back-size: 72px;
+            --mobile-back-y: 8px;
+            --mobile-home-w: 168px;
+            --mobile-home-h: 40px;
+            --mobile-home-y: 12px;
+            --mobile-chrome-radius: 20px;
+            --mobile-chrome-font-size: 16px;
+            --mobile-chrome-site-x: 1058px;
+            --mobile-chrome-fill: rgba(56, 59, 77, 0.98);
+            --mobile-chrome-border: rgba(255, 255, 255, 0.22);
+            --mobile-chrome-text: rgba(250, 250, 255, 1);
         }
 
         * {
@@ -318,28 +332,35 @@
                 padding-bottom: 0;
             }
 
-            .site-exit {
+            .game-shell.active .site-exit.mobile-chrome {
                 position: fixed;
-                top: max(10px, env(safe-area-inset-top));
+                right: auto;
                 bottom: auto;
-                right: max(10px, env(safe-area-inset-right));
-                left: auto;
                 transform: none;
                 margin: 0;
-                min-height: 36px;
-                padding: 0 12px;
-                font-size: 0.82rem;
-                border-radius: 7px;
+                padding: 0 !important;
+                justify-content: center;
+                font-weight: 700;
+                line-height: 1;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: clip;
+                border-style: solid;
+                border-width: 1px;
+                border-color: var(--mobile-chrome-border);
+                color: var(--mobile-chrome-text);
+                background: var(--mobile-chrome-fill) !important;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+            }
+
+            .game-shell.active .site-exit.mobile-chrome:hover,
+            .game-shell.active .site-exit.mobile-chrome:focus-visible {
+                background: rgba(66, 69, 87, 0.98) !important;
             }
 
             .game-shell.active #glcanvas {
                 position: fixed;
-                inset: 0;
-                width: 100%;
-                height: 100%;
-                height: 100dvh;
-                height: 100svh;
-                max-height: none;
                 flex: none;
             }
         }
@@ -539,7 +560,7 @@
 
     <section class="game-shell" id="game-shell" aria-label="StarCrusher game">
         <canvas id="glcanvas" tabindex="1"></canvas>
-        <button class="site-exit" id="site-exit" type="button">Back to Site</button>
+        <button class="site-exit" id="site-exit" type="button" aria-label="Back to Home">Back to Home</button>
     </section>
 
     <script>
@@ -555,7 +576,10 @@
         let loaderStarted = false;
         let gameInputState = 'site';
 
-        const virtualScreen = { w: 1280, h: 720 };
+        function activeVirtualScreen() {
+            return isMobileShell() ? { w: 720, h: 1280 } : { w: 1280, h: 720 };
+        }
+
         const mobileShellQuery = window.matchMedia('(max-width: 700px)');
 
         function isMobileShell() {
@@ -567,15 +591,27 @@
                 return;
             }
 
+            const virtualScreen = activeVirtualScreen();
+
             if (isMobileShell()) {
+                const viewportWidth = window.innerWidth;
                 const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+                const scale = Math.min(
+                    viewportWidth / virtualScreen.w,
+                    viewportHeight / virtualScreen.h
+                );
+                const canvasWidth = Math.round(virtualScreen.w * scale);
+                const canvasHeight = Math.round(virtualScreen.h * scale);
+                const offsetX = Math.round((viewportWidth - canvasWidth) / 2);
+                const offsetY = Math.round((viewportHeight - canvasHeight) / 2);
+
                 glcanvas.style.position = 'fixed';
-                glcanvas.style.left = '0';
-                glcanvas.style.top = '0';
-                glcanvas.style.right = '0';
-                glcanvas.style.bottom = '0';
-                glcanvas.style.width = '100%';
-                glcanvas.style.height = `${Math.round(viewportHeight)}px`;
+                glcanvas.style.left = `${offsetX}px`;
+                glcanvas.style.top = `${offsetY}px`;
+                glcanvas.style.right = 'auto';
+                glcanvas.style.bottom = 'auto';
+                glcanvas.style.width = `${canvasWidth}px`;
+                glcanvas.style.height = `${canvasHeight}px`;
             } else {
                 glcanvas.style.position = '';
                 glcanvas.style.left = '';
@@ -586,20 +622,81 @@
                 glcanvas.style.height = '';
             }
 
+            syncMobileSiteExitChrome();
             window.dispatchEvent(new Event('resize'));
         }
 
-        const mobileTitleRows = {
-            x: 160,
-            y: 318,
-            w: 960,
-            h: 78,
-            gap: 16
+        // Shared mobile chrome spec — keep in sync with ui.rs MOBILE_BACK_* / MOBILE_CHROME_*
+        const mobileChrome = {
+            marginX: 24,
+            y: 8,
+            backSize: 48,
+            homeW: 100,
+            homeH: 40,
+            homeY: 12,
+            fontSize: 16
         };
-        const mobileBack = { x: 54, y: 24, w: 72, h: 46 };
-        const mobileAction = { x: 190, y: 640, w: 900, h: 54 };
-        const spellingPlay = { x: 390, y: 536, w: 220, h: 74 };
-        const spellingNight = { x: 670, y: 536, w: 220, h: 74 };
+        const mobileBack = {
+            x: mobileChrome.marginX,
+            y: mobileChrome.y,
+            w: mobileChrome.backSize,
+            h: mobileChrome.backSize
+        };
+
+        function mobileSiteRect() {
+            const virtualScreen = activeVirtualScreen();
+            return {
+                x: virtualScreen.w - mobileChrome.marginX - mobileChrome.homeW,
+                y: mobileChrome.homeY,
+                w: mobileChrome.homeW,
+                h: mobileChrome.homeH
+            };
+        }
+
+        function syncSiteExitLabel() {
+            siteExit.textContent = isMobileShell() ? 'HOME' : 'Back to Home';
+            siteExit.setAttribute('aria-label', 'Back to Home');
+        }
+
+        function syncMobileSiteExitChrome() {
+            if (!shell.classList.contains('active') || !isMobileShell()) {
+                siteExit.classList.remove('mobile-chrome');
+                siteExit.style.left = '';
+                siteExit.style.top = '';
+                siteExit.style.width = '';
+                siteExit.style.height = '';
+                siteExit.style.fontSize = '';
+                siteExit.style.borderRadius = '';
+                syncSiteExitLabel();
+                return;
+            }
+
+            siteExit.classList.add('mobile-chrome');
+            syncSiteExitLabel();
+
+            const rect = glcanvas.getBoundingClientRect();
+            const virtualScreen = activeVirtualScreen();
+            const mobileSite = mobileSiteRect();
+            const scaleX = rect.width / virtualScreen.w;
+            const scaleY = rect.height / virtualScreen.h;
+            siteExit.style.left = `${rect.left + mobileSite.x * scaleX}px`;
+            siteExit.style.top = `${rect.top + mobileSite.y * scaleY}px`;
+            siteExit.style.width = `${mobileSite.w * scaleX}px`;
+            siteExit.style.height = `${mobileSite.h * scaleY}px`;
+            siteExit.style.fontSize = `${mobileChrome.fontSize * scaleY}px`;
+            siteExit.style.borderRadius = `${(mobileSite.h / 2) * scaleY}px`;
+        }
+
+        const mobileTitleRows = {
+            x: 24,
+            y: 560,
+            w: 672,
+            h: 88,
+            gap: 12
+        };
+        const mobileAction = { x: 24, y: 1208, w: 672, h: 56 };
+        const spellingPlay = { x: 120, y: 980, w: 220, h: 74 };
+        const spellingNight = { x: 380, y: 980, w: 220, h: 74 };
 
         function resizeStars() {
             const scale = Math.min(window.devicePixelRatio || 1, 2);
@@ -732,6 +829,7 @@
         }
 
         function canvasPointToVirtual(clientX, clientY) {
+            const virtualScreen = activeVirtualScreen();
             const rect = glcanvas.getBoundingClientRect();
             return {
                 x: ((clientX - rect.left) / Math.max(rect.width, 1)) * virtualScreen.w,
@@ -768,34 +866,6 @@
                 return true;
             }
 
-            if (gameInputState === 'title-main' || gameInputState === 'title-mini') {
-                const row = titleRowAt(point);
-                if (row >= 0) {
-                    if (gameInputState === 'title-main') {
-                        if (row === 0) {
-                            sendEnter();
-                            gameInputState = 'game';
-                        } else if (row === 1) {
-                            sendLetter('p');
-                            gameInputState = 'title-mini';
-                        } else {
-                            sendLetter('l');
-                            gameInputState = 'spelling';
-                        }
-                    } else if (row === 0) {
-                        sendLetter('r');
-                        gameInputState = 'game';
-                    } else if (row === 1) {
-                        sendLetter('p');
-                        gameInputState = 'game';
-                    } else {
-                        sendLetter('n');
-                        gameInputState = 'game';
-                    }
-                    return true;
-                }
-            }
-
             if (gameInputState === 'spelling') {
                 if (contains(spellingPlay, point)) {
                     sendEnter();
@@ -828,7 +898,7 @@
             status.textContent = 'Preparing launch...';
             landing.style.display = 'none';
             shell.classList.add('active');
-            siteExit.textContent = window.innerWidth <= 700 ? 'Site' : 'Back to Site';
+            syncSiteExitLabel();
             siteExit.classList.add('visible');
             document.body.style.overflow = 'hidden';
             document.documentElement.style.overflow = 'hidden';
@@ -844,10 +914,12 @@
                         throw new Error('Macroquad loader did not initialize.');
                     }
                     registerStarCrusherPlatformBridge();
-                    window.load('star-crusher.wasm?v=1.5.14');
+                    window.load('star-crusher.wasm?v=1.5.8-chrome-' + Date.now());
                     syncGameCanvasSize();
+                    requestAnimationFrame(syncGameCanvasSize);
                     setTimeout(syncGameCanvasSize, 100);
                     setTimeout(syncGameCanvasSize, 500);
+                    setTimeout(syncGameCanvasSize, 1500);
                     if (game) {
                         const keyMap = { mathinv: 'm', mathpong: 'p', readsnake: 'r' };
                         const key = keyMap[game];
