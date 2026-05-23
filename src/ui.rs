@@ -265,13 +265,7 @@ pub fn draw_mobile_question_card(text: &str, banner_y: f32) -> f32 {
 }
 
 fn draw_mobile_corner_stat(left: &str, right: &str, y: f32) {
-    draw_text(
-        left,
-        82.0,
-        y,
-        16.0,
-        Color::new(0.62, 0.88, 1.0, 1.0),
-    );
+    draw_text(left, 82.0, y, 16.0, Color::new(0.62, 0.88, 1.0, 1.0));
     let tm = measure_text(right, None, 16, 1.0);
     draw_text(
         right,
@@ -284,29 +278,30 @@ fn draw_mobile_corner_stat(left: &str, right: &str, y: f32) {
 
 fn draw_mobile_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text: Option<&str>) {
     if let Some(qtext) = question_text {
-        let score_txt = format!("SCORE {}", score);
-        let tm = measure_text(&score_txt, None, 18, 1.0);
-        draw_text(
-            &score_txt,
-            CENTER_X - tm.w / 2.0,
-            34.0,
-            18.0,
-            Color::new(1.0, 0.82, 0.32, 1.0),
-        );
-
         let stats_y = draw_mobile_question_card(qtext, 44.0);
+        let pill_y = stats_y + 10.0;
 
-        draw_text(
-            &format!("{}  Wave {}", grade.display_name(), wave),
-            82.0,
-            stats_y + 18.0,
-            16.0,
+        draw_mobile_hud_pill(
+            150.0,
+            pill_y,
+            390.0,
+            &format!("Wave {}", wave),
             Color::new(0.62, 0.88, 1.0, 1.0),
         );
-
-        for i in 0..lives.min(5) {
-            assets::draw_life_icon(1098.0 - (i as f32) * 20.0, stats_y + 6.0);
-        }
+        draw_mobile_hud_pill(
+            568.0,
+            pill_y,
+            234.0,
+            &format!("Score {}", score),
+            Color::new(1.0, 0.82, 0.32, 1.0),
+        );
+        draw_mobile_hud_pill(
+            830.0,
+            pill_y,
+            300.0,
+            &format!("Lives {}", lives),
+            Color::new(0.74, 1.0, 0.72, 1.0),
+        );
     } else {
         let score_txt = format!("SCORE {}", score);
         let tm = measure_text(&score_txt, None, 18, 1.0);
@@ -325,6 +320,19 @@ fn draw_mobile_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_t
     }
 
     set_default_color();
+}
+
+fn draw_mobile_hud_pill(x: f32, y: f32, w: f32, text: &str, text_color: Color) {
+    draw_rounded_panel(
+        x,
+        y,
+        w,
+        34.0,
+        17.0,
+        Color::new(0.055, 0.075, 0.15, 0.9),
+        Color::new(0.35, 0.55, 0.88, 0.58),
+    );
+    centered_text_in(text, x, y + 24.0, w, 20, text_color);
 }
 
 /// Draws a semi-transparent banner with the current math question.

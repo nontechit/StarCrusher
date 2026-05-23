@@ -11,11 +11,13 @@ use crate::ui;
 
 const PADDLE_Y: f32 = 616.0;
 const TARGET_Y: f32 = 116.0;
-const MOBILE_TARGET_Y: f32 = 200.0;
+const MOBILE_TARGET_Y: f32 = 214.0;
 const MOBILE_PADDLE_TOUCH_MIN_Y: f32 = 260.0;
 const MOBILE_PADDLE_TOUCH_MAX_Y: f32 = 610.0;
 const TARGET_W: f32 = 76.0;
 const TARGET_H: f32 = 42.0;
+const MOBILE_TARGET_W: f32 = 118.0;
+const MOBILE_TARGET_H: f32 = 40.0;
 const BALL_RADIUS: f32 = 8.0;
 const QUESTIONS_PER_GRADE: u8 = 5;
 
@@ -264,15 +266,14 @@ impl MathPong {
         let mut answers = build_answer_choices(&self.question, 5);
         random::shuffle(&mut answers);
         let count = answers.len();
-        let spacing = 28.0;
-        let total_w = count as f32 * TARGET_W + count.saturating_sub(1) as f32 * spacing;
+        let mobile = portrait_layout();
+        let target_w = if mobile { MOBILE_TARGET_W } else { TARGET_W };
+        let target_h = if mobile { MOBILE_TARGET_H } else { TARGET_H };
+        let spacing = if mobile { 30.0 } else { 28.0 };
+        let total_w = count as f32 * target_w + count.saturating_sub(1) as f32 * spacing;
         let start_x = SCREEN_W / 2.0 - total_w / 2.0;
 
-        let target_y = if portrait_layout() {
-            MOBILE_TARGET_Y
-        } else {
-            TARGET_Y
-        };
+        let target_y = if mobile { MOBILE_TARGET_Y } else { TARGET_Y };
 
         self.targets = answers
             .into_iter()
@@ -280,10 +281,10 @@ impl MathPong {
             .enumerate()
             .map(|(idx, value)| Target {
                 rect: Rect::new(
-                    start_x + idx as f32 * (TARGET_W + spacing),
+                    start_x + idx as f32 * (target_w + spacing),
                     target_y,
-                    TARGET_W,
-                    TARGET_H,
+                    target_w,
+                    target_h,
                 ),
                 value,
                 correct: value == self.question.correct_answer,
@@ -335,26 +336,32 @@ impl MathPong {
     }
 
     fn draw_mobile_header(&self) {
-        let progress = format!(
-            "{}  Question {}/{}",
-            self.grade.display_name(),
-            self.questions_cleared + 1,
-            QUESTIONS_PER_GRADE
-        );
-        draw_mobile_corner_stat(&progress, &format!("Lives {}", self.lives), 34.0);
+        centered_text("MATH ORBIT", 42.0, 36, Color::new(0.92, 0.98, 1.0, 1.0));
 
-        ui::draw_mobile_question_card(&self.question.text, 44.0);
-
-        centered_text(
-            "Math Pong",
-            130.0,
-            28,
-            Color::new(0.92, 0.98, 1.0, 1.0),
+        let card_bottom = ui::draw_mobile_question_card(&self.question.text, 58.0);
+        let stat_y = card_bottom + 12.0;
+        draw_mobile_stat_pill(
+            164.0,
+            stat_y,
+            392.0,
+            &format!("Q {}/{}", self.questions_cleared + 1, QUESTIONS_PER_GRADE),
+            Color::new(0.12, 0.19, 0.32, 0.92),
+            Color::new(0.62, 0.88, 1.0, 1.0),
         );
-        centered_text(
+        draw_mobile_stat_pill(
+            584.0,
+            stat_y,
+            236.0,
+            &format!("Lives {}", self.lives),
+            Color::new(0.10, 0.22, 0.19, 0.92),
+            Color::new(0.72, 1.0, 0.78, 1.0),
+        );
+        draw_mobile_stat_pill(
+            848.0,
+            stat_y,
+            268.0,
             &format!("Score {}", self.score),
-            162.0,
-            22,
+            Color::new(0.26, 0.18, 0.10, 0.92),
             Color::new(1.0, 0.82, 0.34, 1.0),
         );
     }
@@ -366,6 +373,15 @@ impl MathPong {
             } else {
                 Color::new(0.2, 0.5, 0.95, 1.0)
             };
+            if portrait_layout() {
+                draw_rectangle(
+                    target.rect.x - 5.0,
+                    target.rect.y - 4.0,
+                    target.rect.w + 10.0,
+                    target.rect.h + 8.0,
+                    Color::new(0.05, 0.08, 0.18, 0.74),
+                );
+            }
             draw_rectangle(
                 target.rect.x,
                 target.rect.y,
@@ -383,7 +399,15 @@ impl MathPong {
             );
 
             let text = target.value.to_string();
-            let target_text_size = screen::mobile_text_size(28);
+            let target_text_size = if portrait_layout() {
+                if text.len() > 2 {
+                    28
+                } else {
+                    32
+                }
+            } else {
+                screen::mobile_text_size(28)
+            };
             let metrics = measure_text(&text, None, target_text_size, 1.0);
             draw_text(
                 &text,
@@ -483,17 +507,12 @@ impl MathPong {
     }
 
     fn draw_mobile_footer(&self) {
+        centered_text(self.message, 524.0, 22, Color::new(0.94, 0.98, 1.0, 1.0));
         centered_text(
-            self.message,
-            560.0,
+            "Drag paddle. Tap START to launch.",
+            556.0,
             18,
-            Color::new(0.94, 0.98, 1.0, 1.0),
-        );
-        centered_text(
-            "Drag the paddle, then tap START.",
-            588.0,
-            15,
-            Color::new(0.68, 0.78, 0.9, 1.0),
+            Color::new(0.72, 0.84, 1.0, 1.0),
         );
 
         if !self.ball_launched {
@@ -506,21 +525,17 @@ fn portrait_layout() -> bool {
     screen::portrait_layout()
 }
 
-fn draw_mobile_corner_stat(left: &str, right: &str, y: f32) {
+fn draw_mobile_stat_pill(x: f32, y: f32, w: f32, text: &str, fill: Color, text_color: Color) {
+    draw_rectangle(x, y, w, 36.0, fill);
+    draw_rectangle_lines(x, y, w, 36.0, 2.0, Color::new(0.45, 0.64, 0.96, 0.55));
+    let font_size = 22;
+    let tm = measure_text(text, None, font_size, 1.0);
     draw_text(
-        left,
-        82.0,
-        y,
-        16.0,
-        Color::new(0.62, 0.88, 1.0, 1.0),
-    );
-    let tm = measure_text(right, None, 16, 1.0);
-    draw_text(
-        right,
-        SCREEN_W - tm.width - 82.0,
-        y,
-        16.0,
-        Color::new(0.74, 1.0, 0.72, 1.0),
+        text,
+        x + w / 2.0 - tm.width / 2.0,
+        y + 26.0,
+        font_size as f32,
+        text_color,
     );
 }
 

@@ -8,6 +8,9 @@ use macroquad::prelude::*;
 const ENEMY_MIN_Y: f32 = 132.0;
 const ENEMY_MAX_Y: f32 = 410.0;
 const ENEMY_PLAYER_ZONE_Y: f32 = 530.0;
+const MOBILE_ENEMY_MIN_Y: f32 = 170.0;
+const MOBILE_ENEMY_MAX_Y: f32 = 438.0;
+const MOBILE_ENEMY_PLAYER_ZONE_Y: f32 = 552.0;
 
 /// Type of enemy: standard invader or puzzle type showing an answer.
 #[derive(Debug, Clone)]
@@ -118,12 +121,13 @@ impl EnemyGrid {
         active_question: Option<&Question>,
     ) -> Self {
         let target_count = config.rows * config.cols;
+        let min_y = enemy_min_y();
 
         let mut enemies = Vec::new();
         for index in 0..target_count {
             let band = index % 4;
             let x = random::f32_range(40.0, screen_w - 84.0);
-            let y = ENEMY_MIN_Y + band as f32 * 70.0 + random::f32_range(0.0, 32.0);
+            let y = min_y + band as f32 * 70.0 + random::f32_range(0.0, 32.0);
             let direction = if random::bool(0.5) { 1.0 } else { -1.0 };
             let velocity_x = direction * random::f32_range(0.45, 1.15);
             let velocity_y = random::f32_range(-0.18, 0.18);
@@ -179,6 +183,9 @@ impl EnemyGrid {
     /// Updates enemy positions each frame. Returns true if any enemy reached the player zone.
     pub fn update(&mut self) -> bool {
         let effective_speed = self.base_speed * self.speed_mult.max(0.5);
+        let min_y = enemy_min_y();
+        let max_y = enemy_max_y();
+        let player_zone_y = enemy_player_zone_y();
 
         for e in &mut self.enemies {
             if !e.alive {
@@ -194,12 +201,12 @@ impl EnemyGrid {
                 e.x = self.screen_w;
             }
 
-            if e.y < ENEMY_MIN_Y || e.y > ENEMY_MAX_Y {
+            if e.y < min_y || e.y > max_y {
                 e.velocity_y *= -1.0;
-                e.y = e.y.clamp(ENEMY_MIN_Y, ENEMY_MAX_Y);
+                e.y = e.y.clamp(min_y, max_y);
             }
 
-            if e.y + e.height > ENEMY_PLAYER_ZONE_Y {
+            if e.y + e.height > player_zone_y {
                 return true;
             }
         }
@@ -294,6 +301,30 @@ impl EnemyGrid {
         result.sort_by(|a, b| b.1.y.partial_cmp(&a.1.y).unwrap());
         result.truncate(5); // Limit to 5 potential shooters
         result
+    }
+}
+
+fn enemy_min_y() -> f32 {
+    if screen::portrait_layout() {
+        MOBILE_ENEMY_MIN_Y
+    } else {
+        ENEMY_MIN_Y
+    }
+}
+
+fn enemy_max_y() -> f32 {
+    if screen::portrait_layout() {
+        MOBILE_ENEMY_MAX_Y
+    } else {
+        ENEMY_MAX_Y
+    }
+}
+
+fn enemy_player_zone_y() -> f32 {
+    if screen::portrait_layout() {
+        MOBILE_ENEMY_PLAYER_ZONE_Y
+    } else {
+        ENEMY_PLAYER_ZONE_Y
     }
 }
 
