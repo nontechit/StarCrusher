@@ -621,6 +621,54 @@
             sendGameKey(digit, `Digit${digit}`);
         }
 
+        const BOOHW_STARCRUSHER_EVENT_VERSION = 1;
+
+        /**
+         * Shell handoff entry point. Parses the serialized PlatformEventPayload JSON
+         * from wasm and forwards it to the platform-hosted parent (no fetch here).
+         */
+        function boohwStarCrusherForwardEvent(jsonString) {
+            let payload;
+            try {
+                payload = JSON.parse(jsonString);
+            } catch (error) {
+                console.error('StarCrusher event JSON parse failed', error);
+                return;
+            }
+
+            const message = {
+                type: 'boohw.starcrusher.event',
+                version: BOOHW_STARCRUSHER_EVENT_VERSION,
+                payload
+            };
+
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage(message, '*');
+                return;
+            }
+
+            console.debug('StarCrusher event (no parent shell):', message);
+            window.dispatchEvent(new CustomEvent('boohw:starcrusher:event', { detail: message }));
+        }
+
+        function registerStarCrusherPlatformBridge() {
+            if (typeof miniquad_add_plugin !== 'function') {
+                return;
+            }
+
+            miniquad_add_plugin({
+                name: 'boohw_starcrusher',
+                version: 1,
+                register_plugin(importObject) {
+                    importObject.env.boohw_starcrusher_emit_event = function (ptr, len) {
+                        boohwStarCrusherForwardEvent(UTF8ToString(ptr, len));
+                    };
+                }
+            });
+        }
+
+        window.boohwStarCrusherForwardEvent = boohwStarCrusherForwardEvent;
+
         function contains(rect, point) {
             return point.x >= rect.x
                 && point.x <= rect.x + rect.w
@@ -771,6 +819,7 @@
                     if (typeof window.load !== 'function') {
                         throw new Error('Macroquad loader did not initialize.');
                     }
+                    registerStarCrusherPlatformBridge();
                     window.load('star-crusher.wasm?v=20260523-159');
                     if (game) {
                         const keyMap = { mathinv: 'm', mathpong: 'p', readsnake: 'r' };

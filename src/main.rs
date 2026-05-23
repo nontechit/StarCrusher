@@ -2,6 +2,7 @@ mod assets;
 mod enemy;
 mod levels;
 mod math_pong;
+mod platform;
 mod player;
 mod question;
 mod random;
@@ -13,6 +14,9 @@ use enemy::{EnemyGrid, Explosion};
 use levels::Grade;
 use macroquad::prelude::*;
 use math_pong::{MathPong, MathPongAction};
+use platform::{
+    ActivePlatformBridge, GameEvent, GameOverReason, LifeLossReason, PlatformBridge,
+};
 use player::{Bullet, EnemyBullet, Player};
 use question::{generate_question, Question};
 use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
@@ -114,6 +118,7 @@ struct Game {
     intro_page: usize,
     adventure_active: bool,
     adventure_step: AdventureStep,
+    platform: ActivePlatformBridge,
 }
 
 impl Game {
@@ -147,6 +152,7 @@ impl Game {
             intro_page: 0,
             adventure_active: false,
             adventure_step: AdventureStep::MathInvaders1,
+            platform: ActivePlatformBridge::default(),
         }
     }
 
@@ -340,6 +346,12 @@ impl Game {
         }
 
         if self.enemies.update() {
+            self.platform.emit(&GameEvent::GameOver {
+                grade: self.grade,
+                wave: self.wave,
+                score: self.score,
+                reason: GameOverReason::EnemiesReachedBottom,
+            });
             self.mode = GameMode::GameOver;
             return;
         }
@@ -350,7 +362,14 @@ impl Game {
         self.explosions.retain_mut(|explosion| !explosion.update());
 
         if self.enemies.is_cleared() {
-            self.score += 100 * (self.grade.index() as u32 + 1);
+            let points_awarded = 100 * (self.grade.index() as u32 + 1);
+            self.score += points_awarded;
+            self.platform.emit(&GameEvent::WaveCleared {
+                grade: self.grade,
+                wave: self.wave,
+                score: self.score,
+                points_awarded,
+            });
             if self.adventure_active {
                 match self.adventure_step {
                     AdventureStep::MathInvaders1 => {
@@ -389,6 +408,13 @@ impl Game {
     }
 
     fn complete_reading_snake(&mut self) {
+        let nightmare_mode =
+            self.adventure_active && self.adventure_step == AdventureStep::NightmareSnake;
+        self.platform.emit(&GameEvent::ReadingSnakeComplete {
+            adventure_active: self.adventure_active,
+            nightmare_mode,
+        });
+
         if !self.adventure_active {
             return;
         }
@@ -407,6 +433,10 @@ impl Game {
     }
 
     fn complete_math_pong(&mut self) {
+        self.platform.emit(&GameEvent::MathPongComplete {
+            adventure_active: self.adventure_active,
+        });
+
         if !self.adventure_active || self.adventure_step != AdventureStep::MathPong {
             return;
         }
@@ -444,13 +474,24 @@ impl Game {
 
                 if is_correct {
                     self.enemies.kill_enemy(enemy_idx);
-                    self.score += 10 + self.grade.index() as u32 * 5;
+                    let points_awarded = 10 + self.grade.index() as u32 * 5;
+                    self.score += points_awarded;
+                    self.platform.emit(&GameEvent::CorrectMathInvadersHit {
+                        grade: self.grade,
+                        score: self.score,
+                        points_awarded,
+                    });
                     if !self.enemies.is_cleared() {
                         self.active_question = generate_question(self.grade);
                         self.enemies.assign_answers(&self.active_question);
                     }
                 } else {
                     self.lives = self.lives.saturating_sub(1);
+                    self.platform.emit(&GameEvent::LifeLost {
+                        grade: self.grade,
+                        lives_remaining: self.lives,
+                        reason: LifeLossReason::WrongTarget,
+                    });
                 }
             } else {
                 next_bullets.push(bullet);
@@ -469,6 +510,11 @@ impl Game {
             if self.player.contains_point(bullet.x, bullet.y) {
                 self.explosions.push(Explosion::new(bullet.x, bullet.y));
                 self.lives = self.lives.saturating_sub(1);
+                self.platform.emit(&GameEvent::LifeLost {
+                    grade: self.grade,
+                    lives_remaining: self.lives,
+                    reason: LifeLossReason::EnemyHit,
+                });
             } else {
                 next_bullets.push(bullet);
             }
@@ -476,6 +522,12 @@ impl Game {
         self.enemy_bullets = next_bullets;
 
         if self.lives == 0 {
+            self.platform.emit(&GameEvent::GameOver {
+                grade: self.grade,
+                wave: self.wave,
+                score: self.score,
+                reason: GameOverReason::LivesExhausted,
+            });
             self.mode = GameMode::GameOver;
         }
     }
@@ -521,7 +573,16 @@ impl Game {
             if is_correct {
                 self.score += 50 * (self.grade.index() as u32 + 1);
                 self.gates_remaining = self.gates_remaining.saturating_sub(1);
+            }
 
+            self.platform.emit(&GameEvent::GateAnswer {
+                grade: self.grade,
+                correct: is_correct,
+                score: self.score,
+                gates_remaining: self.gates_remaining,
+            });
+
+            if is_correct {
                 if self.gates_remaining == 0 {
                     self.advance_grade_or_finish();
                 } else {
@@ -633,11 +694,21 @@ impl Game {
 
     fn advance_grade_or_finish(&mut self) {
         if let Some(next_grade) = self.grade.next() {
+            let from_grade = self.grade;
             self.grade = next_grade;
             self.wave += 1;
             self.spawn_wave();
             self.mode = GameMode::Playing;
+            self.platform.emit(&GameEvent::GradeAdvanced {
+                from_grade,
+                to_grade: next_grade,
+                wave: self.wave,
+                score: self.score,
+            });
         } else {
+            self.platform.emit(&GameEvent::FinalVictory {
+                score: self.score,
+            });
             self.mode = GameMode::Victory;
         }
     }
