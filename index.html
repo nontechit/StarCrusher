@@ -17,16 +17,15 @@
             --cyan: #3dd6d0;
             --pink: #ff5c8a;
             /* Shared mobile chrome — keep in sync with ui.rs MOBILE_BACK_* / MOBILE_CHROME_* */
-            --mobile-chrome-x: 54px;
+            --mobile-chrome-x: 24px;
             --mobile-chrome-y: 8px;
-            --mobile-back-size: 72px;
-            --mobile-back-y: 8px;
-            --mobile-home-w: 168px;
+            --mobile-back-size: 48px;
+            --mobile-home-w: 100px;
             --mobile-home-h: 40px;
             --mobile-home-y: 12px;
             --mobile-chrome-radius: 20px;
             --mobile-chrome-font-size: 16px;
-            --mobile-chrome-site-x: 1058px;
+            --mobile-chrome-site-x: 596px;
             --mobile-chrome-fill: rgba(56, 59, 77, 0.98);
             --mobile-chrome-border: rgba(255, 255, 255, 0.22);
             --mobile-chrome-text: rgba(250, 250, 255, 1);
@@ -795,7 +794,7 @@
             };
 
             if (window.parent && window.parent !== window) {
-                window.parent.postMessage(message, '*');
+                window.parent.postMessage(message, window.location.origin);
                 return;
             }
 
@@ -914,7 +913,7 @@
                         throw new Error('Macroquad loader did not initialize.');
                     }
                     registerStarCrusherPlatformBridge();
-                    window.load('star-crusher.wasm?v=1.5.8-chrome-' + Date.now());
+                    window.load('star-crusher.wasm?v=1.5.15-' + Date.now());
                     syncGameCanvasSize();
                     requestAnimationFrame(syncGameCanvasSize);
                     setTimeout(syncGameCanvasSize, 100);
