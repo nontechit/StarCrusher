@@ -1,6 +1,6 @@
 use crate::assets;
 use crate::levels::Grade;
-use crate::screen::{self, SCREEN_H, SCREEN_W};
+use crate::screen;
 use macroquad::prelude::*;
 
 fn center_x() -> f32 {
@@ -28,10 +28,14 @@ pub const GATE_QUESTION_LINE_GAP: f32 = 34.0;
 pub const MOBILE_GUTTER: f32 = 24.0;
 pub const MOBILE_CHROME_Y: f32 = 8.0;
 pub const MOBILE_CHROME_ROW_H: f32 = 80.0;
+pub const MOBILE_BACK_X: f32 = 24.0;
+pub const MOBILE_BACK_Y: f32 = 24.0;
+pub const MOBILE_BACK_W: f32 = 126.0;
+pub const MOBILE_BACK_H: f32 = 52.0;
 pub const MOBILE_ACTION_X: f32 = 24.0;
-pub const MOBILE_ACTION_Y: f32 = 1208.0;
+pub const MOBILE_ACTION_Y: f32 = 1040.0;
 pub const MOBILE_ACTION_W: f32 = 672.0;
-pub const MOBILE_ACTION_H: f32 = 56.0;
+pub const MOBILE_ACTION_H: f32 = 136.0;
 pub const SPELLING_PLAY_X: f32 = 390.0;
 pub const SPELLING_NIGHTMARE_X: f32 = 670.0;
 pub const SPELLING_ACTION_Y: f32 = 536.0;
@@ -129,8 +133,11 @@ fn hsl_to_rgb(h: f32, s: f32, l: f32) -> Color {
 }
 
 pub fn mobile_back_button_contains(point: Vec2) -> bool {
-    let _ = point;
-    false
+    screen::portrait_layout()
+        && point.x >= MOBILE_BACK_X
+        && point.x <= MOBILE_BACK_X + MOBILE_BACK_W
+        && point.y >= MOBILE_BACK_Y
+        && point.y <= MOBILE_BACK_Y + MOBILE_BACK_H
 }
 
 pub fn mobile_action_button_contains(point: Vec2) -> bool {
@@ -212,7 +219,27 @@ pub fn gate_question_line_gap() -> f32 {
 }
 
 pub fn draw_mobile_back_button(label: &str) {
-    let _ = label;
+    if !screen::portrait_layout() {
+        return;
+    }
+
+    draw_rounded_panel(
+        MOBILE_BACK_X,
+        MOBILE_BACK_Y,
+        MOBILE_BACK_W,
+        MOBILE_BACK_H,
+        16.0,
+        Color::new(0.035, 0.07, 0.13, 0.94),
+        Color::new(0.42, 0.78, 1.0, 0.72),
+    );
+    centered_text_in(
+        label,
+        MOBILE_BACK_X,
+        MOBILE_BACK_Y + MOBILE_BACK_H * 0.68,
+        MOBILE_BACK_W,
+        screen::mobile_text_size(18),
+        Color::new(0.86, 0.96, 1.0, 1.0),
+    );
 }
 
 pub fn draw_mobile_action_button(label: &str) {
@@ -225,13 +252,22 @@ pub fn draw_mobile_action_button(label: &str) {
         MOBILE_ACTION_Y,
         MOBILE_ACTION_W,
         MOBILE_ACTION_H,
-        27.0,
-        Color::new(0.22, 0.48, 0.92, 0.98),
+        18.0,
+        Color::new(1.0, 0.82, 0.34, 0.98),
+    );
+    draw_rounded_rect(
+        MOBILE_ACTION_X + 3.0,
+        MOBILE_ACTION_Y + 3.0,
+        MOBILE_ACTION_W - 6.0,
+        MOBILE_ACTION_H - 6.0,
+        15.0,
+        Color::new(1.0, 0.78, 0.26, 0.98),
     );
 
+    let desired_size = if MOBILE_ACTION_H >= 100.0 { 40 } else { 28 };
     let font_size = fit_mobile_font_size(
         label,
-        screen::mobile_text_size(28)
+        screen::mobile_text_size(desired_size)
             .min((MOBILE_ACTION_H * 0.52) as u16)
             .max(20),
         MOBILE_ACTION_W - 48.0,
@@ -242,7 +278,7 @@ pub fn draw_mobile_action_button(label: &str) {
         MOBILE_ACTION_Y + MOBILE_ACTION_H * 0.68,
         MOBILE_ACTION_W,
         font_size,
-        Color::new(0.9, 1.0, 1.0, 1.0),
+        Color::new(0.035, 0.06, 0.1, 1.0),
     );
 }
 
@@ -366,12 +402,13 @@ fn draw_mobile_corner_stat(left: &str, right: &str, y: f32) {
 fn draw_mobile_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text: Option<&str>) {
     let chrome_clearance = 28.0;
     if let Some(qtext) = question_text {
-        let stats_y = draw_mobile_question_card(qtext, chrome_clearance);
-        let pill_y = stats_y + 16.0;
+        draw_mobile_question_card(qtext, chrome_clearance);
         let stat_font = screen::mobile_text_size(24);
         let pill_h = stat_font as f32 + 22.0;
+        let pill_y = screen::screen_h() - pill_h - 24.0;
         let gap = 12.0;
         let pill_w = (mobile_safe_w() - gap * 2.0) / 3.0;
+        let pill_text = Color::new(0.74, 0.9, 1.0, 1.0);
 
         draw_mobile_hud_pill(
             mobile_safe_x(),
@@ -379,7 +416,7 @@ fn draw_mobile_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_t
             pill_w,
             &format!("Wave {}", wave),
             pill_h,
-            Color::new(0.62, 0.88, 1.0, 1.0),
+            pill_text,
         );
         draw_mobile_hud_pill(
             mobile_safe_x() + pill_w + gap,
@@ -387,7 +424,7 @@ fn draw_mobile_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_t
             pill_w,
             &format!("Score {}", score),
             pill_h,
-            Color::new(1.0, 0.82, 0.32, 1.0),
+            pill_text,
         );
         draw_mobile_hud_pill(
             mobile_safe_x() + (pill_w + gap) * 2.0,
@@ -395,7 +432,7 @@ fn draw_mobile_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_t
             pill_w,
             &format!("Lives {}", lives),
             pill_h,
-            Color::new(0.74, 1.0, 0.72, 1.0),
+            pill_text,
         );
     } else {
         let score_font = screen::mobile_text_size(18);
@@ -547,13 +584,7 @@ fn draw_mobile_title_screen(showing_mini_games: bool, selected_index: usize) {
         24.0, 220.0, 672.0, 130.0, panel, panel_edge, moon, amber, cyan, rose,
     );
 
-    centered_text("STAR CRUSHER", 68.0, screen::mobile_text_size(40), moon);
-    centered_text(
-        "PLANET DUNGEON CREW",
-        136.0,
-        screen::mobile_text_size(20),
-        cyan,
-    );
+    centered_text("STAR CRUSHER", 120.0, screen::mobile_text_size(48), moon);
 
     draw_mobile_adventure_menu(
         showing_mini_games,
@@ -1167,35 +1198,38 @@ fn draw_mobile_adventure_intro(page: usize) {
 
 /// Draws the weekly spelling-list entry screen for Reading Snake.
 pub fn draw_spelling_list_screen(input: &str) {
-    for i in 0..80 {
-        let x = ((17 + i * 11) % SCREEN_W as i32) as f32;
-        let y = ((31 + i * 19) % (SCREEN_H as i32 - 40)) as f32;
-        assets::draw_star(x, y, (i % 3) as f32 * 0.4 + 0.5);
-    }
+    clear_background(Color::new(0.01, 0.015, 0.04, 1.0));
+    draw_star_map_background();
+
+    let panel = Color::new(0.035, 0.07, 0.13, 0.96);
+    let panel_edge = Color::new(0.42, 0.78, 1.0, 0.82);
+    let moon = Color::new(0.9, 0.96, 0.98, 1.0);
+    let amber = Color::new(1.0, 0.76, 0.25, 1.0);
+    let cyan = Color::new(0.32, 0.9, 1.0, 1.0);
 
     centered_text(
-        "WEEKLY SPELLING LIST",
+        "WORD CARGO",
         100.0,
         screen::mobile_text_size(36),
-        Color::new(0.4, 1.0, 0.65, 1.0),
+        moon,
     );
     centered_text(
         "Type word: definition pairs separated by semicolons.",
         148.0,
         screen::mobile_text_size(22),
-        WHITE,
+        cyan,
     );
     centered_text(
         "Plain word lists still work too.",
         176.0,
         screen::mobile_text_size(20),
-        GRAY,
+        Color::new(0.62, 0.86, 1.0, 1.0),
     );
     centered_text(
         "ENTER plays Reading Snake   N starts Nightmare",
         218.0,
         screen::mobile_text_size(22),
-        WHITE,
+        moon,
     );
 
     let input_w = if screen::portrait_layout() {
@@ -1207,10 +1241,7 @@ pub fn draw_spelling_list_screen(input: &str) {
     let input_x = center_x() - input_w / 2.0;
     let input_y = 278.0;
 
-    set_color(Color::new(0.05, 0.12, 0.08, 0.95));
-    draw_rectangle(input_x, input_y, input_w, input_h);
-    set_color(Color::new(0.25, 0.75, 0.4, 1.0));
-    draw_rectangle_lines(input_x, input_y, input_w, input_h);
+    draw_rounded_panel(input_x, input_y, input_w, input_h, 18.0, panel, panel_edge);
 
     let shown_input = if input.is_empty() {
         "apple: a fruit; moon: shines at night"
@@ -1218,9 +1249,9 @@ pub fn draw_spelling_list_screen(input: &str) {
         input
     };
     let color = if input.is_empty() {
-        Color::new(0.58, 0.68, 0.62, 1.0)
+        Color::new(0.62, 0.72, 0.78, 1.0)
     } else {
-        WHITE
+        moon
     };
     draw_wrapped_text(
         shown_input,
@@ -1236,7 +1267,7 @@ pub fn draw_spelling_list_screen(input: &str) {
     } else {
         0.0
     };
-    set_color(Color::new(0.3, 1.0, 0.5, blink));
+    set_color(Color::new(1.0, 0.82, 0.34, blink));
     if input.is_empty() {
         draw_rectangle(input_x + 26.0, input_y + 78.0, 16.0, 3.0);
     }
@@ -1245,39 +1276,48 @@ pub fn draw_spelling_list_screen(input: &str) {
         "Leave it blank to use the default words.",
         456.0,
         18,
-        YELLOW,
+        amber,
     );
-    centered_text("Backspace deletes   ESC returns to title", 504.0, 18, GRAY);
+    centered_text(
+        "Backspace deletes   ESC returns to title",
+        504.0,
+        18,
+        Color::new(0.62, 0.86, 1.0, 1.0),
+    );
     draw_spelling_action_button(
         spelling_play_button_rect(),
         "PLAY",
-        Color::new(0.25, 0.75, 0.4, 1.0),
+        amber,
     );
     draw_spelling_action_button(
         spelling_nightmare_button_rect(),
         "NIGHT",
-        Color::new(0.55, 0.35, 0.95, 1.0),
+        Color::new(1.0, 0.4, 0.68, 1.0),
     );
     set_default_color();
 }
 
 fn draw_spelling_action_button(rect: Rect, label: &str, color: Color) {
-    set_color(Color::new(
-        color.r * 0.35,
-        color.g * 0.35,
-        color.b * 0.35,
-        0.9,
-    ));
-    draw_rectangle(rect.x, rect.y, rect.w, rect.h);
-    set_color(color);
-    draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h);
+    draw_rounded_panel(
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+        18.0,
+        Color::new(color.r, color.g, color.b, 0.26),
+        color,
+    );
     centered_text_in(
         label,
         rect.x,
         rect.y + 48.0,
         rect.w,
         screen::mobile_text_size(16),
-        WHITE,
+        if label == "PLAY" {
+            Color::new(0.035, 0.06, 0.1, 1.0)
+        } else {
+            WHITE
+        },
     );
 }
 

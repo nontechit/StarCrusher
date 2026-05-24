@@ -3,7 +3,7 @@ use crate::screen;
 use macroquad::prelude::*;
 
 const PLAYER_Y: f32 = 680.0;
-const MOBILE_PLAYER_Y: f32 = 1142.0;
+const MOBILE_PLAYER_Y: f32 = 1086.0;
 const MOBILE_PLAYER_SCALE_MULT: f32 = 3.0;
 
 /// Player ship position and state.

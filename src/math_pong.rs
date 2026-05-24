@@ -370,26 +370,29 @@ impl MathPong {
         );
 
         let layout = mobile_hud_layout();
+        let gap = 12.0;
+        let chip_w = (screen::screen_w() - 48.0 - gap * 2.0) / 3.0;
+        let chip_x = 24.0;
         draw_mobile_stat_pill(
-            164.0,
+            chip_x,
             layout.stat_y,
-            392.0,
+            chip_w,
             &format!("Q {}/{}", self.questions_cleared + 1, QUESTIONS_PER_GRADE),
             Color::new(0.12, 0.19, 0.32, 0.92),
             Color::new(0.62, 0.88, 1.0, 1.0),
         );
         draw_mobile_stat_pill(
-            584.0,
+            chip_x + chip_w + gap,
             layout.stat_y,
-            236.0,
+            chip_w,
             &format!("Lives {}", self.lives),
             Color::new(0.10, 0.22, 0.19, 0.92),
             Color::new(0.72, 1.0, 0.78, 1.0),
         );
         draw_mobile_stat_pill(
-            848.0,
+            chip_x + (chip_w + gap) * 2.0,
             layout.stat_y,
-            268.0,
+            chip_w,
             &format!("Score {}", self.score),
             Color::new(0.26, 0.18, 0.10, 0.92),
             Color::new(1.0, 0.82, 0.34, 1.0),

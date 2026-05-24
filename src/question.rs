@@ -57,20 +57,11 @@ fn math_pong_count_range(grade: Grade) -> (i32, i32) {
 /// Preschool: Count objects (1-5). Simple visual counting.
 fn gen_preschool() -> Question {
     let count = random::i32_inclusive(1, 5);
-    let shapes = ["star", "circle", "square", "heart"];
+    let shapes = ["stars", "circles", "rectangles", "hearts", "squares"];
     let shape = shapes[random::usize_exclusive(shapes.len())];
 
-    // Macroquad's default font does not include shape glyphs, so use ASCII markers.
-    let symbols = match shape {
-        "star" => "* ",
-        "circle" => "o ",
-        "square" => "[] ",
-        _ => "<3 ",
-    };
-    let display = (0..count).map(|_| symbols).collect::<String>();
-
     Question {
-        text: format!("How many {}?\n{}", shape, display),
+        text: format!("How many {}?", shape),
         correct_answer: count as i64,
         wrong_answers: gen_unique_wrongs(count as i64, 1, 5, 3),
     }

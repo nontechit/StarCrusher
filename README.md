@@ -2,10 +2,16 @@
 
 Star Crusher is an educational arcade collection about two young space travelers flying between dungeon planets. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.5.15`
+Current build: `1.6.0`
 
 ## Latest Mobile Release
 
+- **Version 1.6.0 UI pass:** Unified the Star Crusher arcade aesthetic across the title flow, Launch Voyage intro, Math Invaders, Math Orbit, Reading Planet, Night Planet, and Word Cargo.
+- **Math Invaders shape-count enemies:** Preschool count prompts now ask clean `How many ...?` questions while the requested objects appear as the enemy wave; the player shoots the correctly numbered shape target.
+- **All-grade Math Invaders targets:** Numbered targets across Preschool through 5th Grade use the larger target footprint and the same yellow answer-number color as the question card.
+- **Math Invaders mobile spacing:** Active gameplay hides the old title chip, moves stat pills below the ship, opens the playfield, and keeps the player separated from the footer HUD.
+- **Reading/Night mobile layout:** Score, lives, and next-letter pills sit below the word card; definition and board areas expand into the reclaimed vertical space.
+- **Screenshot review workflow:** Added a before/after comparison helper so mobile audit changes can be reviewed visually before public release.
 - **Portrait-native canvas (720×1280):** Mobile uses a dedicated portrait virtual screen that fills the phone viewport with uniform scaling—no letterboxing or vertical font stretch.
 - **Split mobile shell:** Active portrait gameplay hides the desktop/site exit chrome, removing the old in-canvas `X` and mobile `HOME` controls from the phone play surface.
 - **iPhone UI polish:** Larger title rows, bigger helper copy, portrait question cards, adventure intro copy, gate prompts, game-over panels, and Reading Snake HUD/footer text fit inside their panels without clipping.
@@ -38,7 +44,7 @@ Current build: `1.5.15`
 - Math Invaders waves with Time Pilot-style drifting numbered targets tied to the active math question.
 - Math Invaders shows the active question in a top-centered banner on portrait mobile, with wave, score, and lives in readable stat pills.
 - Math Invaders scales the player ship and numbered targets on portrait mobile for clearer phone play.
-- Preschool shape prompts use default-font-safe ASCII markers so shapes display reliably.
+- Preschool shape prompts spawn visual shape targets in Math Invaders while keeping the question card clean.
 - Kindergarten number-recognition prompts use words, such as `Shoot number three`, while targets remain numeric.
 - Question gates between waves that require typed answers to advance.
 - Question gate prompts and answer input are spaced to avoid overlapping the wave-complete instructions.
@@ -352,7 +358,8 @@ Reading Snake Nightmare:
 - Local iPhone screenshots in `pictures/` are ignored and should stay out of commits.
 - The game uses `macroquad` for windowing, input, and drawing, and `rand` for question/enemy randomization.
 - CI runs `cargo audit` before each Pages deploy. Local check: `cargo audit --ignore RUSTSEC-2025-0035`.
-- Full iPhone screenshot audit for this mobile UI pass: `target/iphonescreenshots/5_24_2026_0_27` (32/32 scripted states reviewed; no glaring UI blockers found).
+- Full iPhone screenshot audit for this mobile UI pass: `target/iphonescreenshots/5_24_2026_18_33` (scripted states reviewed after the 1.6.0 mobile UI pass).
+- Before/after screenshot comparisons can be generated with `scripts/compare-audit-screenshots.ps1`; see `docs/screenshot-change-review.md`.
 - The static web shell uses a restrictive Content Security Policy in `index.html`; `wasm-unsafe-eval` and inline script/style allowances are required for the Macroquad WASM loader.
 - Custom spelling input is capped at 64 words, 12 characters per word, and 180 characters per definition.
 
@@ -422,7 +429,7 @@ This repository is intended for public GitHub Pages deployment. Before publishin
 - **Local capture hygiene:** Keep manual phone screenshots and audit captures in ignored folders such as `pictures/` or `target/`; review `git status --short` before pushing.
 - **Content Security Policy:** `index.html` restricts scripts/styles to `'self'` with `wasm-unsafe-eval` required for WebAssembly.
 - **postMessage:** Platform events forwarded to a parent frame use `window.location.origin` (not `*`).
-- **Dependencies:** CI runs `cargo audit --ignore RUSTSEC-2025-0035` on push to `main` (see `.github/workflows/pages.yml`). Local audit on 2026-05-24 completed with the existing allowed Macroquad warning and no unallowed vulnerability failure.
+- **Dependencies:** CI runs `cargo audit --ignore RUSTSEC-2025-0035` on push to `main` (see `.github/workflows/pages.yml`). Local audit on 2026-05-24 passed with that documented Macroquad exception ignored.
 - **Static site:** The game runs client-side only; no server-side user data collection in this repo.
 
 Then open `index.html` in a browser through a local server because WASM module loading is restricted from direct file URLs:

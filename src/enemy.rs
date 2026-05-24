@@ -9,9 +9,9 @@ const ENEMY_MIN_Y: f32 = 132.0;
 const ENEMY_MAX_Y: f32 = 410.0;
 const ENEMY_PLAYER_ZONE_Y: f32 = 530.0;
 const ENEMY_KILL_DROP: f32 = 14.0;
-const MOBILE_ENEMY_MIN_Y: f32 = 412.0;
-const MOBILE_ENEMY_MAX_Y: f32 = 680.0;
-const MOBILE_ENEMY_PLAYER_ZONE_Y: f32 = 1062.0;
+const MOBILE_ENEMY_MIN_Y: f32 = 382.0;
+const MOBILE_ENEMY_MAX_Y: f32 = 650.0;
+const MOBILE_ENEMY_PLAYER_ZONE_Y: f32 = 1006.0;
 const MOBILE_ENEMY_KILL_DROP: f32 = 34.0;
 
 /// Type of enemy: standard invader or puzzle type showing an answer.
@@ -19,6 +19,19 @@ const MOBILE_ENEMY_KILL_DROP: f32 = 34.0;
 pub enum EnemyType {
     Standard,
     Puzzle(i64), // Shows this number as the answer option
+    ShapePuzzle {
+        shape: CountShape,
+        number: i64,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CountShape {
+    Circle,
+    Heart,
+    Rectangle,
+    Square,
+    Star,
 }
 
 /// A single enemy in the grid.
@@ -37,12 +50,11 @@ pub struct Enemy {
 impl Enemy {
     /// Creates a new enemy at the given grid position.
     fn new(x: f32, y: f32, velocity_x: f32, velocity_y: f32) -> Self {
-        let w = 44.0;
         Enemy {
             x,
             y,
-            width: w,
-            height: 34.0,
+            width: 58.0,
+            height: 50.0,
             velocity_x,
             velocity_y,
             alive: true,
@@ -74,6 +86,9 @@ impl Enemy {
             }
             EnemyType::Puzzle(num) => {
                 assets::draw_puzzle_enemy(self.x, self.y, grade_color, scale, *num);
+            }
+            EnemyType::ShapePuzzle { shape, number } => {
+                assets::draw_shape_puzzle_enemy(self.x, self.y, grade_color, scale, *shape, *number);
             }
         }
     }
@@ -122,7 +137,7 @@ impl EnemyGrid {
         screen_w: f32,
         active_question: Option<&Question>,
     ) -> Self {
-        let target_count = config.rows * config.cols;
+        let target_count = target_count_for_question(config, active_question);
         let min_y = enemy_min_y();
 
         let mut enemies = Vec::new();
@@ -154,6 +169,11 @@ impl EnemyGrid {
 
     /// Assigns answer numbers to every alive enemy, with exactly one correct target.
     pub fn assign_answers(&mut self, question: &Question) {
+        if let Some((shape, count)) = count_shape_from_question(question) {
+            self.assign_shape_answers(question, shape, count);
+            return;
+        }
+
         let alive_indices: Vec<usize> = self
             .enemies
             .iter()
@@ -178,7 +198,63 @@ impl EnemyGrid {
                 question.wrong_answers[wrong_index]
             };
 
-            self.enemies[*enemy_index].r#type = EnemyType::Puzzle(number);
+            self.enemies[*enemy_index].r#type = if let Some((shape, _)) = count_shape_from_question(question) {
+                EnemyType::ShapePuzzle { shape, number }
+            } else {
+                EnemyType::Puzzle(number)
+            };
+        }
+    }
+
+    fn assign_shape_answers(&mut self, question: &Question, shape: CountShape, count: i64) {
+        let alive_indices: Vec<usize> = self
+            .enemies
+            .iter()
+            .enumerate()
+            .filter(|(_, enemy)| enemy.alive)
+            .map(|(index, _)| index)
+            .collect();
+
+        if alive_indices.is_empty() {
+            return;
+        }
+
+        let correct_slot = random::usize_exclusive(alive_indices.len());
+        let mut numbers = vec![question.correct_answer];
+        for wrong in &question.wrong_answers {
+            if numbers.len() >= alive_indices.len() {
+                break;
+            }
+            if *wrong != question.correct_answer && !numbers.contains(wrong) {
+                numbers.push(*wrong);
+            }
+        }
+
+        let mut candidate = 1;
+        while numbers.len() < alive_indices.len() {
+            if candidate != question.correct_answer && !numbers.contains(&candidate) {
+                numbers.push(candidate);
+            }
+            candidate += 1;
+        }
+
+        let mut wrong_cursor = 1;
+        for (slot, enemy_index) in alive_indices.iter().enumerate() {
+            let number = if slot == correct_slot {
+                question.correct_answer
+            } else {
+                while wrong_cursor < numbers.len() && numbers[wrong_cursor] == question.correct_answer {
+                    wrong_cursor += 1;
+                }
+                let value = numbers
+                    .get(wrong_cursor)
+                    .copied()
+                    .unwrap_or((count + slot as i64 + 1).max(1));
+                wrong_cursor += 1;
+                value
+            };
+
+            self.enemies[*enemy_index].r#type = EnemyType::ShapePuzzle { shape, number };
         }
     }
 
@@ -239,6 +315,12 @@ impl EnemyGrid {
         }
     }
 
+    pub fn clear_all(&mut self) {
+        for enemy in &mut self.enemies {
+            enemy.alive = false;
+        }
+    }
+
     fn drop_alive_after_kill(&mut self) {
         let max_y = enemy_max_y();
         let drop = enemy_kill_drop();
@@ -286,6 +368,7 @@ impl EnemyGrid {
             if e.is_hit(bx, by) {
                 let is_correct = match &e.r#type {
                     EnemyType::Puzzle(n) => correct_answer == Some(*n),
+                    EnemyType::ShapePuzzle { number, .. } => correct_answer == Some(*number),
                     _ => true, // Standard enemies always count as a hit
                 };
                 return Some((i, is_correct));
@@ -346,6 +429,134 @@ fn enemy_kill_drop() -> f32 {
         MOBILE_ENEMY_KILL_DROP
     } else {
         ENEMY_KILL_DROP
+    }
+}
+
+fn target_count_for_question(config: &LevelConfig, active_question: Option<&Question>) -> usize {
+    active_question
+        .and_then(count_shape_from_question)
+        .map(|(_, count)| count.max(1) as usize)
+        .unwrap_or(config.rows * config.cols)
+}
+
+fn count_shape_from_question(question: &Question) -> Option<(CountShape, i64)> {
+    let text = question.text.to_ascii_lowercase();
+    if !text.starts_with("how many ") {
+        return None;
+    }
+
+    let shape = if text.contains("heart") {
+        CountShape::Heart
+    } else if text.contains("circle") {
+        CountShape::Circle
+    } else if text.contains("rectangle") {
+        CountShape::Rectangle
+    } else if text.contains("square") {
+        CountShape::Square
+    } else if text.contains("star") {
+        CountShape::Star
+    } else {
+        return None;
+    };
+
+    Some((shape, question.correct_answer.clamp(1, 9)))
+}
+
+pub fn question_uses_visual_count(question: &Question) -> bool {
+    count_shape_from_question(question).is_some()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sample_question(text: &str, correct_answer: i64) -> Question {
+        Question {
+            text: text.to_string(),
+            correct_answer,
+            wrong_answers: vec![1, 2, 3, 6],
+        }
+    }
+
+    #[test]
+    fn shape_count_questions_spawn_matching_shape_targets() {
+        let question = sample_question("How many hearts?", 4);
+
+        assert_eq!(
+            target_count_for_question(&Grade::Preschool.config(), Some(&question)),
+            4
+        );
+        assert!(question_uses_visual_count(&question));
+        assert_eq!(
+            count_shape_from_question(&question),
+            Some((CountShape::Heart, 4))
+        );
+
+        let mut grid = EnemyGrid {
+            enemies: vec![Enemy::new(0.0, 0.0, 0.0, 0.0)],
+            screen_w: 800.0,
+            speed_mult: 1.0,
+            base_speed: 0.5,
+            fire_interval_ms: 1000,
+        };
+        grid.assign_answers(&question);
+
+        let mut correct_targets = 0;
+        for enemy in &grid.enemies {
+            assert_eq!(enemy.width, 58.0);
+            assert_eq!(enemy.height, 50.0);
+            match enemy.r#type {
+                EnemyType::ShapePuzzle { shape, number } => {
+                    assert_eq!(shape, CountShape::Heart);
+                    if number == 4 {
+                        correct_targets += 1;
+                    }
+                }
+                _ => panic!("expected shaped puzzle target"),
+            }
+        }
+
+        assert_eq!(correct_targets, 1);
+    }
+
+    #[test]
+    fn every_grade_uses_large_numbered_puzzle_targets() {
+        let grades = [
+            Grade::Preschool,
+            Grade::Kindergarten,
+            Grade::FirstGrade,
+            Grade::SecondGrade,
+            Grade::ThirdGrade,
+            Grade::FourthGrade,
+            Grade::FifthGrade,
+        ];
+        let question = sample_question("3 + 2 = ?", 5);
+
+        for grade in grades {
+            let config = grade.config();
+            let mut grid = EnemyGrid {
+                enemies: vec![Enemy::new(0.0, 0.0, 0.0, 0.0)],
+                screen_w: 1200.0,
+                speed_mult: config.enemy_move_speed,
+                base_speed: 0.5,
+                fire_interval_ms: config.fire_interval_ms,
+            };
+            grid.assign_answers(&question);
+
+            assert_eq!(target_count_for_question(&config, Some(&question)), config.rows * config.cols);
+            assert!(grid.enemies.iter().all(|enemy| enemy.width == 58.0));
+            assert!(grid.enemies.iter().all(|enemy| enemy.height == 50.0));
+            assert!(grid.enemies.iter().all(|enemy| matches!(enemy.r#type, EnemyType::Puzzle(_))));
+            assert_eq!(
+                grid.enemies
+                    .iter()
+                    .filter(|enemy| matches!(enemy.r#type, EnemyType::Puzzle(5)))
+                    .count(),
+                1,
+                "{} should have exactly one correct target",
+                grade.display_name()
+            );
+        }
     }
 }
 

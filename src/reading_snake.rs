@@ -18,19 +18,17 @@ const DESKTOP_BOTTOM_CHROME: f32 = 0.0;
 const DESKTOP_PANEL_BOTTOM_PAD: f32 = 8.0;
 const MOBILE_BOARD_MARGIN: f32 = 24.0;
 const MOBILE_CELL_H: f32 = 28.0;
-const MOBILE_GOAL_CARD_Y: f32 = 148.0;
-const MOBILE_GOAL_TEXT_Y: f32 = 180.0;
+const MOBILE_GOAL_CARD_Y: f32 = 118.0;
+const MOBILE_GOAL_TEXT_Y: f32 = 160.0;
 const MOBILE_GOAL_TEXT_W: f32 = 620.0;
-const MOBILE_GOAL_TEXT_SIZE: u16 = 26;
-const MOBILE_GOAL_MAX_LINES: usize = 2;
+const MOBILE_GOAL_TEXT_SIZE: u16 = 30;
+const MOBILE_GOAL_MAX_LINES: usize = 3;
 const MOBILE_BOARD_GAP: f32 = 10.0;
 const MOBILE_FOOTER_GAP: f32 = 12.0;
-const MOBILE_FOOTER_H: f32 = 104.0;
-const MOBILE_STAT_CHIP_Y: f32 = ui::MOBILE_CHROME_Y + ui::MOBILE_CHROME_ROW_H + 40.0;
+const MOBILE_FOOTER_H: f32 = 184.0;
 const MOBILE_STAT_CHIP_H: f32 = 44.0;
-const MOBILE_STAT_CHIP_W: f32 = 180.0;
-const MOBILE_STAT_CHIP_GAP: f32 = 10.0;
-const MOBILE_PLAYFIELD_BOTTOM: f32 = ui::MOBILE_ACTION_Y - 10.0;
+const MOBILE_STAT_CHIP_W: f32 = 210.0;
+const MOBILE_STAT_CHIP_GAP: f32 = 12.0;
 const MOBILE_SWIPE_THRESHOLD: f32 = 34.0;
 const MOBILE_PANEL_MARGIN: f32 = 24.0;
 const MOBILE_CARD_CONTENT_PAD: f32 = 36.0;
@@ -747,37 +745,6 @@ impl ReadingSnake {
         draw_mobile_header_band();
         centered_text(title, 46.0, screen::mobile_text_size(30), soft_white());
 
-        let row_w = MOBILE_STAT_CHIP_W * 3.0 + MOBILE_STAT_CHIP_GAP * 2.0;
-        let row_x = (screen::screen_w() - row_w) / 2.0;
-        draw_stat_chip(
-            row_x,
-            MOBILE_STAT_CHIP_Y,
-            MOBILE_STAT_CHIP_W,
-            "Score",
-            &self.score.to_string(),
-            star_yellow(),
-        );
-        draw_stat_chip(
-            row_x + MOBILE_STAT_CHIP_W + MOBILE_STAT_CHIP_GAP,
-            MOBILE_STAT_CHIP_Y,
-            MOBILE_STAT_CHIP_W,
-            "Lives",
-            &self.lives.to_string(),
-            mint(),
-        );
-        draw_stat_chip(
-            row_x + (MOBILE_STAT_CHIP_W + MOBILE_STAT_CHIP_GAP) * 2.0,
-            MOBILE_STAT_CHIP_Y,
-            MOBILE_STAT_CHIP_W,
-            "Next",
-            &self.next_letter_label(),
-            if self.nightmare_mode {
-                planet_pink()
-            } else {
-                soft_cyan()
-            },
-        );
-
         draw_surface_card(
             MOBILE_PANEL_MARGIN,
             MOBILE_GOAL_CARD_Y,
@@ -788,13 +755,13 @@ impl ReadingSnake {
         );
         centered_text(
             "Definition",
-            MOBILE_GOAL_TEXT_Y - 10.0,
-            screen::mobile_text_size(22),
+            MOBILE_GOAL_TEXT_Y - 18.0,
+            screen::mobile_text_size(24),
             muted_text(),
         );
         draw_wrapped_centered_text(
             &layout.goal_text,
-            MOBILE_GOAL_TEXT_Y + 16.0,
+            MOBILE_GOAL_TEXT_Y + 20.0,
             MOBILE_GOAL_TEXT_W,
             screen::mobile_text_size(MOBILE_GOAL_TEXT_SIZE),
             soft_white(),
@@ -975,21 +942,26 @@ impl ReadingSnake {
         let footer_y = self.mobile_footer_top();
         let progress = format_word_progress(&self.word, self.letter_index);
         let label_size = screen::mobile_text_size(20);
-        let progress_size = screen::mobile_text_size(24);
+        let progress_size = screen::mobile_text_size(36);
         let message_size = screen::mobile_text_size(18);
+        let row_w = MOBILE_STAT_CHIP_W * 3.0 + MOBILE_STAT_CHIP_GAP * 2.0;
+        let row_x = (screen::screen_w() - row_w) / 2.0;
+        let word_card_y = footer_y;
+        let word_card_h = MOBILE_FOOTER_H - MOBILE_STAT_CHIP_H - 12.0;
+        let chip_y = word_card_y + word_card_h + 12.0;
 
         draw_surface_card(
             MOBILE_PANEL_MARGIN,
-            footer_y,
+            word_card_y,
             mobile_panel_w(),
-            MOBILE_FOOTER_H,
+            word_card_h,
             20.0,
             elevated_surface(),
         );
         centered_text_in_rect(
             "Word",
             MOBILE_PANEL_MARGIN,
-            footer_y + 8.0,
+            word_card_y + 8.0,
             mobile_panel_w(),
             24.0,
             label_size,
@@ -998,18 +970,43 @@ impl ReadingSnake {
         centered_text_in_rect(
             &progress,
             MOBILE_PANEL_MARGIN,
-            footer_y + 26.0,
+            word_card_y + 26.0,
             mobile_panel_w(),
-            26.0,
+            40.0,
             progress_size,
             star_yellow(),
         );
-        centered_text(self.message, footer_y + 68.0, message_size, soft_white());
+        centered_text(self.message, word_card_y + 82.0, message_size, soft_white());
         centered_text(
             "Tap or swipe on the board to steer",
-            footer_y + 88.0,
+            word_card_y + 106.0,
             screen::mobile_text_size(16),
             muted_text(),
+        );
+
+        draw_stat_chip(
+            row_x,
+            chip_y,
+            MOBILE_STAT_CHIP_W,
+            "Score",
+            &self.score.to_string(),
+            soft_cyan(),
+        );
+        draw_stat_chip(
+            row_x + MOBILE_STAT_CHIP_W + MOBILE_STAT_CHIP_GAP,
+            chip_y,
+            MOBILE_STAT_CHIP_W,
+            "Lives",
+            &self.lives.to_string(),
+            soft_cyan(),
+        );
+        draw_stat_chip(
+            row_x + (MOBILE_STAT_CHIP_W + MOBILE_STAT_CHIP_GAP) * 2.0,
+            chip_y,
+            MOBILE_STAT_CHIP_W,
+            "Next",
+            &self.next_letter_label(),
+            soft_cyan(),
         );
     }
 
@@ -1304,17 +1301,18 @@ fn mobile_playfield_layout(definition: &str) -> MobilePlayfieldLayout {
     let goal_lines =
         wrapped_line_count(&goal_text, MOBILE_GOAL_TEXT_W, MOBILE_GOAL_TEXT_SIZE).max(1);
     let goal_text_h = wrapped_block_height(goal_lines, MOBILE_GOAL_TEXT_SIZE);
-    let goal_card_h = (MOBILE_GOAL_TEXT_Y - MOBILE_GOAL_CARD_Y) + goal_text_h + 14.0;
+    let goal_card_h = ((MOBILE_GOAL_TEXT_Y - MOBILE_GOAL_CARD_Y) + goal_text_h + 34.0).max(138.0);
     let header_bottom = MOBILE_GOAL_CARD_Y + goal_card_h;
     let mut board_y = header_bottom + MOBILE_BOARD_GAP;
     let mut cell_h = MOBILE_CELL_H;
+    let playfield_bottom = screen::screen_h() - 24.0;
 
     let mut board_h = MOBILE_GRID_H as f32 * cell_h;
     let mut footer_top = board_y + board_h + MOBILE_FOOTER_GAP;
     let mut stack_bottom = footer_top + MOBILE_FOOTER_H;
 
-    if stack_bottom > MOBILE_PLAYFIELD_BOTTOM {
-        let max_board_h = MOBILE_PLAYFIELD_BOTTOM - MOBILE_FOOTER_GAP - MOBILE_FOOTER_H - board_y;
+    if stack_bottom != playfield_bottom {
+        let max_board_h = playfield_bottom - MOBILE_FOOTER_GAP - MOBILE_FOOTER_H - board_y;
         if max_board_h >= MOBILE_GRID_H as f32 * 18.0 {
             cell_h = (max_board_h / MOBILE_GRID_H as f32).floor().max(18.0);
             board_h = MOBILE_GRID_H as f32 * cell_h;
@@ -1323,8 +1321,8 @@ fn mobile_playfield_layout(definition: &str) -> MobilePlayfieldLayout {
         }
     }
 
-    if stack_bottom > MOBILE_PLAYFIELD_BOTTOM {
-        board_y = MOBILE_PLAYFIELD_BOTTOM - MOBILE_FOOTER_H - MOBILE_FOOTER_GAP - board_h;
+    if stack_bottom > playfield_bottom {
+        board_y = playfield_bottom - MOBILE_FOOTER_H - MOBILE_FOOTER_GAP - board_h;
         board_y = board_y.max(header_bottom + MOBILE_BOARD_GAP);
     }
 
@@ -1425,28 +1423,28 @@ fn reading_palette(nightmare_mode: bool) -> ReadingPalette {
     if nightmare_mode {
         ReadingPalette {
             desktop_clear: Color::new(0.018, 0.02, 0.035, 1.0),
-            desktop_board_shell: Color::new(0.11, 0.09, 0.16, 0.96),
+            desktop_board_shell: Color::new(0.055, 0.07, 0.14, 0.96),
             desktop_cell_a: Color::new(0.12, 0.15, 0.2, 0.98),
             desktop_cell_b: Color::new(0.09, 0.12, 0.17, 0.98),
-            desktop_accent: Color::new(0.48, 0.29, 1.0, 0.88),
-            desktop_card_fill: Color::new(0.09, 0.08, 0.13, 0.98),
+            desktop_accent: planet_pink(),
+            desktop_card_fill: Color::new(0.045, 0.06, 0.14, 0.98),
             desktop_card_title: planet_pink(),
             desktop_snake_head: soft_cyan(),
             desktop_snake_body: Color::new(0.35, 0.55, 0.95, 1.0),
-            letter_tile: Color::new(0.55, 0.75, 1.0, 1.0),
+            letter_tile: soft_cyan(),
         }
     } else {
         ReadingPalette {
-            desktop_clear: Color::new(0.02, 0.04, 0.03, 1.0),
-            desktop_board_shell: Color::new(0.08, 0.17, 0.13, 0.96),
-            desktop_cell_a: Color::new(0.08, 0.17, 0.13, 0.92),
-            desktop_cell_b: Color::new(0.055, 0.125, 0.12, 0.92),
-            desktop_accent: Color::new(0.4, 1.0, 0.65, 0.88),
-            desktop_card_fill: Color::new(0.06, 0.14, 0.1, 0.98),
-            desktop_card_title: YELLOW,
+            desktop_clear: Color::new(0.01, 0.015, 0.04, 1.0),
+            desktop_board_shell: Color::new(0.035, 0.07, 0.13, 0.96),
+            desktop_cell_a: Color::new(0.12, 0.15, 0.2, 0.98),
+            desktop_cell_b: Color::new(0.09, 0.12, 0.17, 0.98),
+            desktop_accent: Color::new(0.42, 0.78, 1.0, 0.88),
+            desktop_card_fill: Color::new(0.045, 0.065, 0.15, 0.98),
+            desktop_card_title: star_yellow(),
             desktop_snake_head: mint(),
             desktop_snake_body: Color::new(0.38, 0.86, 0.58, 1.0),
-            letter_tile: Color::new(1.0, 0.86, 0.2, 1.0),
+            letter_tile: star_yellow(),
         }
     }
 }
@@ -1457,40 +1455,39 @@ fn draw_mobile_space_background() {
         0.0,
         screen::screen_w(),
         screen::screen_h(),
-        Color::new(0.035, 0.035, 0.07, 1.0),
+        Color::new(0.01, 0.015, 0.04, 1.0),
     );
-    draw_rectangle(
-        0.0,
-        0.0,
-        screen::screen_w(),
-        188.0,
-        Color::new(0.38, 0.22, 0.95, 0.72),
-    );
+
+    for row in 0..11 {
+        for col in 0..20 {
+            let x = col as f32 * 68.0 - if row % 2 == 0 { 0.0 } else { 34.0 };
+            let y = row as f32 * 68.0 + 8.0;
+            draw_rectangle_lines(x, y, 48.0, 48.0, 2.0, Color::new(0.04, 0.08, 0.13, 1.0));
+        }
+    }
 
     for i in 0..42 {
         let x = ((i * 83 + 29) % screen::screen_w() as i32) as f32;
         let y = ((i * 47 + 61) % screen::screen_h() as i32) as f32;
         let radius = if i % 6 == 0 { 1.8 } else { 0.9 };
         let color = if i % 8 == 0 {
-            Color::new(0.46, 0.9, 1.0, 0.38)
+            Color::new(0.46, 0.9, 1.0, 0.62)
         } else {
-            Color::new(0.94, 0.96, 0.82, 0.32)
+            Color::new(0.94, 0.96, 0.82, 0.52)
         };
         draw_circle(x, y, radius, color);
     }
 
-    draw_circle(1088.0, 282.0, 84.0, Color::new(0.55, 0.36, 1.0, 0.1));
-    draw_circle(150.0, 602.0, 96.0, Color::new(0.3, 0.62, 1.0, 0.08));
+    draw_circle(620.0, 170.0, 150.0, Color::new(0.3, 0.62, 1.0, 0.08));
 }
 
 fn draw_mobile_header_band() {
-    draw_circle(1000.0, 60.0, 280.0, Color::new(0.54, 0.35, 1.0, 0.12));
-    draw_circle(256.0, 116.0, 180.0, Color::new(0.25, 0.52, 1.0, 0.1));
+    draw_circle(620.0, 92.0, 190.0, Color::new(0.25, 0.52, 1.0, 0.08));
 }
 
 fn draw_mobile_reading_card(x: f32, y: f32, w: f32, h: f32, accent: Color) {
-    draw_round_rect(x, y, w, h, 36.0, Color::new(0.115, 0.12, 0.16, 0.98));
-    draw_round_rect(x, y, w, 86.0, 36.0, Color::new(0.16, 0.17, 0.23, 0.96));
+    draw_round_rect(x, y, w, h, 30.0, Color::new(0.045, 0.065, 0.15, 0.98));
+    draw_round_rect(x, y, w, 86.0, 30.0, Color::new(0.055, 0.085, 0.17, 0.96));
     draw_round_rect(x + 34.0, y + h - 8.0, w - 68.0, 8.0, 4.0, accent);
 }
 

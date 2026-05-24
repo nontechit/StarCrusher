@@ -1,3 +1,4 @@
+use crate::enemy::CountShape;
 use macroquad::prelude::*;
 
 thread_local! {
@@ -113,10 +114,10 @@ pub fn draw_enemy_invader(x: f32, y: f32, color: Color, scale: f32) {
 
 /// Draws a puzzle target as a large answer number.
 pub fn draw_puzzle_enemy(x: f32, y: f32, color: Color, scale: f32, answer_number: i64) {
-    let target_w = 44.0 * scale;
-    let target_h = 34.0 * scale;
+    let target_w = 58.0 * scale;
+    let target_h = 50.0 * scale;
     let txt = format!("{}", answer_number);
-    let font_size = if txt.len() >= 3 { 24.0 } else { 30.0 } * scale;
+    let font_size = if txt.len() >= 3 { 26.0 } else { 34.0 } * scale;
     let tm = measure_text(&txt, None, font_size as u16, 1.0);
 
     let text_x = x + target_w / 2.0 - tm.w / 2.0;
@@ -132,10 +133,133 @@ pub fn draw_puzzle_enemy(x: f32, y: f32, color: Color, scale: f32, answer_number
     draw_text(&txt, text_x - 1.0, text_y, font_size);
     draw_text(&txt, text_x + 1.0, text_y, font_size);
 
-    set_color(WHITE);
+    set_color(Color::new(1.0, 0.97, 0.34, 1.0));
     draw_text(&txt, text_x, text_y, font_size);
 
     set_default_color();
+}
+
+pub fn draw_shape_puzzle_enemy(
+    x: f32,
+    y: f32,
+    color: Color,
+    scale: f32,
+    shape: CountShape,
+    answer_number: i64,
+) {
+    let target_w = 58.0 * scale;
+    let target_h = 50.0 * scale;
+    let cx = x + target_w / 2.0;
+    let cy = y + target_h / 2.0;
+    let shape_color = Color::new(color.r, color.g, color.b, 0.78);
+    let edge_color = Color::new(color.r.min(1.0), (color.g + 0.2).min(1.0), 1.0, 1.0);
+
+    set_color(Color::new(color.r, color.g, color.b, 0.18));
+    draw_shape_blob(cx, cy, target_w, target_h, shape, Color::new(color.r, color.g, color.b, 0.18));
+
+    draw_shape_blob(cx, cy, target_w, target_h, shape, shape_color);
+    draw_shape_outline(cx, cy, target_w, target_h, shape, edge_color);
+
+    let txt = format!("{}", answer_number);
+    let font_size = if txt.len() >= 3 { 26.0 } else { 34.0 } * scale;
+    let tm = measure_text(&txt, None, font_size as u16, 1.0);
+    let text_x = cx - tm.w / 2.0;
+    let text_y = cy + tm.h * 0.36;
+
+    set_color(BLACK);
+    draw_text(&txt, text_x + 2.0, text_y + 2.0, font_size);
+    set_color(Color::new(1.0, 0.97, 0.34, 1.0));
+    draw_text(&txt, text_x, text_y, font_size);
+    set_default_color();
+}
+
+fn draw_shape_blob(cx: f32, cy: f32, w: f32, h: f32, shape: CountShape, color: Color) {
+    set_color(color);
+    match shape {
+        CountShape::Circle => draw_circle(cx, cy, w.min(h) * 0.48),
+        CountShape::Heart => draw_heart(cx, cy, w, h, true),
+        CountShape::Rectangle => draw_rectangle(cx - w * 0.48, cy - h * 0.34, w * 0.96, h * 0.68),
+        CountShape::Square => {
+            let s = w.min(h) * 0.84;
+            draw_rectangle(cx - s / 2.0, cy - s / 2.0, s, s);
+        }
+        CountShape::Star => draw_star_shape(cx, cy, w.min(h) * 0.52, true),
+    }
+}
+
+fn draw_shape_outline(cx: f32, cy: f32, w: f32, h: f32, shape: CountShape, color: Color) {
+    set_color(color);
+    match shape {
+        CountShape::Circle => {
+            macroquad::prelude::draw_circle_lines(cx, cy, w.min(h) * 0.48, 2.0 * (w / 44.0), color);
+        }
+        CountShape::Rectangle => {
+            macroquad::prelude::draw_rectangle_lines(
+                cx - w * 0.48,
+                cy - h * 0.34,
+                w * 0.96,
+                h * 0.68,
+                2.0 * (w / 44.0),
+                color,
+            );
+        }
+        CountShape::Square => {
+            let s = w.min(h) * 0.84;
+            macroquad::prelude::draw_rectangle_lines(
+                cx - s / 2.0,
+                cy - s / 2.0,
+                s,
+                s,
+                2.0 * (w / 44.0),
+                color,
+            );
+        }
+        CountShape::Heart => draw_heart(cx, cy, w, h, false),
+        CountShape::Star => draw_star_shape(cx, cy, w.min(h) * 0.52, false),
+    }
+}
+
+fn draw_heart(cx: f32, cy: f32, w: f32, h: f32, filled: bool) {
+    let left = vec2(cx - w * 0.22, cy - h * 0.12);
+    let right = vec2(cx + w * 0.22, cy - h * 0.12);
+    let bottom = vec2(cx, cy + h * 0.38);
+    if filled {
+        draw_circle(left.x, left.y, w * 0.22);
+        draw_circle(right.x, right.y, w * 0.22);
+        macroquad::prelude::draw_triangle(
+            vec2(cx - w * 0.43, cy - h * 0.02),
+            vec2(cx + w * 0.43, cy - h * 0.02),
+            bottom,
+            current_color(),
+        );
+    } else {
+        let color = current_color();
+        macroquad::prelude::draw_circle_lines(left.x, left.y, w * 0.22, 2.0, color);
+        macroquad::prelude::draw_circle_lines(right.x, right.y, w * 0.22, 2.0, color);
+        macroquad::prelude::draw_line(cx - w * 0.43, cy - h * 0.02, bottom.x, bottom.y, 2.0, color);
+        macroquad::prelude::draw_line(cx + w * 0.43, cy - h * 0.02, bottom.x, bottom.y, 2.0, color);
+    }
+}
+
+fn draw_star_shape(cx: f32, cy: f32, r: f32, filled: bool) {
+    let mut points = [Vec2::ZERO; 10];
+    for (i, point) in points.iter_mut().enumerate() {
+        let angle = -std::f32::consts::FRAC_PI_2 + i as f32 * std::f32::consts::PI / 5.0;
+        let radius = if i % 2 == 0 { r } else { r * 0.45 };
+        *point = vec2(cx + angle.cos() * radius, cy + angle.sin() * radius);
+    }
+    let color = current_color();
+    if filled {
+        for i in 1..9 {
+            macroquad::prelude::draw_triangle(points[0], points[i], points[i + 1], color);
+        }
+    } else {
+        for i in 0..10 {
+            let a = points[i];
+            let b = points[(i + 1) % 10];
+            macroquad::prelude::draw_line(a.x, a.y, b.x, b.y, 2.0, color);
+        }
+    }
 }
 
 /// Draws a bullet (player projectile).

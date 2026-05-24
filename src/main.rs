@@ -10,7 +10,7 @@ mod reading_snake;
 mod screen;
 mod ui;
 
-use enemy::{EnemyGrid, Explosion};
+use enemy::{question_uses_visual_count, EnemyGrid, Explosion};
 use levels::Grade;
 use macroquad::prelude::*;
 use math_pong::{MathPong, MathPongAction};
@@ -95,6 +95,7 @@ struct Game {
     mode: GameMode,
     title_menu_page: TitleMenuPage,
     title_selection: usize,
+    title_tap_armed: bool,
     grade: Grade,
     wave: usize,
     score: u32,
@@ -134,6 +135,7 @@ impl Game {
             mode: GameMode::Title,
             title_menu_page: TitleMenuPage::Main,
             title_selection: 0,
+            title_tap_armed: false,
             grade,
             wave: 1,
             score: 0,
@@ -180,6 +182,7 @@ impl Game {
             TitleMenuOption::PlayMiniGames => {
                 self.title_menu_page = TitleMenuPage::MiniGames;
                 self.title_selection = 0;
+                self.title_tap_armed = false;
             }
             TitleMenuOption::MathInvaders => self.reset(),
             TitleMenuOption::MathPong => {
@@ -238,22 +241,38 @@ impl Game {
                 let menu_len = TitleMenuOption::menu_len(self.title_menu_page);
                 if let Some(tap) = primary_tap_position() {
                     if let Some(index) = title_menu_index_at(tap, menu_len) {
-                        self.title_selection = index;
-                        self.launch_title_option(TitleMenuOption::from_index(
-                            self.title_menu_page,
-                            self.title_selection,
-                        ));
+                        if screen::portrait_layout() {
+                            let launch_selected =
+                                self.title_tap_armed && self.title_selection == index;
+                            self.title_selection = index;
+                            self.title_tap_armed = !launch_selected;
+                            if launch_selected {
+                                self.launch_title_option(TitleMenuOption::from_index(
+                                    self.title_menu_page,
+                                    self.title_selection,
+                                ));
+                            }
+                        } else {
+                            self.title_selection = index;
+                            self.launch_title_option(TitleMenuOption::from_index(
+                                self.title_menu_page,
+                                self.title_selection,
+                            ));
+                        }
                         return;
                     }
                 }
 
                 if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
                     self.title_selection = (self.title_selection + menu_len - 1) % menu_len;
+                    self.title_tap_armed = false;
                 } else if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
                     self.title_selection = (self.title_selection + 1) % menu_len;
+                    self.title_tap_armed = false;
                 }
 
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+                    self.title_tap_armed = false;
                     self.launch_title_option(TitleMenuOption::from_index(
                         self.title_menu_page,
                         self.title_selection,
@@ -263,6 +282,7 @@ impl Game {
                 {
                     self.title_menu_page = TitleMenuPage::Main;
                     self.title_selection = 1;
+                    self.title_tap_armed = false;
                 } else if is_key_pressed(KeyCode::M) {
                     self.launch_title_option(TitleMenuOption::MathInvaders);
                 } else if is_key_pressed(KeyCode::R) {
@@ -317,6 +337,10 @@ impl Game {
     }
 
     fn update_mobile_navigation(&mut self) -> bool {
+        if !self.should_show_mobile_back_button() {
+            return false;
+        }
+
         let Some(tap) = primary_tap_position() else {
             return false;
         };
@@ -329,6 +353,7 @@ impl Game {
             GameMode::Title if self.title_menu_page == TitleMenuPage::MiniGames => {
                 self.title_menu_page = TitleMenuPage::Main;
                 self.title_selection = 1;
+                self.title_tap_armed = false;
                 true
             }
             GameMode::Title => false,
@@ -336,6 +361,14 @@ impl Game {
                 self.exit_to_title();
                 true
             }
+        }
+    }
+
+    fn should_show_mobile_back_button(&self) -> bool {
+        match self.mode {
+            GameMode::Title if self.title_menu_page == TitleMenuPage::MiniGames => true,
+            GameMode::Title | GameMode::Playing => false,
+            _ => true,
         }
     }
 
@@ -407,6 +440,7 @@ impl Game {
         self.adventure_active = false;
         self.adventure_step = AdventureStep::MathInvaders1;
         self.title_menu_page = TitleMenuPage::Main;
+        self.title_tap_armed = false;
         self.mode = GameMode::Title;
     }
 
@@ -476,7 +510,11 @@ impl Game {
                     .push(Explosion::new(enemy.center_x(), enemy.bottom_y()));
 
                 if is_correct {
-                    self.enemies.kill_enemy(enemy_idx);
+                    if question_uses_visual_count(&self.active_question) {
+                        self.enemies.clear_all();
+                    } else {
+                        self.enemies.kill_enemy(enemy_idx);
+                    }
                     let points_awarded = 10 + self.grade.index() as u32 * 5;
                     self.score += points_awarded;
                     self.platform.emit(&GameEvent::CorrectMathInvadersHit {
@@ -749,12 +787,12 @@ impl Game {
             GameMode::AdventureIntro => ui::draw_adventure_intro(self.intro_page),
         }
 
-        match self.mode {
-            GameMode::Title if self.title_menu_page == TitleMenuPage::MiniGames => {
+        if self.should_show_mobile_back_button() {
+            if self.mode == GameMode::Title && self.title_menu_page == TitleMenuPage::MiniGames {
                 ui::draw_mobile_back_button("BACK");
+            } else {
+                ui::draw_mobile_back_button("TITLE");
             }
-            GameMode::Title => {}
-            _ => ui::draw_mobile_back_button("TITLE"),
         }
     }
 

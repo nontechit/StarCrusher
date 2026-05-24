@@ -2,6 +2,9 @@
 /pictures/
 /.opencode/
 /.cursor/
+/docs/templates/
+/docs/screenshot-change-review.md
+/scripts/compare-audit-screenshots.ps1
 /rebase-log.txt
 /opencode.json
 *.pdb
