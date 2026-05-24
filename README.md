@@ -8,10 +8,12 @@ Current build: `1.5.15`
 
 - **Portrait-native canvas (720×1280):** Mobile uses a dedicated portrait virtual screen that fills the phone viewport with uniform scaling—no letterboxing or vertical font stretch.
 - **Unified mobile chrome:** Circular back (`X`) button and `HOME` pill (HTML overlay) aligned to the game canvas; chrome fonts use fixed sizes independent of gameplay text scaling.
+- **iPhone UI polish:** Portrait question cards, adventure intro copy, gate prompts, game-over panels, and Reading Snake HUD/footer text fit inside their panels without clipping or overlapping the `HOME` pill.
+- **Clickable touch targets:** Mobile `START`, `CONTINUE`, `PLAY`, and `NIGHT` button hitboxes are aligned with their visible button bounds.
 - **Tap-to-select menus:** Title and Mission Select use first-tap to highlight, second-tap to launch.
 - **Reading Snake:** Retuned definition cards, stat chips, and board layout for the portrait canvas; tap/swipe steering on the board.
 - **Math Orbit:** Portrait HUD with question below numbered targets, centered stat pills, paddle above `START`, and hearts/circles/X's question prompts.
-- **Font scaling:** Mobile gameplay text uses a 1.75× multiplier tuned for readability without overlap.
+- **Font fitting:** Mobile gameplay text shrinks to the available panel width instead of relying on one large global text multiplier.
 - **`build-wasm.ps1`:** Root build script verifies WASM freshness, copies artifacts, and writes sanitized `star-crusher.wasm.buildinfo.json` (relative paths only).
 - Rebuilt checked-in `star-crusher.wasm` for the static site with cache-busting query string in `index.html`.
 
@@ -347,6 +349,7 @@ Reading Snake Nightmare:
 
 - This is a binary Rust project, so `Cargo.lock` is intentionally committed.
 - Build output in `target/` is ignored.
+- Local iPhone screenshots in `pictures/` are ignored and should stay out of commits.
 - The game uses `macroquad` for windowing, input, and drawing, and `rand` for question/enemy randomization.
 - CI runs `cargo audit` before each Pages deploy. Local check: `cargo audit --ignore RUSTSEC-2025-0035`.
 - The static web shell uses a restrictive Content Security Policy in `index.html`; `wasm-unsafe-eval` and inline script/style allowances are required for the Macroquad WASM loader.
@@ -415,6 +418,7 @@ The build script also writes `star-crusher.wasm.buildinfo.json` (hash, UTC time,
 This repository is intended for public GitHub Pages deployment. Before publishing:
 
 - **No secrets in repo:** Do not commit `.env`, API keys, tokens, or private paths. `star-crusher.wasm.buildinfo.json` uses relative paths only.
+- **Local capture hygiene:** Keep manual phone screenshots and audit captures in ignored folders such as `pictures/` or `target/`; review `git status --short` before pushing.
 - **Content Security Policy:** `index.html` restricts scripts/styles to `'self'` with `wasm-unsafe-eval` required for WebAssembly.
 - **postMessage:** Platform events forwarded to a parent frame use `window.location.origin` (not `*`).
 - **Dependencies:** CI runs `cargo audit` on push to `main` (see `.github/workflows/pages.yml`).
