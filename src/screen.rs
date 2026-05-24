@@ -12,7 +12,7 @@ pub const SCREEN_W: f32 = DESKTOP_W;
 pub const SCREEN_H: f32 = DESKTOP_H;
 
 /// Portrait mobile UI text multiplier.
-pub const MOBILE_TEXT_SCALE: f32 = 1.75;
+pub const MOBILE_TEXT_SCALE: f32 = 1.0;
 
 pub fn screen_w() -> f32 {
     if portrait_layout() {

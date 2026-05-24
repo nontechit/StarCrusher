@@ -14,9 +14,7 @@ use enemy::{EnemyGrid, Explosion};
 use levels::Grade;
 use macroquad::prelude::*;
 use math_pong::{MathPong, MathPongAction};
-use platform::{
-    ActivePlatformBridge, GameEvent, GameOverReason, LifeLossReason, PlatformBridge,
-};
+use platform::{ActivePlatformBridge, GameEvent, GameOverReason, LifeLossReason, PlatformBridge};
 use player::{Bullet, EnemyBullet, Player};
 use question::{generate_question, Question};
 use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
@@ -125,7 +123,12 @@ impl Game {
     fn new() -> Self {
         let grade = Grade::Preschool;
         let active_question = generate_question(grade);
-        let enemies = EnemyGrid::new(grade, &grade.config(), screen::screen_w(), Some(&active_question));
+        let enemies = EnemyGrid::new(
+            grade,
+            &grade.config(),
+            screen::screen_w(),
+            Some(&active_question),
+        );
 
         Self {
             mode: GameMode::Title,
@@ -667,13 +670,21 @@ impl Game {
 
     fn update_touch_player(&mut self) -> bool {
         let ship_w = self.player.effective_width();
-        let move_threshold = if screen::portrait_layout() { 540.0 } else { 520.0 };
-        let fire_threshold = if screen::portrait_layout() { 500.0 } else { 470.0 };
+        let move_threshold = if screen::portrait_layout() {
+            540.0
+        } else {
+            520.0
+        };
+        let fire_threshold = if screen::portrait_layout() {
+            500.0
+        } else {
+            470.0
+        };
 
         if let Some(pointer) = primary_pointer_position() {
             if pointer.y > move_threshold {
-                self.player.x = (pointer.x - ship_w / 2.0)
-                    .clamp(8.0, screen::screen_w() - ship_w - 8.0);
+                self.player.x =
+                    (pointer.x - ship_w / 2.0).clamp(8.0, screen::screen_w() - ship_w - 8.0);
             }
         }
 
@@ -706,9 +717,8 @@ impl Game {
                 score: self.score,
             });
         } else {
-            self.platform.emit(&GameEvent::FinalVictory {
-                score: self.score,
-            });
+            self.platform
+                .emit(&GameEvent::FinalVictory { score: self.score });
             self.mode = GameMode::Victory;
         }
     }
@@ -782,11 +792,11 @@ impl Game {
         for (i, line) in question_lines.iter().enumerate() {
             let text_size = ui::gate_question_text_size();
             let metrics = measure_text(line, None, text_size, 1.0);
-            let question_center_x = ui::GATE_QUESTION_X + ui::GATE_QUESTION_W / 2.0;
+            let question_center_x = ui::gate_question_x() + ui::gate_question_w() / 2.0;
             draw_text(
                 line,
                 question_center_x - metrics.width / 2.0,
-                ui::GATE_QUESTION_Y + i as f32 * ui::GATE_QUESTION_LINE_GAP,
+                ui::gate_question_y() + i as f32 * ui::gate_question_line_gap(),
                 text_size as f32,
                 YELLOW,
             );

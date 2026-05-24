@@ -25,6 +25,7 @@ pub const GATE_QUESTION_X: f32 = 210.0;
 pub const GATE_QUESTION_Y: f32 = 438.0;
 pub const GATE_QUESTION_W: f32 = 620.0;
 pub const GATE_QUESTION_LINE_GAP: f32 = 34.0;
+pub const MOBILE_GUTTER: f32 = 24.0;
 pub const MOBILE_BACK_X: f32 = 24.0;
 /// Virtual diameter for the circular back button.
 pub const MOBILE_BACK_SIZE: f32 = 48.0;
@@ -32,8 +33,7 @@ pub const MOBILE_HOME_W: f32 = 100.0;
 pub const MOBILE_HOME_H: f32 = 40.0;
 pub const MOBILE_CHROME_Y: f32 = 8.0;
 pub const MOBILE_CHROME_ROW_H: f32 = 48.0;
-pub const MOBILE_HOME_Y: f32 =
-    MOBILE_CHROME_Y + (MOBILE_CHROME_ROW_H - MOBILE_HOME_H) / 2.0;
+pub const MOBILE_HOME_Y: f32 = MOBILE_CHROME_Y + (MOBILE_CHROME_ROW_H - MOBILE_HOME_H) / 2.0;
 pub const MOBILE_CHROME_RADIUS: f32 = MOBILE_HOME_H / 2.0;
 /// Fixed chrome label size — never pass through mobile_text_size().
 pub const MOBILE_CHROME_FONT: u16 = 16;
@@ -51,6 +51,14 @@ pub const SPELLING_NIGHTMARE_X: f32 = 670.0;
 pub const SPELLING_ACTION_Y: f32 = 536.0;
 pub const SPELLING_ACTION_W: f32 = 220.0;
 pub const SPELLING_ACTION_H: f32 = 74.0;
+
+fn mobile_safe_x() -> f32 {
+    MOBILE_GUTTER
+}
+
+fn mobile_safe_w() -> f32 {
+    (screen::screen_w() - MOBILE_GUTTER * 2.0).max(1.0)
+}
 
 thread_local! {
     static CURRENT_COLOR: std::cell::Cell<Color> = const { std::cell::Cell::new(WHITE) };
@@ -105,6 +113,26 @@ fn measure_text(text: &str, font: Option<&Font>, font_size: u16, font_scale: f32
     TextMeasure { w: measure.width }
 }
 
+fn fit_font_size(text: &str, desired: u16, max_width: f32, min_size: u16) -> u16 {
+    if text.is_empty() {
+        return desired;
+    }
+
+    let mut size = desired.max(min_size);
+    while size > min_size && measure_text(text, None, size, 1.0).w > max_width {
+        size -= 1;
+    }
+    size
+}
+
+fn fit_mobile_font_size(text: &str, desired: u16, max_width: f32) -> u16 {
+    if screen::portrait_layout() {
+        fit_font_size(text, desired, max_width, 14)
+    } else {
+        desired
+    }
+}
+
 fn hsl_to_rgb(h: f32, s: f32, l: f32) -> Color {
     let a = s * l.min(1.0 - l);
     let channel = |n: f32| {
@@ -141,17 +169,73 @@ pub fn mobile_action_button_contains(point: Vec2) -> bool {
 }
 
 pub fn spelling_play_button_contains(point: Vec2) -> bool {
-    point.x >= SPELLING_PLAY_X
-        && point.x <= SPELLING_PLAY_X + SPELLING_ACTION_W
-        && point.y >= SPELLING_ACTION_Y
-        && point.y <= SPELLING_ACTION_Y + SPELLING_ACTION_H
+    spelling_play_button_rect().contains(point)
 }
 
 pub fn spelling_nightmare_button_contains(point: Vec2) -> bool {
-    point.x >= SPELLING_NIGHTMARE_X
-        && point.x <= SPELLING_NIGHTMARE_X + SPELLING_ACTION_W
-        && point.y >= SPELLING_ACTION_Y
-        && point.y <= SPELLING_ACTION_Y + SPELLING_ACTION_H
+    spelling_nightmare_button_rect().contains(point)
+}
+
+pub fn spelling_play_button_rect() -> Rect {
+    if screen::portrait_layout() {
+        let gap = 24.0;
+        let w = (mobile_safe_w() - gap) / 2.0;
+        Rect::new(mobile_safe_x(), 1048.0, w, SPELLING_ACTION_H)
+    } else {
+        Rect::new(
+            SPELLING_PLAY_X,
+            SPELLING_ACTION_Y,
+            SPELLING_ACTION_W,
+            SPELLING_ACTION_H,
+        )
+    }
+}
+
+pub fn spelling_nightmare_button_rect() -> Rect {
+    if screen::portrait_layout() {
+        let gap = 24.0;
+        let w = (mobile_safe_w() - gap) / 2.0;
+        Rect::new(mobile_safe_x() + w + gap, 1048.0, w, SPELLING_ACTION_H)
+    } else {
+        Rect::new(
+            SPELLING_NIGHTMARE_X,
+            SPELLING_ACTION_Y,
+            SPELLING_ACTION_W,
+            SPELLING_ACTION_H,
+        )
+    }
+}
+
+pub fn gate_question_x() -> f32 {
+    if screen::portrait_layout() {
+        50.0
+    } else {
+        GATE_QUESTION_X
+    }
+}
+
+pub fn gate_question_w() -> f32 {
+    if screen::portrait_layout() {
+        screen::screen_w() - 100.0
+    } else {
+        GATE_QUESTION_W
+    }
+}
+
+pub fn gate_question_y() -> f32 {
+    if screen::portrait_layout() {
+        438.0
+    } else {
+        GATE_QUESTION_Y
+    }
+}
+
+pub fn gate_question_line_gap() -> f32 {
+    if screen::portrait_layout() {
+        42.0
+    } else {
+        GATE_QUESTION_LINE_GAP
+    }
 }
 
 fn mobile_chrome_fill() -> Color {
@@ -222,9 +306,13 @@ pub fn draw_mobile_action_button(label: &str) {
         Color::new(0.22, 0.48, 0.92, 0.98),
     );
 
-    let font_size = screen::mobile_text_size(28)
-        .min((MOBILE_ACTION_H * 0.52) as u16)
-        .max(20);
+    let font_size = fit_mobile_font_size(
+        label,
+        screen::mobile_text_size(28)
+            .min((MOBILE_ACTION_H * 0.52) as u16)
+            .max(20),
+        MOBILE_ACTION_W - 48.0,
+    );
     centered_text_in(
         label,
         MOBILE_ACTION_X,
@@ -300,8 +388,8 @@ pub fn mobile_question_card_height(text: &str) -> f32 {
 /// Yellow-bordered question card for portrait mobile HUDs. Returns the card bottom Y.
 pub fn draw_mobile_question_card(text: &str, banner_y: f32) -> f32 {
     let lines: Vec<&str> = text.lines().collect();
-    let banner_w = 884.0;
-    let banner_x = center_x() - banner_w / 2.0;
+    let banner_w = mobile_safe_w();
+    let banner_x = mobile_safe_x();
     let font_size = screen::mobile_text_size(if lines.len() > 2 { 22 } else { 28 });
     let line_h = font_size as f32 + 12.0;
     let banner_h = mobile_question_card_height(text);
@@ -317,12 +405,13 @@ pub fn draw_mobile_question_card(text: &str, banner_y: f32) -> f32 {
     );
 
     for (i, line) in lines.iter().enumerate() {
-        let tm = measure_text(line, None, font_size, 1.0);
+        let line_font = fit_mobile_font_size(line, font_size, banner_w - 48.0);
+        let tm = measure_text(line, None, line_font, 1.0);
         draw_text(
             line,
             center_x() - tm.w / 2.0,
-            banner_y + 28.0 + font_size as f32 + (i as f32) * line_h,
-            font_size as f32,
+            banner_y + 28.0 + line_font as f32 + (i as f32) * line_h,
+            line_font as f32,
             Color::new(1.0, 0.97, 0.34, 1.0),
         );
     }
@@ -332,7 +421,13 @@ pub fn draw_mobile_question_card(text: &str, banner_y: f32) -> f32 {
 
 fn draw_mobile_corner_stat(left: &str, right: &str, y: f32) {
     let font_size = screen::mobile_text_size(20);
-    draw_text(left, 82.0, y, font_size as f32, Color::new(0.62, 0.88, 1.0, 1.0));
+    draw_text(
+        left,
+        82.0,
+        y,
+        font_size as f32,
+        Color::new(0.62, 0.88, 1.0, 1.0),
+    );
     let tm = measure_text(right, None, font_size, 1.0);
     draw_text(
         right,
@@ -344,33 +439,35 @@ fn draw_mobile_corner_stat(left: &str, right: &str, y: f32) {
 }
 
 fn draw_mobile_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text: Option<&str>) {
-    let chrome_clearance = MOBILE_CHROME_Y + MOBILE_CHROME_ROW_H + 8.0;
+    let chrome_clearance = MOBILE_CHROME_Y + MOBILE_CHROME_ROW_H + 56.0;
     if let Some(qtext) = question_text {
         let stats_y = draw_mobile_question_card(qtext, chrome_clearance);
         let pill_y = stats_y + 12.0;
         let stat_font = screen::mobile_text_size(20);
         let pill_h = stat_font as f32 + 20.0;
+        let gap = 12.0;
+        let pill_w = (mobile_safe_w() - gap * 2.0) / 3.0;
 
         draw_mobile_hud_pill(
-            120.0,
+            mobile_safe_x(),
             pill_y,
-            360.0,
+            pill_w,
             &format!("Wave {}", wave),
             pill_h,
             Color::new(0.62, 0.88, 1.0, 1.0),
         );
         draw_mobile_hud_pill(
-            500.0,
+            mobile_safe_x() + pill_w + gap,
             pill_y,
-            280.0,
+            pill_w,
             &format!("Score {}", score),
             pill_h,
             Color::new(1.0, 0.82, 0.32, 1.0),
         );
         draw_mobile_hud_pill(
-            800.0,
+            mobile_safe_x() + (pill_w + gap) * 2.0,
             pill_y,
-            360.0,
+            pill_w,
             &format!("Lives {}", lives),
             pill_h,
             Color::new(0.74, 1.0, 0.72, 1.0),
@@ -407,7 +504,7 @@ fn draw_mobile_hud_pill(x: f32, y: f32, w: f32, text: &str, h: f32, text_color: 
         Color::new(0.055, 0.075, 0.15, 0.9),
         Color::new(0.35, 0.55, 0.88, 0.58),
     );
-    let font_size = screen::mobile_text_size(20);
+    let font_size = fit_mobile_font_size(text, screen::mobile_text_size(20), w - 24.0);
     centered_text_in(text, x, y + h * 0.68, w, font_size, text_color);
 }
 
@@ -968,8 +1065,9 @@ fn draw_monster_glyph(x: f32, y: f32, ink: Color, stone_light: Color) {
 }
 
 fn centered_text_in(text: &str, x: f32, y: f32, w: f32, font_size: u16, color: Color) {
-    let tm = measure_text(text, None, font_size, 1.0);
-    draw_text(text, x + w / 2.0 - tm.w / 2.0, y, font_size as f32, color);
+    let size = fit_mobile_font_size(text, font_size, (w - 24.0).max(1.0));
+    let tm = measure_text(text, None, size, 1.0);
+    draw_text(text, x + w / 2.0 - tm.w / 2.0, y, size as f32, color);
 }
 
 const ADVENTURE_INTRO_PAGES: [(&str, &str); 5] = [
@@ -1088,12 +1186,17 @@ fn draw_mobile_adventure_intro(page: usize) {
     clear_background(Color::new(0.01, 0.015, 0.04, 1.0));
     draw_star_map_background();
 
-    centered_text("STAR CRUSHER VOYAGE", 92.0, screen::mobile_text_size(32), moon);
     centered_text_in(
+        "STAR CRUSHER VOYAGE",
+        96.0,
+        92.0,
+        528.0,
+        screen::mobile_text_size(32),
+        moon,
+    );
+    centered_text(
         &format!("PAGE {} / {}", page + 1, ADVENTURE_INTRO_PAGES.len()),
-        480.0,
-        78.0,
-        220.0,
+        122.0,
         screen::mobile_text_size(18),
         Color::new(0.7, 0.9, 1.0, 1.0),
     );
@@ -1117,17 +1220,10 @@ fn draw_mobile_adventure_intro(page: usize) {
         Color::new(0.07, 0.055, 0.12, 0.96),
         Color::new(1.0, 0.82, 0.36, 0.9),
     );
-    let line1_size = screen::mobile_text_size(28);
-    let line2_size = screen::mobile_text_size(22);
-    centered_text_in(line_one, 48.0, 572.0, 624.0, line1_size, amber);
-    centered_text_in(
-        line_two,
-        48.0,
-        572.0 + line1_size as f32 * 0.55 + line2_size as f32 * 0.5,
-        624.0,
-        line2_size,
-        moon,
-    );
+    let line1_size = screen::mobile_text_size(if page == 0 { 28 } else { 20 });
+    let line2_size = screen::mobile_text_size(if page == 0 { 22 } else { 18 });
+    draw_wrapped_centered_text(line_one, 584.0, 600.0, line1_size, amber);
+    draw_wrapped_centered_text(line_two, 626.0, 600.0, line2_size, moon);
 
     draw_mobile_action_button(if page + 1 >= ADVENTURE_INTRO_PAGES.len() {
         "START"
@@ -1171,7 +1267,11 @@ pub fn draw_spelling_list_screen(input: &str) {
         WHITE,
     );
 
-    let input_w = 760.0;
+    let input_w = if screen::portrait_layout() {
+        mobile_safe_w()
+    } else {
+        760.0
+    };
     let input_h = 118.0;
     let input_x = center_x() - input_w / 2.0;
     let input_y = 278.0;
@@ -1217,38 +1317,43 @@ pub fn draw_spelling_list_screen(input: &str) {
         YELLOW,
     );
     centered_text("Backspace deletes   ESC returns to title", 504.0, 18, GRAY);
-    draw_spelling_action_button(SPELLING_PLAY_X, "PLAY", Color::new(0.25, 0.75, 0.4, 1.0));
     draw_spelling_action_button(
-        SPELLING_NIGHTMARE_X,
+        spelling_play_button_rect(),
+        "PLAY",
+        Color::new(0.25, 0.75, 0.4, 1.0),
+    );
+    draw_spelling_action_button(
+        spelling_nightmare_button_rect(),
         "NIGHT",
         Color::new(0.55, 0.35, 0.95, 1.0),
     );
     set_default_color();
 }
 
-fn draw_spelling_action_button(x: f32, label: &str, color: Color) {
+fn draw_spelling_action_button(rect: Rect, label: &str, color: Color) {
     set_color(Color::new(
         color.r * 0.35,
         color.g * 0.35,
         color.b * 0.35,
         0.9,
     ));
-    draw_rectangle(x, SPELLING_ACTION_Y, SPELLING_ACTION_W, SPELLING_ACTION_H);
+    draw_rectangle(rect.x, rect.y, rect.w, rect.h);
     set_color(color);
-    draw_rectangle_lines(x, SPELLING_ACTION_Y, SPELLING_ACTION_W, SPELLING_ACTION_H);
+    draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h);
     centered_text_in(
         label,
-        x,
-        SPELLING_ACTION_Y + 48.0,
-        SPELLING_ACTION_W,
+        rect.x,
+        rect.y + 48.0,
+        rect.w,
         screen::mobile_text_size(16),
         WHITE,
     );
 }
 
 fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
-    let tm = measure_text(text, None, font_size, 1.0);
-    draw_text(text, center_x() - tm.w / 2.0, y, font_size as f32, color);
+    let size = fit_mobile_font_size(text, font_size, screen::screen_w() - 48.0);
+    let tm = measure_text(text, None, size, 1.0);
+    draw_text(text, center_x() - tm.w / 2.0, y, size as f32, color);
 }
 
 fn draw_wrapped_centered_text(text: &str, y: f32, max_width: f32, font_size: u16, color: Color) {
@@ -1284,7 +1389,10 @@ pub fn keypad_button_rect(index: usize) -> Rect {
     let col = index % 3;
     let row = index / 3;
     let (key, gap, x, y) = if screen::portrait_layout() {
-        (64.0, 8.0, 930.0, 404.0)
+        let key = 68.0;
+        let gap = 10.0;
+        let total_w = key * 3.0 + gap * 2.0;
+        (key, gap, center_x() - total_w / 2.0, 676.0)
     } else {
         (KEYPAD_KEY, KEYPAD_GAP, KEYPAD_X, KEYPAD_Y)
     };
@@ -1444,9 +1552,9 @@ fn draw_mobile_question_gate(grade: &Grade, math_topics: &str, show_start_button
     draw_rectangle(0.0, 0.0, screen::screen_w(), screen::screen_h());
 
     draw_rounded_panel(
-        196.0,
+        mobile_safe_x(),
         98.0,
-        888.0,
+        mobile_safe_w(),
         276.0,
         24.0,
         Color::new(0.045, 0.065, 0.15, 0.97),
@@ -1468,7 +1576,7 @@ fn draw_mobile_question_gate(grade: &Grade, math_topics: &str, show_start_button
     draw_wrapped_centered_text(
         &format!("Topics: {}", math_topics),
         270.0,
-        736.0,
+        mobile_safe_w() - 48.0,
         screen::mobile_text_size(22),
         Color::new(0.92, 0.98, 1.0, 1.0),
     );
@@ -1687,9 +1795,9 @@ fn draw_mobile_end_overlay(title: &str, score: &str, detail: &str, accent: Color
     set_color(Color::new(0.01, 0.012, 0.035, 0.9));
     draw_rectangle(0.0, 0.0, screen::screen_w(), screen::screen_h());
     draw_rounded_panel(
-        216.0,
+        32.0,
         176.0,
-        848.0,
+        screen::screen_w() - 64.0,
         292.0,
         26.0,
         Color::new(0.045, 0.06, 0.14, 0.98),

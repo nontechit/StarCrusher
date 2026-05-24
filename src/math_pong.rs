@@ -164,8 +164,7 @@ impl MathPong {
         }
         if let Some(pointer) = primary_pointer_position() {
             let in_paddle_zone = if portrait_layout() {
-                pointer.y >= MOBILE_PADDLE_TOUCH_MIN_Y
-                    && pointer.y <= mobile_paddle_touch_max_y()
+                pointer.y >= MOBILE_PADDLE_TOUCH_MIN_Y && pointer.y <= mobile_paddle_touch_max_y()
             } else {
                 pointer.y > 400.0
             };
@@ -174,7 +173,9 @@ impl MathPong {
             }
         }
 
-        self.paddle_x = self.paddle_x.clamp(12.0, screen::screen_w() - self.paddle_w - 12.0);
+        self.paddle_x = self
+            .paddle_x
+            .clamp(12.0, screen::screen_w() - self.paddle_w - 12.0);
 
         if !self.ball_launched {
             self.ball_pos = vec2(self.paddle_x + self.paddle_w / 2.0, paddle_y() - 14.0);
@@ -201,9 +202,14 @@ impl MathPong {
 
         self.ball_pos += self.ball_vel * screen::frame_step();
 
-        if self.ball_pos.x - BALL_RADIUS <= 0.0 || self.ball_pos.x + BALL_RADIUS >= screen::screen_w() {
+        if self.ball_pos.x - BALL_RADIUS <= 0.0
+            || self.ball_pos.x + BALL_RADIUS >= screen::screen_w()
+        {
             self.ball_vel.x *= -1.0;
-            self.ball_pos.x = self.ball_pos.x.clamp(BALL_RADIUS, screen::screen_w() - BALL_RADIUS);
+            self.ball_pos.x = self
+                .ball_pos
+                .x
+                .clamp(BALL_RADIUS, screen::screen_w() - BALL_RADIUS);
         }
         if self.ball_pos.y - BALL_RADIUS <= 0.0 {
             self.ball_vel.y = self.ball_vel.y.abs();
@@ -356,7 +362,12 @@ impl MathPong {
     }
 
     fn draw_mobile_header(&self) {
-        centered_text("MATH ORBIT", MOBILE_TITLE_Y, 36, Color::new(0.92, 0.98, 1.0, 1.0));
+        centered_text(
+            "MATH ORBIT",
+            MOBILE_TITLE_Y,
+            36,
+            Color::new(0.92, 0.98, 1.0, 1.0),
+        );
 
         let layout = mobile_hud_layout();
         draw_mobile_stat_pill(
@@ -664,12 +675,21 @@ fn draw_starfield() {
 }
 
 fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
-    let metrics = measure_text(text, None, font_size, 1.0);
+    let mut size = font_size;
+    let max_width = if screen::portrait_layout() {
+        screen::screen_w() - 48.0
+    } else {
+        screen::screen_w()
+    };
+    while size > 14 && measure_text(text, None, size, 1.0).width > max_width {
+        size -= 1;
+    }
+    let metrics = measure_text(text, None, size, 1.0);
     draw_text(
         text,
         screen::screen_w() / 2.0 - metrics.width / 2.0,
         y,
-        font_size as f32,
+        size as f32,
         color,
     );
 }
