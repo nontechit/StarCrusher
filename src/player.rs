@@ -3,6 +3,8 @@ use crate::screen;
 use macroquad::prelude::*;
 
 const PLAYER_Y: f32 = 680.0;
+const MOBILE_PLAYER_Y: f32 = 1142.0;
+const MOBILE_PLAYER_SCALE_MULT: f32 = 3.0;
 
 /// Player ship position and state.
 pub struct Player {
@@ -18,14 +20,22 @@ impl Player {
         let w = 32.0;
         Player {
             x: (screen_w - w) / 2.0,
-            y: PLAYER_Y,
+            y: if screen::portrait_layout() {
+                MOBILE_PLAYER_Y
+            } else {
+                PLAYER_Y
+            },
             width: w,
             height: 32.0,
         }
     }
 
     pub fn draw_scale(&self) -> f32 {
-        screen::portrait_gameplay_scale()
+        if screen::portrait_layout() {
+            screen::portrait_gameplay_scale() * MOBILE_PLAYER_SCALE_MULT
+        } else {
+            screen::portrait_gameplay_scale()
+        }
     }
 
     pub fn effective_width(&self) -> f32 {

@@ -8,9 +8,11 @@ use macroquad::prelude::*;
 const ENEMY_MIN_Y: f32 = 132.0;
 const ENEMY_MAX_Y: f32 = 410.0;
 const ENEMY_PLAYER_ZONE_Y: f32 = 530.0;
-const MOBILE_ENEMY_MIN_Y: f32 = 170.0;
-const MOBILE_ENEMY_MAX_Y: f32 = 438.0;
-const MOBILE_ENEMY_PLAYER_ZONE_Y: f32 = 552.0;
+const ENEMY_KILL_DROP: f32 = 14.0;
+const MOBILE_ENEMY_MIN_Y: f32 = 412.0;
+const MOBILE_ENEMY_MAX_Y: f32 = 680.0;
+const MOBILE_ENEMY_PLAYER_ZONE_Y: f32 = 1062.0;
+const MOBILE_ENEMY_KILL_DROP: f32 = 34.0;
 
 /// Type of enemy: standard invader or puzzle type showing an answer.
 #[derive(Debug, Clone)]
@@ -233,6 +235,17 @@ impl EnemyGrid {
     pub fn kill_enemy(&mut self, idx: usize) {
         if idx < self.enemies.len() {
             self.enemies[idx].alive = false;
+            self.drop_alive_after_kill();
+        }
+    }
+
+    fn drop_alive_after_kill(&mut self) {
+        let max_y = enemy_max_y();
+        let drop = enemy_kill_drop();
+        for enemy in &mut self.enemies {
+            if enemy.alive {
+                enemy.y = (enemy.y + drop).min(max_y);
+            }
         }
     }
 
@@ -272,7 +285,7 @@ impl EnemyGrid {
             }
             if e.is_hit(bx, by) {
                 let is_correct = match &e.r#type {
-                    EnemyType::Puzzle(n) => correct_answer.map_or(false, |ca| *n == ca),
+                    EnemyType::Puzzle(n) => correct_answer == Some(*n),
                     _ => true, // Standard enemies always count as a hit
                 };
                 return Some((i, is_correct));
@@ -325,6 +338,14 @@ fn enemy_player_zone_y() -> f32 {
         MOBILE_ENEMY_PLAYER_ZONE_Y
     } else {
         ENEMY_PLAYER_ZONE_Y
+    }
+}
+
+fn enemy_kill_drop() -> f32 {
+    if screen::portrait_layout() {
+        MOBILE_ENEMY_KILL_DROP
+    } else {
+        ENEMY_KILL_DROP
     }
 }
 

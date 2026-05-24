@@ -13,10 +13,10 @@ pub const TITLE_MENU_ROW_TOP: f32 = 270.0;
 pub const TITLE_MENU_ROW_H: f32 = 54.0;
 pub const TITLE_MENU_ROW_GAP: f32 = 18.0;
 pub const MOBILE_TITLE_MENU_X: f32 = 24.0;
-pub const MOBILE_TITLE_MENU_ROW_TOP: f32 = 560.0;
+pub const MOBILE_TITLE_MENU_ROW_TOP: f32 = 620.0;
 pub const MOBILE_TITLE_MENU_W: f32 = 672.0;
-pub const MOBILE_TITLE_MENU_ROW_H: f32 = 88.0;
-pub const MOBILE_TITLE_MENU_ROW_GAP: f32 = 12.0;
+pub const MOBILE_TITLE_MENU_ROW_H: f32 = 136.0;
+pub const MOBILE_TITLE_MENU_ROW_GAP: f32 = 44.0;
 pub const KEYPAD_X: f32 = 920.0;
 pub const KEYPAD_Y: f32 = 414.0;
 pub const KEYPAD_KEY: f32 = 54.0;
@@ -26,26 +26,12 @@ pub const GATE_QUESTION_Y: f32 = 438.0;
 pub const GATE_QUESTION_W: f32 = 620.0;
 pub const GATE_QUESTION_LINE_GAP: f32 = 34.0;
 pub const MOBILE_GUTTER: f32 = 24.0;
-pub const MOBILE_BACK_X: f32 = 24.0;
-/// Virtual diameter for the circular back button.
-pub const MOBILE_BACK_SIZE: f32 = 48.0;
-pub const MOBILE_HOME_W: f32 = 100.0;
-pub const MOBILE_HOME_H: f32 = 40.0;
 pub const MOBILE_CHROME_Y: f32 = 8.0;
-pub const MOBILE_CHROME_ROW_H: f32 = 48.0;
-pub const MOBILE_HOME_Y: f32 = MOBILE_CHROME_Y + (MOBILE_CHROME_ROW_H - MOBILE_HOME_H) / 2.0;
-pub const MOBILE_CHROME_RADIUS: f32 = MOBILE_HOME_H / 2.0;
-/// Fixed chrome label size — never pass through mobile_text_size().
-pub const MOBILE_CHROME_FONT: u16 = 16;
-pub const MOBILE_CHROME_EDGE: f32 = 1.0;
+pub const MOBILE_CHROME_ROW_H: f32 = 80.0;
 pub const MOBILE_ACTION_X: f32 = 24.0;
 pub const MOBILE_ACTION_Y: f32 = 1208.0;
 pub const MOBILE_ACTION_W: f32 = 672.0;
 pub const MOBILE_ACTION_H: f32 = 56.0;
-
-pub fn mobile_site_x() -> f32 {
-    screen::screen_w() - MOBILE_BACK_X - MOBILE_HOME_W
-}
 pub const SPELLING_PLAY_X: f32 = 390.0;
 pub const SPELLING_NIGHTMARE_X: f32 = 670.0;
 pub const SPELLING_ACTION_Y: f32 = 536.0;
@@ -142,22 +128,9 @@ fn hsl_to_rgb(h: f32, s: f32, l: f32) -> Color {
     Color::new(channel(0.0), channel(8.0), channel(4.0), 1.0)
 }
 
-fn mobile_back_center() -> (f32, f32) {
-    (
-        MOBILE_BACK_X + MOBILE_BACK_SIZE / 2.0,
-        MOBILE_CHROME_Y + MOBILE_CHROME_ROW_H / 2.0,
-    )
-}
-
 pub fn mobile_back_button_contains(point: Vec2) -> bool {
-    if !screen::portrait_layout() {
-        return false;
-    }
-    let (cx, cy) = mobile_back_center();
-    let r = MOBILE_BACK_SIZE / 2.0;
-    let dx = point.x - cx;
-    let dy = point.y - cy;
-    dx * dx + dy * dy <= r * r
+    let _ = point;
+    false
 }
 
 pub fn mobile_action_button_contains(point: Vec2) -> bool {
@@ -238,58 +211,8 @@ pub fn gate_question_line_gap() -> f32 {
     }
 }
 
-fn mobile_chrome_fill() -> Color {
-    Color::new(0.22, 0.23, 0.3, 0.98)
-}
-
-fn mobile_chrome_edge() -> Color {
-    Color::new(1.0, 1.0, 1.0, 0.22)
-}
-
-fn mobile_chrome_text() -> Color {
-    Color::new(0.98, 0.98, 1.0, 1.0)
-}
-
-fn draw_mobile_chrome_pill(x: f32, y: f32, w: f32, h: f32) {
-    let radius = MOBILE_CHROME_RADIUS.min(w / 2.0).min(h / 2.0);
-    let inset = MOBILE_CHROME_EDGE;
-    draw_rounded_rect(x, y, w, h, radius, mobile_chrome_edge());
-    draw_rounded_rect(
-        x + inset,
-        y + inset,
-        w - inset * 2.0,
-        h - inset * 2.0,
-        (radius - inset).max(0.0),
-        mobile_chrome_fill(),
-    );
-}
-
-fn draw_mobile_chrome_circle(cx: f32, cy: f32, diameter: f32) {
-    let radius = diameter / 2.0;
-    let inset = MOBILE_CHROME_EDGE;
-    set_color(mobile_chrome_edge());
-    draw_circle(cx, cy, radius);
-    set_color(mobile_chrome_fill());
-    draw_circle(cx, cy, (radius - inset).max(0.0));
-}
-
 pub fn draw_mobile_back_button(label: &str) {
-    if !screen::portrait_layout() {
-        return;
-    }
-
-    let (cx, cy) = mobile_back_center();
-    draw_mobile_chrome_circle(cx, cy, MOBILE_BACK_SIZE);
-    let shown = if label == "BACK" { "<" } else { "X" };
-    let font_size = MOBILE_CHROME_FONT.min((MOBILE_BACK_SIZE * 0.46) as u16);
-    centered_text_in(
-        shown,
-        cx - MOBILE_BACK_SIZE / 2.0,
-        cy + font_size as f32 * 0.32,
-        MOBILE_BACK_SIZE,
-        font_size,
-        mobile_chrome_text(),
-    );
+    let _ = label;
 }
 
 pub fn draw_mobile_action_button(label: &str) {
@@ -380,9 +303,9 @@ pub fn draw_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text
 /// Height of the portrait question card for the given text.
 pub fn mobile_question_card_height(text: &str) -> f32 {
     let lines: Vec<&str> = text.lines().collect();
-    let font_size = screen::mobile_text_size(if lines.len() > 2 { 22 } else { 28 });
-    let line_h = font_size as f32 + 12.0;
-    (lines.len() as f32 * line_h + 36.0).max(90.0)
+    let font_size = screen::mobile_text_size(if lines.len() > 2 { 30 } else { 46 });
+    let line_h = font_size as f32 + 18.0;
+    (lines.len() as f32 * line_h + 56.0).max(260.0)
 }
 
 /// Yellow-bordered question card for portrait mobile HUDs. Returns the card bottom Y.
@@ -390,9 +313,11 @@ pub fn draw_mobile_question_card(text: &str, banner_y: f32) -> f32 {
     let lines: Vec<&str> = text.lines().collect();
     let banner_w = mobile_safe_w();
     let banner_x = mobile_safe_x();
-    let font_size = screen::mobile_text_size(if lines.len() > 2 { 22 } else { 28 });
-    let line_h = font_size as f32 + 12.0;
+    let font_size = screen::mobile_text_size(if lines.len() > 2 { 30 } else { 46 });
+    let line_h = font_size as f32 + 18.0;
     let banner_h = mobile_question_card_height(text);
+    let text_block_h = lines.len() as f32 * line_h;
+    let first_baseline = banner_y + (banner_h - text_block_h) / 2.0 + font_size as f32 * 0.88;
 
     draw_rounded_panel(
         banner_x,
@@ -410,7 +335,7 @@ pub fn draw_mobile_question_card(text: &str, banner_y: f32) -> f32 {
         draw_text(
             line,
             center_x() - tm.w / 2.0,
-            banner_y + 28.0 + line_font as f32 + (i as f32) * line_h,
+            first_baseline + (i as f32) * line_h,
             line_font as f32,
             Color::new(1.0, 0.97, 0.34, 1.0),
         );
@@ -439,12 +364,12 @@ fn draw_mobile_corner_stat(left: &str, right: &str, y: f32) {
 }
 
 fn draw_mobile_hud(grade: &Grade, score: u32, lives: u8, wave: usize, question_text: Option<&str>) {
-    let chrome_clearance = MOBILE_CHROME_Y + MOBILE_CHROME_ROW_H + 56.0;
+    let chrome_clearance = 28.0;
     if let Some(qtext) = question_text {
         let stats_y = draw_mobile_question_card(qtext, chrome_clearance);
-        let pill_y = stats_y + 12.0;
-        let stat_font = screen::mobile_text_size(20);
-        let pill_h = stat_font as f32 + 20.0;
+        let pill_y = stats_y + 16.0;
+        let stat_font = screen::mobile_text_size(24);
+        let pill_h = stat_font as f32 + 22.0;
         let gap = 12.0;
         let pill_w = (mobile_safe_w() - gap * 2.0) / 3.0;
 
@@ -504,7 +429,7 @@ fn draw_mobile_hud_pill(x: f32, y: f32, w: f32, text: &str, h: f32, text_color: 
         Color::new(0.055, 0.075, 0.15, 0.9),
         Color::new(0.35, 0.55, 0.88, 0.58),
     );
-    let font_size = fit_mobile_font_size(text, screen::mobile_text_size(20), w - 24.0);
+    let font_size = fit_mobile_font_size(text, screen::mobile_text_size(24), w - 24.0);
     centered_text_in(text, x, y + h * 0.68, w, font_size, text_color);
 }
 
@@ -619,13 +544,13 @@ fn draw_mobile_title_screen(showing_mini_games: bool, selected_index: usize) {
     clear_background(void);
     draw_star_map_background();
     draw_mobile_space_scene(
-        24.0, 300.0, 672.0, 130.0, panel, panel_edge, moon, amber, cyan, rose,
+        24.0, 220.0, 672.0, 130.0, panel, panel_edge, moon, amber, cyan, rose,
     );
 
-    centered_text("STAR CRUSHER", 108.0, screen::mobile_text_size(40), moon);
+    centered_text("STAR CRUSHER", 68.0, screen::mobile_text_size(40), moon);
     centered_text(
         "PLANET DUNGEON CREW",
-        176.0,
+        136.0,
         screen::mobile_text_size(20),
         cyan,
     );
@@ -641,12 +566,18 @@ fn draw_mobile_title_screen(showing_mini_games: bool, selected_index: usize) {
 
     centered_text(
         if showing_mini_games {
-            "Tap a mission, then tap again to launch"
+            "Tap a mission"
         } else {
-            "Tap a destination, then tap again to launch"
+            "Tap a destination"
         },
-        1150.0,
-        screen::mobile_text_size(18),
+        1212.0,
+        screen::mobile_text_size(40),
+        moon,
+    );
+    centered_text(
+        "Tap again to launch",
+        1258.0,
+        screen::mobile_text_size(40),
         moon,
     );
 
@@ -786,8 +717,8 @@ fn draw_mobile_adventure_menu(
         } else {
             "LAUNCH DECK"
         },
-        520.0,
-        screen::mobile_text_size(28),
+        480.0,
+        screen::mobile_text_size(34),
         moon,
     );
 
@@ -841,8 +772,8 @@ fn draw_mobile_menu_button(
         Color::new(0.62, 0.86, 1.0, 1.0)
     };
 
-    let label_size = screen::mobile_text_size(32);
-    let detail_size = screen::mobile_text_size(22);
+    let label_size = screen::mobile_text_size(40);
+    let detail_size = screen::mobile_text_size(26);
     let center_x = MOBILE_TITLE_MENU_X + MOBILE_TITLE_MENU_W / 2.0;
     let label_metrics = measure_text(label, None, label_size, 1.0);
     let detail_metrics = measure_text(detail, None, detail_size, 1.0);

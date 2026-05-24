@@ -7,11 +7,12 @@ Current build: `1.5.15`
 ## Latest Mobile Release
 
 - **Portrait-native canvas (720×1280):** Mobile uses a dedicated portrait virtual screen that fills the phone viewport with uniform scaling—no letterboxing or vertical font stretch.
-- **Unified mobile chrome:** Circular back (`X`) button and `HOME` pill (HTML overlay) aligned to the game canvas; chrome fonts use fixed sizes independent of gameplay text scaling.
-- **iPhone UI polish:** Portrait question cards, adventure intro copy, gate prompts, game-over panels, and Reading Snake HUD/footer text fit inside their panels without clipping or overlapping the `HOME` pill.
-- **Clickable touch targets:** Mobile `START`, `CONTINUE`, `PLAY`, and `NIGHT` button hitboxes are aligned with their visible button bounds.
+- **Split mobile shell:** Active portrait gameplay hides the desktop/site exit chrome, removing the old in-canvas `X` and mobile `HOME` controls from the phone play surface.
+- **iPhone UI polish:** Larger title rows, bigger helper copy, portrait question cards, adventure intro copy, gate prompts, game-over panels, and Reading Snake HUD/footer text fit inside their panels without clipping.
+- **Clickable touch targets:** Mobile title rows, mission rows, `START`, `CONTINUE`, `PLAY`, and `NIGHT` button hitboxes are aligned with their visible button bounds.
 - **Tap-to-select menus:** Title and Mission Select use first-tap to highlight, second-tap to launch.
 - **Reading Snake:** Retuned definition cards, stat chips, and board layout for the portrait canvas; tap/swipe steering on the board.
+- **Math Invaders:** Expanded portrait question card, lowered HUD/stat pills, larger/lower player ship, and enemies that step closer after each kill.
 - **Math Orbit:** Portrait HUD with question below numbered targets, centered stat pills, paddle above `START`, and hearts/circles/X's question prompts.
 - **Font fitting:** Mobile gameplay text shrinks to the available panel width instead of relying on one large global text multiplier.
 - **`build-wasm.ps1`:** Root build script verifies WASM freshness, copies artifacts, and writes sanitized `star-crusher.wasm.buildinfo.json` (relative paths only).
@@ -20,7 +21,7 @@ Current build: `1.5.15`
 ## Previous Mobile Improvements
 
 - Fixed portrait touch mapping by converting screen coordinates through the virtual camera in `screen.rs`, so paddle and ship controls align with finger position on iPhone Safari.
-- Moved the mobile web exit control to the top-right shell (`HOME` on mobile, `Back to Home` on desktop) so it no longer overlaps in-canvas headers.
+- Earlier builds moved the web exit control out of in-canvas headers; the current mobile game shell hides that control during active portrait play while desktop keeps `Back to Home`.
 - Math Invaders portrait HUD leads with the active question card at the top; score, wave, and lives sit in stat pills.
 - Math Invaders portrait gameplay scales the player ship and numbered targets for easier reading on phone screens.
 - Math Pong portrait HUD moves the question card below numbered targets, with `Q`, `Lives`, and `Score` stat pills and footer hints above the paddle.
@@ -50,7 +51,7 @@ Current build: `1.5.15`
 - Completing the standard Reading Snake list starts a bonus Nightmare round using the same words in the same randomized order.
 - In Launch Voyage, completing normal Reading Snake advances directly to Math Pong instead of the standalone bonus round.
 - Space-travel title menu with two travelers, a ship, dungeon planets, a focused main adventure menu, and a Mission Select submenu.
-- Portrait mobile screens show an in-canvas circular `BACK` / `X` button and a shell-level `HOME` pill for touch navigation.
+- Portrait mobile gameplay uses a clean game-only surface; desktop keeps the shell-level `Back to Home` control.
 - Portrait mobile menus use large rounded touch buttons with tap-to-select (first tap highlights, second tap launches).
 - Portrait mobile gameplay uses a **720×1280** virtual canvas; desktop uses **1280×720**.
 - Arcade movement uses frame-time scaling for enemies, ships, bullets, explosions, and Math Orbit ball/paddle motion so desktop and mobile pacing stay consistent across frame rates.
@@ -77,8 +78,7 @@ Title menu controls:
 - Direct shortcut for Reading Snake Nightmare: `N`
 - Direct shortcut for Word Cargo: `L`
 - On mobile, tap menu rows directly (first tap selects, second tap launches).
-- On mobile, tap the in-canvas back (`X`) button or shell `HOME` to navigate.
-- On mobile, use explicit `CONTINUE`, `START`, `BACK`, and `TITLE` buttons for story, gate, restart, and navigation screens.
+- On mobile, use explicit `CONTINUE`, `START`, `PLAY`, and `NIGHT` buttons for story, restart, and list-entry screens.
 
 Math Invaders controls:
 
@@ -90,7 +90,7 @@ Math Invaders controls:
 - Delete typed answer characters with `Backspace`
 - On mobile, hold or drag in the lower play area to move and fire.
 - On mobile, the active question appears in the top banner; wave, score, and lives appear in stat pills below it.
-- On mobile, tap `TITLE` to return to the title menu.
+- On mobile, use the visible `START` / continue actions for gameplay flow; desktop keyboard `Esc` remains available for returning to title.
 - On mobile, use the enlarged gate number pad and `OK` button to submit answers.
 
 Reading Snake controls:
@@ -101,7 +101,7 @@ Reading Snake controls:
 - Return to title: `Esc`
 - On mobile, tap or swipe on the board to steer toward the next letter.
 - On mobile, tap `START` on definition cards and game-over screens to continue.
-- On mobile, tap `TITLE` to return to the title menu.
+- On mobile, use the visible `START` actions for definition cards and restart screens; desktop keyboard `Esc` remains available for returning to title.
 
 Reading Snake layout and safety:
 
@@ -127,7 +127,7 @@ Spelling-list entry controls:
 - Return to title without starting: `Esc`
 - On mobile, tap `PLAY` to start normal Reading Snake with the typed list.
 - On mobile, tap `NIGHT` to start Nightmare Snake with the typed list.
-- On mobile, tap `TITLE` to return to the title menu.
+- On mobile, use the visible `PLAY` and `NIGHT` actions to start from the list-entry screen.
 
 Math Pong controls:
 
@@ -137,7 +137,7 @@ Math Pong controls:
 - Return to title: `Esc`
 - On mobile, drag or hold in the gameplay band near the lower play area to move the paddle, then tap `START` to launch the ball.
 - On mobile, the question card appears at the top of the screen; wider answer targets and `Q`, `Lives`, and `Score` stat pills sit below it.
-- On mobile, tap `TITLE` to return to the title menu.
+- On mobile, use the visible `START` action to launch and restart Math Orbit.
 
 ## Requirements
 
@@ -352,6 +352,7 @@ Reading Snake Nightmare:
 - Local iPhone screenshots in `pictures/` are ignored and should stay out of commits.
 - The game uses `macroquad` for windowing, input, and drawing, and `rand` for question/enemy randomization.
 - CI runs `cargo audit` before each Pages deploy. Local check: `cargo audit --ignore RUSTSEC-2025-0035`.
+- Full iPhone screenshot audit for this mobile UI pass: `target/iphonescreenshots/5_24_2026_0_27` (32/32 scripted states reviewed; no glaring UI blockers found).
 - The static web shell uses a restrictive Content Security Policy in `index.html`; `wasm-unsafe-eval` and inline script/style allowances are required for the Macroquad WASM loader.
 - Custom spelling input is capped at 64 words, 12 characters per word, and 180 characters per definition.
 
@@ -421,7 +422,7 @@ This repository is intended for public GitHub Pages deployment. Before publishin
 - **Local capture hygiene:** Keep manual phone screenshots and audit captures in ignored folders such as `pictures/` or `target/`; review `git status --short` before pushing.
 - **Content Security Policy:** `index.html` restricts scripts/styles to `'self'` with `wasm-unsafe-eval` required for WebAssembly.
 - **postMessage:** Platform events forwarded to a parent frame use `window.location.origin` (not `*`).
-- **Dependencies:** CI runs `cargo audit` on push to `main` (see `.github/workflows/pages.yml`).
+- **Dependencies:** CI runs `cargo audit --ignore RUSTSEC-2025-0035` on push to `main` (see `.github/workflows/pages.yml`). Local audit on 2026-05-24 completed with the existing allowed Macroquad warning and no unallowed vulnerability failure.
 - **Static site:** The game runs client-side only; no server-side user data collection in this repo.
 
 Then open `index.html` in a browser through a local server because WASM module loading is restricted from direct file URLs:

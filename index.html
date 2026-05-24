@@ -16,19 +16,6 @@
             --gold: #ffd166;
             --cyan: #3dd6d0;
             --pink: #ff5c8a;
-            /* Shared mobile chrome — keep in sync with ui.rs MOBILE_BACK_* / MOBILE_CHROME_* */
-            --mobile-chrome-x: 24px;
-            --mobile-chrome-y: 8px;
-            --mobile-back-size: 48px;
-            --mobile-home-w: 100px;
-            --mobile-home-h: 40px;
-            --mobile-home-y: 12px;
-            --mobile-chrome-radius: 20px;
-            --mobile-chrome-font-size: 16px;
-            --mobile-chrome-site-x: 596px;
-            --mobile-chrome-fill: rgba(56, 59, 77, 0.98);
-            --mobile-chrome-border: rgba(255, 255, 255, 0.22);
-            --mobile-chrome-text: rgba(250, 250, 255, 1);
         }
 
         * {
@@ -331,33 +318,6 @@
                 padding-bottom: 0;
             }
 
-            .game-shell.active .site-exit.mobile-chrome {
-                position: fixed;
-                right: auto;
-                bottom: auto;
-                transform: none;
-                margin: 0;
-                padding: 0 !important;
-                justify-content: center;
-                font-weight: 700;
-                line-height: 1;
-                overflow: hidden;
-                white-space: nowrap;
-                text-overflow: clip;
-                border-style: solid;
-                border-width: 1px;
-                border-color: var(--mobile-chrome-border);
-                color: var(--mobile-chrome-text);
-                background: var(--mobile-chrome-fill) !important;
-                box-shadow: none !important;
-                backdrop-filter: none !important;
-            }
-
-            .game-shell.active .site-exit.mobile-chrome:hover,
-            .game-shell.active .site-exit.mobile-chrome:focus-visible {
-                background: rgba(66, 69, 87, 0.98) !important;
-            }
-
             .game-shell.active #glcanvas {
                 position: fixed;
                 flex: none;
@@ -625,73 +585,36 @@
             window.dispatchEvent(new Event('resize'));
         }
 
-        // Shared mobile chrome spec — keep in sync with ui.rs MOBILE_BACK_* / MOBILE_CHROME_*
-        const mobileChrome = {
-            marginX: 24,
-            y: 8,
-            backSize: 48,
-            homeW: 100,
-            homeH: 40,
-            homeY: 12,
-            fontSize: 16
-        };
-        const mobileBack = {
-            x: mobileChrome.marginX,
-            y: mobileChrome.y,
-            w: mobileChrome.backSize,
-            h: mobileChrome.backSize
-        };
-
-        function mobileSiteRect() {
-            const virtualScreen = activeVirtualScreen();
-            return {
-                x: virtualScreen.w - mobileChrome.marginX - mobileChrome.homeW,
-                y: mobileChrome.homeY,
-                w: mobileChrome.homeW,
-                h: mobileChrome.homeH
-            };
-        }
-
         function syncSiteExitLabel() {
-            siteExit.textContent = isMobileShell() ? 'HOME' : 'Back to Home';
+            siteExit.textContent = 'Back to Home';
             siteExit.setAttribute('aria-label', 'Back to Home');
         }
 
         function syncMobileSiteExitChrome() {
-            if (!shell.classList.contains('active') || !isMobileShell()) {
+            if (shell.classList.contains('active') && isMobileShell()) {
                 siteExit.classList.remove('mobile-chrome');
-                siteExit.style.left = '';
-                siteExit.style.top = '';
-                siteExit.style.width = '';
-                siteExit.style.height = '';
-                siteExit.style.fontSize = '';
-                siteExit.style.borderRadius = '';
+                siteExit.style.display = 'none';
                 syncSiteExitLabel();
                 return;
             }
 
-            siteExit.classList.add('mobile-chrome');
+            siteExit.style.display = '';
+            siteExit.classList.remove('mobile-chrome');
+            siteExit.style.left = '';
+            siteExit.style.top = '';
+            siteExit.style.width = '';
+            siteExit.style.height = '';
+            siteExit.style.fontSize = '';
+            siteExit.style.borderRadius = '';
             syncSiteExitLabel();
-
-            const rect = glcanvas.getBoundingClientRect();
-            const virtualScreen = activeVirtualScreen();
-            const mobileSite = mobileSiteRect();
-            const scaleX = rect.width / virtualScreen.w;
-            const scaleY = rect.height / virtualScreen.h;
-            siteExit.style.left = `${rect.left + mobileSite.x * scaleX}px`;
-            siteExit.style.top = `${rect.top + mobileSite.y * scaleY}px`;
-            siteExit.style.width = `${mobileSite.w * scaleX}px`;
-            siteExit.style.height = `${mobileSite.h * scaleY}px`;
-            siteExit.style.fontSize = `${mobileChrome.fontSize * scaleY}px`;
-            siteExit.style.borderRadius = `${(mobileSite.h / 2) * scaleY}px`;
         }
 
         const mobileTitleRows = {
             x: 24,
-            y: 560,
+            y: 620,
             w: 672,
-            h: 88,
-            gap: 12
+            h: 136,
+            gap: 44
         };
         const mobileAction = { x: 24, y: 1208, w: 672, h: 56 };
         const spellingPlay = { x: 24, y: 1048, w: 324, h: 74 };
@@ -851,7 +774,41 @@
             return -1;
         }
 
-        function bridgeCanvasTap(clientX, clientY) {
+        function bridgeTitleRowTap(row) {
+            if (row < 0) {
+                return false;
+            }
+
+            if (gameInputState === 'title-mini') {
+                if (row === 0) {
+                    sendLetter('r');
+                } else if (row === 1) {
+                    sendLetter('p');
+                } else {
+                    sendLetter('n');
+                }
+                gameInputState = 'game';
+                return true;
+            }
+
+            if (gameInputState !== 'title-main') {
+                return false;
+            }
+
+            if (row === 0) {
+                sendEnter();
+                gameInputState = 'game';
+            } else if (row === 1) {
+                sendLetter('p');
+                gameInputState = 'title-mini';
+            } else {
+                sendLetter('l');
+                gameInputState = 'spelling';
+            }
+            return true;
+        }
+
+        function bridgeCanvasTap(clientX, clientY, fromTouch = false) {
             if (!shell.classList.contains('active')) {
                 return false;
             }
@@ -859,9 +816,7 @@
             glcanvas.focus();
             const point = canvasPointToVirtual(clientX, clientY);
 
-            if (contains(mobileBack, point)) {
-                sendEscape();
-                gameInputState = gameInputState === 'title-mini' ? 'title-main' : 'title-main';
+            if (fromTouch && bridgeTitleRowTap(titleRowAt(point))) {
                 return true;
             }
 
@@ -966,7 +921,7 @@
             }
 
             const touch = event.changedTouches[0];
-            if (touch && bridgeCanvasTap(touch.clientX, touch.clientY)) {
+            if (touch && bridgeCanvasTap(touch.clientX, touch.clientY, true)) {
                 event.preventDefault();
             }
         }, { passive: false });
