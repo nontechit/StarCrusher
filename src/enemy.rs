@@ -392,8 +392,6 @@ impl EnemyGrid {
             return result;
         }
 
-        // Group by approximate column based on starting X positions
-        let _cols = (self.fire_interval_ms as usize).max(1); // Just use a heuristic
         for e in &self.enemies {
             if !e.alive {
                 continue;

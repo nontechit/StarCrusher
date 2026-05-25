@@ -1150,7 +1150,6 @@ pub fn draw_adventure_intro(page: usize) {
     set_color(parchment);
     draw_rectangle_lines(180.0, 500.0, 920.0, 110.0);
 
-    let _title_card = page == 0;
     centered_text_in(line_one, 210.0, 542.0, 860.0, line1_size, parchment);
     centered_text_in(line_two, 210.0, 578.0, 860.0, line2_size, WHITE);
     centered_text(
