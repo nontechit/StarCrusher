@@ -895,7 +895,27 @@ impl Game {
                 .button("PLAY", "enter", "spelling-play")
                 .button("NIGHT", "key:n", "spelling-night"),
             GameMode::Playing => overlay::OverlayState::empty(),
-            GameMode::GateQuestion => overlay::OverlayState::empty().with_home("HOME", "escape"),
+            GameMode::GateQuestion => {
+                const KEYPAD: [(&str, &str, &str); 12] = [
+                    ("1", "key:1", "keypad-0"),
+                    ("2", "key:2", "keypad-1"),
+                    ("3", "key:3", "keypad-2"),
+                    ("4", "key:4", "keypad-3"),
+                    ("5", "key:5", "keypad-4"),
+                    ("6", "key:6", "keypad-5"),
+                    ("7", "key:7", "keypad-6"),
+                    ("8", "key:8", "keypad-7"),
+                    ("9", "key:9", "keypad-8"),
+                    ("DEL", "backspace", "keypad-9"),
+                    ("0", "key:0", "keypad-10"),
+                    ("OK", "enter", "keypad-11"),
+                ];
+                let mut state = overlay::OverlayState::empty().with_home("HOME", "escape");
+                for (label, action, slot) in KEYPAD {
+                    state = state.button(label, action, slot);
+                }
+                state
+            }
         };
 
         overlay::publish(&state);

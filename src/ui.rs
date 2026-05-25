@@ -1897,6 +1897,10 @@ pub fn draw_answer_feedback(is_correct: bool) {
 }
 
 fn draw_number_pad() {
+    if mobile_html_overlay_controls() {
+        return;
+    }
+
     let labels = [
         "1", "2", "3", "4", "5", "6", "7", "8", "9", "DEL", "0", "OK",
     ];

@@ -414,6 +414,29 @@
             top: 1024px;
         }
 
+        /* Gate-question keypad: 3×4 grid matching the canvas keypad at (248,676) */
+        .game-overlay .overlay-keypad {
+            width: 68px;
+            min-height: 68px;
+            height: 68px;
+            border-radius: 12px;
+            font-size: 18px;
+            padding: 0;
+        }
+
+        .game-overlay .overlay-keypad.slot-keypad-0  { left: 248px; top: 676px; }
+        .game-overlay .overlay-keypad.slot-keypad-1  { left: 326px; top: 676px; }
+        .game-overlay .overlay-keypad.slot-keypad-2  { left: 404px; top: 676px; }
+        .game-overlay .overlay-keypad.slot-keypad-3  { left: 248px; top: 754px; }
+        .game-overlay .overlay-keypad.slot-keypad-4  { left: 326px; top: 754px; }
+        .game-overlay .overlay-keypad.slot-keypad-5  { left: 404px; top: 754px; }
+        .game-overlay .overlay-keypad.slot-keypad-6  { left: 248px; top: 832px; }
+        .game-overlay .overlay-keypad.slot-keypad-7  { left: 326px; top: 832px; }
+        .game-overlay .overlay-keypad.slot-keypad-8  { left: 404px; top: 832px; }
+        .game-overlay .overlay-keypad.slot-keypad-9  { left: 248px; top: 910px; }
+        .game-overlay .overlay-keypad.slot-keypad-10 { left: 326px; top: 910px; }
+        .game-overlay .overlay-keypad.slot-keypad-11 { left: 404px; top: 910px; }
+
         @media (max-width: 700px) {
             .game-shell.active {
                 display: block;
@@ -800,6 +823,7 @@
             if (slot === 'definition-action') return 'overlay-action slot-definition-action';
             if (slot && slot.startsWith('menu-')) return `overlay-menu slot-${slot}`;
             if (slot && slot.startsWith('spelling-')) return `overlay-spelling slot-${slot}`;
+            if (slot && slot.startsWith('keypad-')) return `overlay-keypad slot-${slot}`;
             return 'overlay-action';
         }
 
