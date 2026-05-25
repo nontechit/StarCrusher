@@ -44,6 +44,7 @@
             inset: 0;
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
             z-index: 0;
             background:
                 linear-gradient(rgba(59, 151, 215, 0.08) 1px, transparent 1px),
@@ -56,6 +57,7 @@
             position: relative;
             z-index: 1;
             min-height: 100vh;
+            min-height: 100dvh;
             display: grid;
             grid-template-rows: auto 1fr auto;
             padding: clamp(14px, 2vw, 24px) clamp(18px, 4vw, 56px) 22px;
@@ -923,8 +925,7 @@
                 return false;
             }
             glcanvas.focus();
-            // Rust handles all in-canvas tap targeting via macroquad touches().
-            // Don't preventDefault here — let the touch reach the WASM input layer.
+            // HTML buttons sit above the canvas; gameplay gestures still reach WASM.
             return false;
         }
 
