@@ -2,11 +2,13 @@ mod assets;
 mod enemy;
 mod levels;
 mod math_pong;
+mod overlay;
 mod platform;
 mod player;
 mod question;
 mod random;
 mod reading_snake;
+mod route;
 mod screen;
 mod ui;
 
@@ -18,6 +20,7 @@ use platform::{ActivePlatformBridge, GameEvent, GameOverReason, LifeLossReason, 
 use player::{Bullet, EnemyBullet, Player};
 use question::{generate_question, Question};
 use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
+use route::StartupRoute;
 use screen::{
     enter_fullscreen, primary_pointer_position, primary_tap_position, use_virtual_screen,
     window_conf,
@@ -131,27 +134,26 @@ impl Game {
             Some(&active_question),
         );
 
-        // Shell hints the desired starting mode via window.location.hash so the
-        // HTML landing buttons can skip the now-redundant in-canvas main title
-        // page entirely.
-        let initial_mode_code = platform::initial_mode_code();
+        // Shell routing comes from the HTML landing hash, but the game only
+        // deals in typed startup routes from here down.
+        let startup_route = StartupRoute::from_platform();
         let (mode, title_menu_page, adventure_active, adventure_step, intro_page) =
-            match initial_mode_code {
-                1 => (
+            match startup_route {
+                StartupRoute::Adventure => (
                     GameMode::AdventureIntro,
                     TitleMenuPage::Main,
                     true,
                     AdventureStep::MathInvaders1,
                     0,
                 ),
-                2 => (
+                StartupRoute::MissionSelect => (
                     GameMode::Title,
                     TitleMenuPage::MiniGames,
                     false,
                     AdventureStep::MathInvaders1,
                     0,
                 ),
-                _ => (
+                StartupRoute::Title => (
                     GameMode::Title,
                     TitleMenuPage::Main,
                     false,
@@ -822,87 +824,63 @@ impl Game {
 
     fn sync_html_overlay(&self) {
         if !screen::portrait_layout() {
-            platform::set_html_overlay("");
+            overlay::clear();
             return;
         }
 
-        let mut buttons = Vec::new();
-        let mut home_label = None;
-
-        match self.mode {
+        let state = match self.mode {
             GameMode::Title => {
                 if self.title_menu_page == TitleMenuPage::MiniGames {
-                    home_label = Some(("HOME", "escape"));
-                    buttons.push(("Reading Planet", "key:r", "menu-0"));
-                    buttons.push(("Math Orbit", "key:p", "menu-1"));
-                    buttons.push(("Night Planet", "key:n", "menu-2"));
+                    overlay::OverlayState::empty()
+                        .with_home("HOME", "escape")
+                        .button("Reading Planet", "key:r", "menu-0")
+                        .button("Math Orbit", "key:p", "menu-1")
+                        .button("Night Planet", "key:n", "menu-2")
                 } else {
-                    buttons.push(("Launch Game", "enter", "menu-0"));
-                    buttons.push(("Select Mission", "key:p", "menu-1"));
-                    buttons.push(("Word Cargo", "key:l", "menu-2"));
+                    overlay::OverlayState::empty()
+                        .button("Launch Game", "enter", "menu-0")
+                        .button("Select Mission", "key:p", "menu-1")
+                        .button("Word Cargo", "key:l", "menu-2")
                 }
             }
             GameMode::AdventureIntro => {
-                home_label = Some(("HOME", "escape"));
                 let label = if self.intro_page + 1 >= ui::adventure_intro_page_count() {
                     "START"
                 } else {
                     "CONTINUE"
                 };
-                buttons.push((label, "enter", "action"));
+                overlay::OverlayState::empty()
+                    .with_home("HOME", "escape")
+                    .button(label, "enter", "action")
             }
-            GameMode::GateIntro => {
-                home_label = Some(("HOME", "escape"));
-                buttons.push(("START", "enter", "action"));
-            }
-            GameMode::GameOver | GameMode::Victory => {
-                home_label = Some(("HOME", "escape"));
-                buttons.push(("START", "enter", "action"));
-            }
+            GameMode::GateIntro => overlay::OverlayState::empty()
+                .with_home("HOME", "escape")
+                .button("START", "enter", "action"),
+            GameMode::GameOver | GameMode::Victory => overlay::OverlayState::empty()
+                .with_home("HOME", "escape")
+                .button("START", "enter", "action"),
             GameMode::ReadingSnake => {
-                home_label = Some(("HOME", "escape"));
+                let mut state = overlay::OverlayState::empty().with_home("HOME", "escape");
                 if let Some((label, slot)) = self.reading_snake.mobile_overlay_action() {
-                    buttons.push((label, "enter", slot));
+                    state = state.button(label, "enter", slot);
                 }
+                state
             }
             GameMode::MathPong => {
-                home_label = Some(("HOME", "escape"));
+                let mut state = overlay::OverlayState::empty().with_home("HOME", "escape");
                 if let Some(label) = self.math_pong.mobile_overlay_action_label() {
-                    buttons.push((label, "enter", "action"));
+                    state = state.button(label, "enter", "action");
                 }
+                state
             }
-            GameMode::SpellingList => {
-                home_label = Some(("HOME", "escape"));
-                buttons.push(("PLAY", "enter", "spelling-play"));
-                buttons.push(("NIGHT", "key:n", "spelling-night"));
-            }
-            GameMode::Playing | GameMode::GateQuestion => {}
-        }
+            GameMode::SpellingList => overlay::OverlayState::empty()
+                .with_home("HOME", "escape")
+                .button("PLAY", "enter", "spelling-play")
+                .button("NIGHT", "key:n", "spelling-night"),
+            GameMode::Playing | GameMode::GateQuestion => overlay::OverlayState::empty(),
+        };
 
-        if buttons.is_empty() && home_label.is_none() {
-            platform::set_html_overlay("");
-            return;
-        }
-
-        let payload = serde_json::json!({
-            "home": home_label.map(|(label, action)| {
-                serde_json::json!({
-                    "label": label,
-                    "action": action,
-                })
-            }),
-            "buttons": buttons.into_iter().map(|(label, action, slot)| {
-                serde_json::json!({
-                    "label": label,
-                    "action": action,
-                    "slot": slot,
-                })
-            }).collect::<Vec<_>>(),
-        });
-
-        if let Ok(json) = serde_json::to_string(&payload) {
-            platform::set_html_overlay(&json);
-        }
+        overlay::publish(&state);
     }
 
     fn draw_playing(&self) {
