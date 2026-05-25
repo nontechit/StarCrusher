@@ -1315,11 +1315,10 @@ pub fn draw_spelling_list_screen(input: &str) {
 }
 
 fn draw_spelling_action_button(rect: Rect, label: &str, color: Color) {
+    if mobile_html_overlay_controls() {
+        return;
+    }
     if screen::portrait_layout() {
-        if mobile_html_overlay_controls() {
-            let _ = (rect, label);
-            return;
-        }
         draw_mobile_yellow_button_rect(rect, label, 40);
         return;
     }
