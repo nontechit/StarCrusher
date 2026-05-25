@@ -210,10 +210,7 @@ impl Game {
             TitleMenuOption::MathPong => self.start_math_orbit(),
             TitleMenuOption::ReadingSnake => self.start_reading_planet(),
             TitleMenuOption::NightmareSnake => self.start_night_planet(),
-            TitleMenuOption::SpellingList => {
-                self.spelling_input.clear();
-                self.mode = GameMode::SpellingList;
-            }
+            TitleMenuOption::SpellingList => self.start_spelling_list(),
         }
     }
 
@@ -405,20 +402,12 @@ impl Game {
             });
             if self.adventure_active {
                 match self.adventure_step {
-                    AdventureStep::MathInvaders1 => {
-                        self.adventure_step = AdventureStep::ReadingSnake;
-                        self.reading_snake = ReadingSnake::new_adventure();
-                        self.mode = GameMode::ReadingSnake;
-                    }
+                    AdventureStep::MathInvaders1 => self.enter_adventure_reading_planet(),
                     AdventureStep::MathInvaders2 => {
                         self.adventure_step = AdventureStep::MathPong;
                         self.start_math_orbit();
                     }
-                    AdventureStep::MathInvaders3 => {
-                        self.adventure_step = AdventureStep::NightmareSnake;
-                        self.reading_snake = ReadingSnake::new_adventure_nightmare();
-                        self.mode = GameMode::ReadingSnake;
-                    }
+                    AdventureStep::MathInvaders3 => self.enter_adventure_night_planet(),
                     AdventureStep::MathInvadersFinal => {
                         self.begin_gate();
                     }
@@ -476,6 +465,23 @@ impl Game {
 
     fn start_night_planet(&mut self) {
         self.reading_snake = ReadingSnake::new_nightmare();
+        self.mode = GameMode::ReadingSnake;
+    }
+
+    fn start_spelling_list(&mut self) {
+        self.spelling_input.clear();
+        self.mode = GameMode::SpellingList;
+    }
+
+    fn enter_adventure_reading_planet(&mut self) {
+        self.adventure_step = AdventureStep::ReadingSnake;
+        self.reading_snake = ReadingSnake::new_adventure();
+        self.mode = GameMode::ReadingSnake;
+    }
+
+    fn enter_adventure_night_planet(&mut self) {
+        self.adventure_step = AdventureStep::NightmareSnake;
+        self.reading_snake = ReadingSnake::new_adventure_nightmare();
         self.mode = GameMode::ReadingSnake;
     }
 
@@ -672,7 +678,7 @@ impl Game {
 
     fn update_spelling_list(&mut self) {
         if is_key_pressed(KeyCode::Escape) {
-            self.mode = GameMode::Title;
+            self.exit_to_title();
             return;
         }
 
