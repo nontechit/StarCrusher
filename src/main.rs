@@ -98,7 +98,6 @@ struct Game {
     mode: GameMode,
     title_menu_page: TitleMenuPage,
     title_selection: usize,
-    title_tap_armed: bool,
     grade: Grade,
     wave: usize,
     score: u32,
@@ -166,7 +165,6 @@ impl Game {
             mode,
             title_menu_page,
             title_selection: 0,
-            title_tap_armed: false,
             grade,
             wave: 1,
             score: 0,
@@ -256,7 +254,6 @@ impl Game {
                     if let Some(tap) = primary_tap_position() {
                         if let Some(index) = title_menu_index_at(tap, menu_len) {
                             self.title_selection = index;
-                            self.title_tap_armed = false;
                             self.launch_title_option(TitleMenuOption::from_index(
                                 self.title_menu_page,
                                 self.title_selection,
@@ -268,14 +265,11 @@ impl Game {
 
                 if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
                     self.title_selection = (self.title_selection + menu_len - 1) % menu_len;
-                    self.title_tap_armed = false;
                 } else if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
                     self.title_selection = (self.title_selection + 1) % menu_len;
-                    self.title_tap_armed = false;
                 }
 
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
-                    self.title_tap_armed = false;
                     self.launch_title_option(TitleMenuOption::from_index(
                         self.title_menu_page,
                         self.title_selection,
@@ -434,7 +428,6 @@ impl Game {
     fn exit_to_title(&mut self) {
         self.adventure_active = false;
         self.adventure_step = AdventureStep::MathInvaders1;
-        self.title_tap_armed = false;
         // The HTML landing is the title screen now; the canvas main title page
         // is dormant. Reload back to the landing instead of showing it.
         // Native builds (and any case where the shell hook is unavailable) fall
@@ -447,13 +440,11 @@ impl Game {
     fn back_to_main_menu(&mut self) {
         self.title_menu_page = TitleMenuPage::Main;
         self.title_selection = 1;
-        self.title_tap_armed = false;
     }
 
     fn go_to_mission_select(&mut self) {
         self.title_menu_page = TitleMenuPage::MiniGames;
         self.title_selection = 0;
-        self.title_tap_armed = false;
     }
 
     fn start_adventure(&mut self) {
