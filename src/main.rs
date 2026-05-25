@@ -244,6 +244,13 @@ impl Game {
             return;
         }
 
+        // Portrait mobile HTML overlay HOME buttons dispatch Escape. Canvas back
+        // taps are suppressed in that configuration, so these modes must handle it.
+        if is_key_pressed(KeyCode::Escape) && mode_handles_overlay_home_escape(self.mode) {
+            self.exit_to_title();
+            return;
+        }
+
         match self.mode {
             GameMode::Title => {
                 let menu_len = TitleMenuOption::menu_len(self.title_menu_page);
@@ -1056,6 +1063,15 @@ fn title_menu_index_at(point: Vec2, menu_len: usize) -> Option<usize> {
     })
 }
 
+/// Modes whose HTML overlay publishes a HOME button with action `"escape"`.
+/// Each must route Escape to `exit_to_title` when canvas back taps are off.
+fn mode_handles_overlay_home_escape(mode: GameMode) -> bool {
+    matches!(
+        mode,
+        GameMode::GateIntro | GameMode::GateQuestion | GameMode::GameOver | GameMode::Victory
+    )
+}
+
 fn gate_key_at(point: Vec2) -> Option<GateKey> {
     let labels = [
         GateKey::Digit('1'),
@@ -1086,6 +1102,43 @@ fn draw_starfield() {
         let x = ((i * 73 + 19) % screen::screen_w() as i32) as f32;
         let y = ((i * 41 + 37) % (screen::screen_h() as i32 - 40)) as f32;
         assets::draw_star(x, y, 0.6 + (i % 3) as f32 * 0.4);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{mode_handles_overlay_home_escape, GameMode};
+
+    #[test]
+    fn overlay_home_escape_is_handled_for_gate_and_endgame_modes() {
+        for mode in [
+            GameMode::GateIntro,
+            GameMode::GateQuestion,
+            GameMode::GameOver,
+            GameMode::Victory,
+        ] {
+            assert!(
+                mode_handles_overlay_home_escape(mode),
+                "{mode:?} publishes an overlay HOME button"
+            );
+        }
+    }
+
+    #[test]
+    fn overlay_home_escape_is_not_duplicated_for_modes_with_local_handlers() {
+        for mode in [
+            GameMode::Title,
+            GameMode::Playing,
+            GameMode::AdventureIntro,
+            GameMode::ReadingSnake,
+            GameMode::SpellingList,
+            GameMode::MathPong,
+        ] {
+            assert!(
+                !mode_handles_overlay_home_escape(mode),
+                "{mode:?} should handle Escape in its own update path"
+            );
+        }
     }
 }
 
