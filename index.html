@@ -790,7 +790,14 @@
         }
 
         function sendLetter(letter) {
-            sendGameKey(letter.toLowerCase(), `Key${letter.toUpperCase()}`);
+            // Digit keys use 'Digit5' code; letter keys use 'KeyR' code.
+            // into_sapp_keycode in the WASM bundle only maps 'Digit0'..'Digit9'
+            // for the number row — 'Key0'..'Key9' have no entry and return
+            // undefined, so key_down would receive 0 (unknown key).
+            const code = (letter >= '0' && letter <= '9')
+                ? `Digit${letter}`
+                : `Key${letter.toUpperCase()}`;
+            sendGameKey(letter.toLowerCase(), code);
         }
 
         function sendEnter() {

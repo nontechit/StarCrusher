@@ -617,10 +617,31 @@ impl Game {
     fn update_gate_question(&mut self) {
         let mut submit_answer = false;
 
+        // Digit input via is_key_pressed so that synthetic keydown events fired
+        // by the HTML overlay keypad are handled correctly.  get_char_pressed()
+        // only fires on real keypress events and is therefore unreachable from
+        // the overlay buttons.
+        const DIGIT_KEYS: [(KeyCode, char); 10] = [
+            (KeyCode::Key0, '0'),
+            (KeyCode::Key1, '1'),
+            (KeyCode::Key2, '2'),
+            (KeyCode::Key3, '3'),
+            (KeyCode::Key4, '4'),
+            (KeyCode::Key5, '5'),
+            (KeyCode::Key6, '6'),
+            (KeyCode::Key7, '7'),
+            (KeyCode::Key8, '8'),
+            (KeyCode::Key9, '9'),
+        ];
+        for (key, ch) in DIGIT_KEYS {
+            if is_key_pressed(key) && self.gate_answer.len() < MAX_GATE_ANSWER_LEN {
+                self.gate_answer.push(ch);
+            }
+        }
+
+        // Minus sign: hardware keyboard only — no overlay button for it.
         while let Some(ch) = get_char_pressed() {
-            if self.gate_answer.len() < MAX_GATE_ANSWER_LEN
-                && (ch.is_ascii_digit() || (ch == '-' && self.gate_answer.is_empty()))
-            {
+            if ch == '-' && self.gate_answer.is_empty() {
                 self.gate_answer.push(ch);
             }
         }
