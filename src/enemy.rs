@@ -19,10 +19,7 @@ const MOBILE_ENEMY_KILL_DROP: f32 = 34.0;
 pub enum EnemyType {
     Standard,
     Puzzle(i64), // Shows this number as the answer option
-    ShapePuzzle {
-        shape: CountShape,
-        number: i64,
-    },
+    ShapePuzzle { shape: CountShape, number: i64 },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -88,7 +85,14 @@ impl Enemy {
                 assets::draw_puzzle_enemy(self.x, self.y, grade_color, scale, *num);
             }
             EnemyType::ShapePuzzle { shape, number } => {
-                assets::draw_shape_puzzle_enemy(self.x, self.y, grade_color, scale, *shape, *number);
+                assets::draw_shape_puzzle_enemy(
+                    self.x,
+                    self.y,
+                    grade_color,
+                    scale,
+                    *shape,
+                    *number,
+                );
             }
         }
     }
@@ -198,11 +202,12 @@ impl EnemyGrid {
                 question.wrong_answers[wrong_index]
             };
 
-            self.enemies[*enemy_index].r#type = if let Some((shape, _)) = count_shape_from_question(question) {
-                EnemyType::ShapePuzzle { shape, number }
-            } else {
-                EnemyType::Puzzle(number)
-            };
+            self.enemies[*enemy_index].r#type =
+                if let Some((shape, _)) = count_shape_from_question(question) {
+                    EnemyType::ShapePuzzle { shape, number }
+                } else {
+                    EnemyType::Puzzle(number)
+                };
         }
     }
 
@@ -243,7 +248,9 @@ impl EnemyGrid {
             let number = if slot == correct_slot {
                 question.correct_answer
             } else {
-                while wrong_cursor < numbers.len() && numbers[wrong_cursor] == question.correct_answer {
+                while wrong_cursor < numbers.len()
+                    && numbers[wrong_cursor] == question.correct_answer
+                {
                     wrong_cursor += 1;
                 }
                 let value = numbers
@@ -439,7 +446,7 @@ fn target_count_for_question(config: &LevelConfig, active_question: Option<&Ques
         .unwrap_or(config.rows * config.cols)
 }
 
-fn count_shape_from_question(question: &Question) -> Option<(CountShape, i64)> {
+pub fn count_shape_from_question(question: &Question) -> Option<(CountShape, i64)> {
     let text = question.text.to_ascii_lowercase();
     if !text.starts_with("how many ") {
         return None;
@@ -480,7 +487,7 @@ mod tests {
 
     #[test]
     fn shape_count_questions_spawn_matching_shape_targets() {
-        let question = sample_question("How many hearts?", 4);
+        let question = sample_question("How many stars?", 4);
 
         assert_eq!(
             target_count_for_question(&Grade::Preschool.config(), Some(&question)),
@@ -489,7 +496,7 @@ mod tests {
         assert!(question_uses_visual_count(&question));
         assert_eq!(
             count_shape_from_question(&question),
-            Some((CountShape::Heart, 4))
+            Some((CountShape::Star, 4))
         );
 
         let mut grid = EnemyGrid {
@@ -507,7 +514,7 @@ mod tests {
             assert_eq!(enemy.height, 50.0);
             match enemy.r#type {
                 EnemyType::ShapePuzzle { shape, number } => {
-                    assert_eq!(shape, CountShape::Heart);
+                    assert_eq!(shape, CountShape::Star);
                     if number == 4 {
                         correct_targets += 1;
                     }
@@ -543,10 +550,16 @@ mod tests {
             };
             grid.assign_answers(&question);
 
-            assert_eq!(target_count_for_question(&config, Some(&question)), config.rows * config.cols);
+            assert_eq!(
+                target_count_for_question(&config, Some(&question)),
+                config.rows * config.cols
+            );
             assert!(grid.enemies.iter().all(|enemy| enemy.width == 58.0));
             assert!(grid.enemies.iter().all(|enemy| enemy.height == 50.0));
-            assert!(grid.enemies.iter().all(|enemy| matches!(enemy.r#type, EnemyType::Puzzle(_))));
+            assert!(grid
+                .enemies
+                .iter()
+                .all(|enemy| matches!(enemy.r#type, EnemyType::Puzzle(_))));
             assert_eq!(
                 grid.enemies
                     .iter()

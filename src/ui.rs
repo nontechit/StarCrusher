@@ -13,10 +13,10 @@ pub const TITLE_MENU_ROW_TOP: f32 = 270.0;
 pub const TITLE_MENU_ROW_H: f32 = 54.0;
 pub const TITLE_MENU_ROW_GAP: f32 = 18.0;
 pub const MOBILE_TITLE_MENU_X: f32 = 24.0;
-pub const MOBILE_TITLE_MENU_ROW_TOP: f32 = 620.0;
+pub const MOBILE_TITLE_MENU_ROW_TOP: f32 = 640.0;
 pub const MOBILE_TITLE_MENU_W: f32 = 672.0;
-pub const MOBILE_TITLE_MENU_ROW_H: f32 = 136.0;
-pub const MOBILE_TITLE_MENU_ROW_GAP: f32 = 44.0;
+pub const MOBILE_TITLE_MENU_ROW_H: f32 = 132.0;
+pub const MOBILE_TITLE_MENU_ROW_GAP: f32 = 24.0;
 pub const KEYPAD_X: f32 = 920.0;
 pub const KEYPAD_Y: f32 = 414.0;
 pub const KEYPAD_KEY: f32 = 54.0;
@@ -41,6 +41,8 @@ pub const SPELLING_NIGHTMARE_X: f32 = 670.0;
 pub const SPELLING_ACTION_Y: f32 = 536.0;
 pub const SPELLING_ACTION_W: f32 = 220.0;
 pub const SPELLING_ACTION_H: f32 = 74.0;
+pub const MOBILE_SPELLING_PLAY_Y: f32 = 864.0;
+pub const MOBILE_SPELLING_NIGHTMARE_Y: f32 = 1024.0;
 
 fn mobile_safe_x() -> f32 {
     MOBILE_GUTTER
@@ -141,11 +143,28 @@ pub fn mobile_back_button_contains(point: Vec2) -> bool {
 }
 
 pub fn mobile_action_button_contains(point: Vec2) -> bool {
+    screen::portrait_layout() && mobile_action_button_rect().contains(point)
+}
+
+pub fn mobile_action_button_rect() -> Rect {
+    Rect::new(
+        MOBILE_ACTION_X,
+        MOBILE_ACTION_Y,
+        MOBILE_ACTION_W,
+        MOBILE_ACTION_H,
+    )
+}
+
+pub fn mobile_action_button_rect_at(y: f32) -> Rect {
+    Rect::new(MOBILE_ACTION_X, y, MOBILE_ACTION_W, MOBILE_ACTION_H)
+}
+
+pub fn mobile_button_rect_contains(point: Vec2, rect: Rect) -> bool {
     screen::portrait_layout()
-        && point.x >= MOBILE_ACTION_X
-        && point.x <= MOBILE_ACTION_X + MOBILE_ACTION_W
-        && point.y >= MOBILE_ACTION_Y
-        && point.y <= MOBILE_ACTION_Y + MOBILE_ACTION_H
+        && point.x >= rect.x
+        && point.x <= rect.x + rect.w
+        && point.y >= rect.y
+        && point.y <= rect.y + rect.h
 }
 
 pub fn spelling_play_button_contains(point: Vec2) -> bool {
@@ -158,9 +177,12 @@ pub fn spelling_nightmare_button_contains(point: Vec2) -> bool {
 
 pub fn spelling_play_button_rect() -> Rect {
     if screen::portrait_layout() {
-        let gap = 24.0;
-        let w = (mobile_safe_w() - gap) / 2.0;
-        Rect::new(mobile_safe_x(), 1048.0, w, SPELLING_ACTION_H)
+        Rect::new(
+            MOBILE_ACTION_X,
+            MOBILE_SPELLING_PLAY_Y,
+            MOBILE_ACTION_W,
+            MOBILE_ACTION_H,
+        )
     } else {
         Rect::new(
             SPELLING_PLAY_X,
@@ -173,9 +195,12 @@ pub fn spelling_play_button_rect() -> Rect {
 
 pub fn spelling_nightmare_button_rect() -> Rect {
     if screen::portrait_layout() {
-        let gap = 24.0;
-        let w = (mobile_safe_w() - gap) / 2.0;
-        Rect::new(mobile_safe_x() + w + gap, 1048.0, w, SPELLING_ACTION_H)
+        Rect::new(
+            MOBILE_ACTION_X,
+            MOBILE_SPELLING_NIGHTMARE_Y,
+            MOBILE_ACTION_W,
+            MOBILE_ACTION_H,
+        )
     } else {
         Rect::new(
             SPELLING_NIGHTMARE_X,
@@ -223,22 +248,10 @@ pub fn draw_mobile_back_button(label: &str) {
         return;
     }
 
-    draw_rounded_panel(
-        MOBILE_BACK_X,
-        MOBILE_BACK_Y,
-        MOBILE_BACK_W,
-        MOBILE_BACK_H,
-        16.0,
-        Color::new(0.035, 0.07, 0.13, 0.94),
-        Color::new(0.42, 0.78, 1.0, 0.72),
-    );
-    centered_text_in(
+    draw_mobile_yellow_button_rect(
+        Rect::new(MOBILE_BACK_X, MOBILE_BACK_Y, MOBILE_BACK_W, MOBILE_BACK_H),
         label,
-        MOBILE_BACK_X,
-        MOBILE_BACK_Y + MOBILE_BACK_H * 0.68,
-        MOBILE_BACK_W,
-        screen::mobile_text_size(18),
-        Color::new(0.86, 0.96, 1.0, 1.0),
+        18,
     );
 }
 
@@ -247,39 +260,53 @@ pub fn draw_mobile_action_button(label: &str) {
         return;
     }
 
-    draw_rounded_rect(
-        MOBILE_ACTION_X,
-        MOBILE_ACTION_Y,
-        MOBILE_ACTION_W,
-        MOBILE_ACTION_H,
-        18.0,
-        Color::new(1.0, 0.82, 0.34, 0.98),
-    );
-    draw_rounded_rect(
-        MOBILE_ACTION_X + 3.0,
-        MOBILE_ACTION_Y + 3.0,
-        MOBILE_ACTION_W - 6.0,
-        MOBILE_ACTION_H - 6.0,
-        15.0,
-        Color::new(1.0, 0.78, 0.26, 0.98),
-    );
+    draw_mobile_action_button_in_rect(label, mobile_action_button_rect());
+}
 
-    let desired_size = if MOBILE_ACTION_H >= 100.0 { 40 } else { 28 };
+pub fn draw_mobile_action_button_in_rect(label: &str, rect: Rect) {
+    if !screen::portrait_layout() {
+        return;
+    }
+
+    draw_mobile_yellow_button_rect(rect, label, 40);
+}
+
+fn draw_mobile_yellow_button_rect(rect: Rect, label: &str, desired_size: u16) {
+    draw_rounded_rect(
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+        18.0,
+        Color::new(0.85, 0.52, 0.13, 0.98),
+    );
+    draw_rounded_rect(
+        rect.x + 3.0,
+        rect.y + 3.0,
+        rect.w - 6.0,
+        rect.h - 6.0,
+        15.0,
+        Color::new(1.0, 0.84, 0.44, 0.99),
+    );
+    set_color(Color::new(0.78, 0.44, 0.08, 0.28));
+    draw_rectangle(rect.x + 12.0, rect.y + rect.h - 14.0, rect.w - 24.0, 8.0);
+
     let font_size = fit_mobile_font_size(
         label,
         screen::mobile_text_size(desired_size)
-            .min((MOBILE_ACTION_H * 0.52) as u16)
-            .max(20),
-        MOBILE_ACTION_W - 48.0,
+            .min((rect.h * 0.52) as u16)
+            .max(16),
+        rect.w - 48.0,
     );
     centered_text_in(
         label,
-        MOBILE_ACTION_X,
-        MOBILE_ACTION_Y + MOBILE_ACTION_H * 0.68,
-        MOBILE_ACTION_W,
+        rect.x,
+        rect.y + rect.h * 0.68,
+        rect.w,
         font_size,
         Color::new(0.035, 0.06, 0.1, 1.0),
     );
+    set_default_color();
 }
 
 /// Draws the heads-up display (HUD) at top of screen.
@@ -580,11 +607,36 @@ fn draw_mobile_title_screen(showing_mini_games: bool, selected_index: usize) {
 
     clear_background(void);
     draw_star_map_background();
+
+    // Top-left small brand label, matching the HTML topbar. Hidden on the
+    // mini-games sub-page because the BACK button sits in the same corner.
+    if !showing_mini_games {
+        draw_text(
+            "STAR CRUSHER ARCADE LEARNING MISSIONS",
+            24.0,
+            46.0,
+            screen::mobile_text_size(20) as f32,
+            cyan,
+        );
+    }
+
+    // Ship/deck visualization sits above the title.
     draw_mobile_space_scene(
-        24.0, 220.0, 672.0, 130.0, panel, panel_edge, moon, amber, cyan, rose,
+        24.0, 80.0, 672.0, 220.0, panel, panel_edge, moon, amber, cyan, rose,
     );
 
-    centered_text("STAR CRUSHER", 120.0, screen::mobile_text_size(48), moon);
+    // Big title below the ship art.
+    centered_text("STAR CRUSHER", 380.0, screen::mobile_text_size(64), moon);
+    centered_text(
+        if showing_mini_games {
+            "SELECT MISSION"
+        } else {
+            "Choose a mission path."
+        },
+        430.0,
+        screen::mobile_text_size(24),
+        cyan,
+    );
 
     draw_mobile_adventure_menu(
         showing_mini_games,
@@ -599,16 +651,10 @@ fn draw_mobile_title_screen(showing_mini_games: bool, selected_index: usize) {
         if showing_mini_games {
             "Tap a mission"
         } else {
-            "Tap a destination"
+            "Ready when you are."
         },
-        1212.0,
-        screen::mobile_text_size(40),
-        moon,
-    );
-    centered_text(
-        "Tap again to launch",
-        1258.0,
-        screen::mobile_text_size(40),
+        1208.0,
+        screen::mobile_text_size(22),
         moon,
     );
 
@@ -652,11 +698,11 @@ fn draw_mobile_space_scene(
 ) {
     draw_rounded_panel(x, y, w, h, 18.0, panel, panel_edge);
 
-    draw_dungeon_planet(x + w * 0.14, y + h * 0.72, 42.0, moon, amber);
-    draw_dungeon_planet(x + w * 0.78, y + h * 0.62, 36.0, rose, cyan);
-    draw_spaceship(x + w * 0.46, y + h * 0.58, cyan, moon, amber);
-    draw_space_traveler(x + w * 0.32, y + h * 0.78, moon, cyan);
-    draw_space_traveler(x + w * 0.62, y + h * 0.82, moon, rose);
+    draw_dungeon_planet(x + w * 0.14, y + h * 0.55, 42.0, moon, amber);
+    draw_dungeon_planet(x + w * 0.78, y + h * 0.48, 36.0, rose, cyan);
+    draw_spaceship(x + w * 0.46, y + h * 0.40, cyan, moon, amber);
+    draw_space_traveler(x + w * 0.32, y + h * 0.46, moon, cyan);
+    draw_space_traveler(x + w * 0.62, y + h * 0.48, moon, rose);
 
     set_color(Color::new(0.35, 0.72, 0.95, 0.42));
     draw_rectangle(x + w * 0.18, y + h * 0.68, w * 0.24, 4.0);
@@ -721,111 +767,45 @@ fn draw_space_traveler(x: f32, y: f32, suit: Color, accent: Color) {
 fn draw_mobile_adventure_menu(
     showing_mini_games: bool,
     selected_index: usize,
-    panel: Color,
-    panel_edge: Color,
-    moon: Color,
-    amber: Color,
+    _panel: Color,
+    _panel_edge: Color,
+    _moon: Color,
+    _amber: Color,
 ) {
-    let main_options = [
-        ("Launch Voyage", "Start the planet dungeon route"),
-        ("Mission Select", "Practice arcade encounters"),
-        ("Word Cargo", "Load a spelling list"),
-    ];
-    let mini_game_options = [
-        ("Reading Planet", "Steer through word caves"),
-        ("Math Orbit", "Bounce into number targets"),
-        ("Night Planet", "Same-color letter trial"),
-    ];
-    let options = if showing_mini_games {
+    let main_options = ["Launch Game", "Select Mission", "Word Cargo"];
+    let mini_game_options = ["Reading Planet", "Math Orbit", "Night Planet"];
+    let options: &[&str] = if showing_mini_games {
         &mini_game_options
     } else {
         &main_options
     };
 
-    centered_text(
-        if showing_mini_games {
-            "MISSION SELECT"
-        } else {
-            "LAUNCH DECK"
-        },
-        480.0,
-        screen::mobile_text_size(34),
-        moon,
-    );
-
-    for (index, (label, detail)) in options.iter().enumerate() {
+    for (index, label) in options.iter().enumerate() {
         let y = MOBILE_TITLE_MENU_ROW_TOP
             + index as f32 * (MOBILE_TITLE_MENU_ROW_H + MOBILE_TITLE_MENU_ROW_GAP);
+        let rect = Rect::new(
+            MOBILE_TITLE_MENU_X,
+            y,
+            MOBILE_TITLE_MENU_W,
+            MOBILE_TITLE_MENU_ROW_H,
+        );
         let selected = selected_index % options.len() == index;
-
-        draw_mobile_menu_button(y, selected, label, detail, panel, panel_edge, moon, amber);
+        draw_mobile_yellow_button_rect_selectable(rect, label, 44, selected);
     }
 }
 
-fn draw_mobile_menu_button(
-    y: f32,
-    selected: bool,
+fn draw_mobile_yellow_button_rect_selectable(
+    rect: Rect,
     label: &str,
-    detail: &str,
-    panel: Color,
-    panel_edge: Color,
-    moon: Color,
-    amber: Color,
+    desired_size: u16,
+    selected: bool,
 ) {
-    let fill = if selected {
-        Color::new(0.98, 0.82, 0.42, 0.98)
-    } else {
-        panel
-    };
-    let edge = if selected {
-        amber
-    } else {
-        Color::new(panel_edge.r, panel_edge.g, panel_edge.b, 0.68)
-    };
-    draw_rounded_panel(
-        MOBILE_TITLE_MENU_X,
-        y,
-        MOBILE_TITLE_MENU_W,
-        MOBILE_TITLE_MENU_ROW_H,
-        18.0,
-        fill,
-        edge,
-    );
-
-    let text_color = if selected {
-        Color::new(0.035, 0.06, 0.1, 1.0)
-    } else {
-        moon
-    };
-    let detail_color = if selected {
-        Color::new(0.12, 0.16, 0.18, 1.0)
-    } else {
-        Color::new(0.62, 0.86, 1.0, 1.0)
-    };
-
-    let label_size = screen::mobile_text_size(40);
-    let detail_size = screen::mobile_text_size(26);
-    let center_x = MOBILE_TITLE_MENU_X + MOBILE_TITLE_MENU_W / 2.0;
-    let label_metrics = measure_text(label, None, label_size, 1.0);
-    let detail_metrics = measure_text(detail, None, detail_size, 1.0);
-    let text_block_h = label_size as f32 + detail_size as f32 + 8.0;
-    let text_top = y + (MOBILE_TITLE_MENU_ROW_H - text_block_h) / 2.0;
-    let label_y = text_top + label_size as f32 * 0.88;
-    let detail_y = text_top + label_size as f32 + detail_size as f32 * 0.88 + 4.0;
-    draw_text(
-        label,
-        center_x - label_metrics.w / 2.0,
-        label_y,
-        label_size as f32,
-        text_color,
-    );
-    draw_text(
-        detail,
-        center_x - detail_metrics.w / 2.0,
-        detail_y,
-        detail_size as f32,
-        detail_color,
-    );
+    draw_mobile_yellow_button_rect(rect, label, desired_size);
+    if selected {
+        set_color(Color::new(1.0, 1.0, 1.0, 0.72));
+        draw_rectangle_lines(rect.x - 4.0, rect.y - 4.0, rect.w + 8.0, rect.h + 8.0);
+        set_default_color();
+    }
 }
 
 fn draw_dungeon_tiles(stone_dark: Color, ink: Color) {
@@ -922,11 +902,16 @@ fn draw_adventure_menu(
     w: f32,
     showing_mini_games: bool,
     selected_index: usize,
-    ink: Color,
-    stone: Color,
+    _ink: Color,
+    _stone: Color,
     stone_light: Color,
     parchment: Color,
 ) {
+    let gold_fill = Color::new(1.0, 0.84, 0.44, 0.99);
+    let gold_edge = Color::new(0.85, 0.62, 0.18, 1.0);
+    let gold_shadow = Color::new(0.83, 0.56, 0.18, 0.28);
+    let ink_dark = Color::new(0.035, 0.06, 0.1, 1.0);
+
     let main_options = [
         ("Launch Voyage", "Start the planet dungeon route"),
         ("Mission Select", "Practice arcade encounters"),
@@ -956,27 +941,68 @@ fn draw_adventure_menu(
 
     for (index, (label, detail)) in options.iter().enumerate() {
         let row_top = TITLE_MENU_ROW_TOP + index as f32 * (TITLE_MENU_ROW_H + TITLE_MENU_ROW_GAP);
-        let label_y = row_top + 24.0;
-        let detail_y = row_top + 43.0;
         let selected = selected_index % options.len() == index;
-        if selected {
-            set_color(parchment);
-            draw_rectangle(x + 22.0, row_top, w - 44.0, TITLE_MENU_ROW_H);
-            set_color(ink);
-            draw_rectangle(x + 32.0, row_top + 20.0, 10.0, 10.0);
-            draw_text(label, x + 54.0, label_y, 20.0, ink);
-            draw_text(detail, x + 54.0, detail_y, 12.0, ink);
-        } else {
-            set_color(stone);
-            draw_rectangle_lines(x + 22.0, row_top, w - 44.0, TITLE_MENU_ROW_H);
-            draw_text(label, x + 54.0, label_y, 20.0, stone_light);
-            draw_text(detail, x + 54.0, detail_y, 12.0, parchment);
-        }
+        draw_adventure_menu_row(
+            x + 22.0,
+            row_top,
+            w - 44.0,
+            TITLE_MENU_ROW_H,
+            label,
+            detail,
+            selected,
+            ink_dark,
+            gold_fill,
+            gold_edge,
+            gold_shadow,
+        );
     }
 
     if showing_mini_games {
         centered_text_in("Press ESC to return", x, y + 338.0, w, 14, parchment);
     }
+}
+
+fn draw_adventure_menu_row(
+    rx: f32,
+    ry: f32,
+    rw: f32,
+    rh: f32,
+    label: &str,
+    detail: &str,
+    selected: bool,
+    ink_dark: Color,
+    gold_fill: Color,
+    gold_edge: Color,
+    gold_shadow: Color,
+) {
+    let radius = 18.0;
+
+    // Shadow bar at bottom
+    set_color(gold_shadow);
+    draw_rounded_rect(rx + 4.0, ry + rh - 12.0, rw - 8.0, 8.0, 4.0, gold_shadow);
+
+    // Outer border (gold edge)
+    draw_rounded_rect(rx, ry, rw, rh, radius, gold_edge);
+    // Inner fill
+    draw_rounded_rect(
+        rx + 3.0,
+        ry + 3.0,
+        rw - 6.0,
+        rh - 6.0,
+        radius - 3.0,
+        gold_fill,
+    );
+
+    if selected {
+        set_color(Color::new(1.0, 1.0, 1.0, 0.72));
+        draw_rectangle_lines(rx - 4.0, ry - 4.0, rw + 8.0, rh + 8.0);
+        set_default_color();
+    }
+
+    let label_size = screen::mobile_text_size(20);
+    let detail_size = screen::mobile_text_size(13);
+    draw_text(label, rx + 54.0, ry + 24.0, label_size as f32, ink_dark);
+    draw_text(detail, rx + 54.0, ry + 46.0, detail_size as f32, ink_dark);
 }
 
 fn draw_door_glyph(x: f32, y: f32, ink: Color, stone: Color, stone_light: Color) {
@@ -1163,29 +1189,29 @@ fn draw_mobile_adventure_intro(page: usize) {
         Color::new(0.7, 0.9, 1.0, 1.0),
     );
 
-    draw_rounded_panel(24.0, 140.0, 672.0, 320.0, 22.0, panel, edge);
-    draw_dungeon_planet(180.0, 300.0, 48.0, Color::new(0.82, 0.9, 0.7, 1.0), amber);
-    draw_dungeon_planet(540.0, 280.0, 40.0, rose, cyan);
-    draw_spaceship(360.0, 278.0, cyan, moon, amber);
-    draw_space_traveler(280.0, 330.0, moon, cyan);
-    draw_space_traveler(440.0, 336.0, moon, rose);
+    draw_rounded_panel(24.0, 140.0, 672.0, 340.0, 22.0, panel, edge);
+    draw_dungeon_planet(180.0, 310.0, 52.0, Color::new(0.82, 0.9, 0.7, 1.0), amber);
+    draw_dungeon_planet(540.0, 288.0, 44.0, rose, cyan);
+    draw_spaceship(360.0, 286.0, cyan, moon, amber);
+    draw_space_traveler(280.0, 348.0, moon, cyan);
+    draw_space_traveler(440.0, 354.0, moon, rose);
     set_color(Color::new(0.36, 0.74, 1.0, 0.38));
-    draw_rectangle(240.0, 296.0, 120.0, 5.0);
-    draw_rectangle(400.0, 296.0, 120.0, 5.0);
+    draw_rectangle(240.0, 306.0, 120.0, 5.0);
+    draw_rectangle(400.0, 306.0, 120.0, 5.0);
 
     draw_rounded_panel(
         24.0,
-        520.0,
+        548.0,
         672.0,
-        160.0,
+        252.0,
         22.0,
         Color::new(0.07, 0.055, 0.12, 0.96),
         Color::new(1.0, 0.82, 0.36, 0.9),
     );
-    let line1_size = screen::mobile_text_size(if page == 0 { 28 } else { 20 });
-    let line2_size = screen::mobile_text_size(if page == 0 { 22 } else { 18 });
-    draw_wrapped_centered_text(line_one, 584.0, 600.0, line1_size, amber);
-    draw_wrapped_centered_text(line_two, 626.0, 600.0, line2_size, moon);
+    let line1_size = screen::mobile_text_size(if page == 0 { 32 } else { 24 });
+    let line2_size = screen::mobile_text_size(if page == 0 { 24 } else { 20 });
+    draw_wrapped_centered_text(line_one, 644.0, 600.0, line1_size, amber);
+    draw_wrapped_centered_text(line_two, 704.0, 600.0, line2_size, moon);
 
     draw_mobile_action_button(if page + 1 >= ADVENTURE_INTRO_PAGES.len() {
         "START"
@@ -1207,12 +1233,7 @@ pub fn draw_spelling_list_screen(input: &str) {
     let amber = Color::new(1.0, 0.76, 0.25, 1.0);
     let cyan = Color::new(0.32, 0.9, 1.0, 1.0);
 
-    centered_text(
-        "WORD CARGO",
-        100.0,
-        screen::mobile_text_size(36),
-        moon,
-    );
+    centered_text("WORD CARGO", 100.0, screen::mobile_text_size(36), moon);
     centered_text(
         "Type word: definition pairs separated by semicolons.",
         148.0,
@@ -1272,23 +1293,14 @@ pub fn draw_spelling_list_screen(input: &str) {
         draw_rectangle(input_x + 26.0, input_y + 78.0, 16.0, 3.0);
     }
 
-    centered_text(
-        "Leave it blank to use the default words.",
-        456.0,
-        18,
-        amber,
-    );
+    centered_text("Leave it blank to use the default words.", 456.0, 18, amber);
     centered_text(
         "Backspace deletes   ESC returns to title",
         504.0,
         18,
         Color::new(0.62, 0.86, 1.0, 1.0),
     );
-    draw_spelling_action_button(
-        spelling_play_button_rect(),
-        "PLAY",
-        amber,
-    );
+    draw_spelling_action_button(spelling_play_button_rect(), "PLAY", amber);
     draw_spelling_action_button(
         spelling_nightmare_button_rect(),
         "NIGHT",
@@ -1298,6 +1310,11 @@ pub fn draw_spelling_list_screen(input: &str) {
 }
 
 fn draw_spelling_action_button(rect: Rect, label: &str, color: Color) {
+    if screen::portrait_layout() {
+        draw_mobile_yellow_button_rect(rect, label, 40);
+        return;
+    }
+
     draw_rounded_panel(
         rect.x,
         rect.y,
@@ -1864,29 +1881,33 @@ fn draw_number_pad() {
 
     for (index, label) in labels.iter().enumerate() {
         let rect = keypad_button_rect(index);
-        let accent = *label == "OK";
-
-        set_color(if accent {
-            Color::new(0.2, 0.78, 0.65, 0.92)
+        if screen::portrait_layout() {
+            draw_mobile_yellow_button_rect(rect, label, if label.len() > 1 { 16 } else { 24 });
         } else {
-            Color::new(0.16, 0.18, 0.28, 0.92)
-        });
-        draw_rectangle(rect.x, rect.y, rect.w, rect.h);
-        set_color(if accent {
-            WHITE
-        } else {
-            Color::new(0.5, 0.9, 1.0, 1.0)
-        });
-        draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h);
+            let accent = *label == "OK";
 
-        let font_size = screen::mobile_text_size(if label.len() > 1 { 16 } else { 24 });
-        let tm = measure_text(label, None, font_size, 1.0);
-        draw_text(
-            label,
-            rect.x + rect.w / 2.0 - tm.w / 2.0,
-            rect.y + rect.h / 2.0 + font_size as f32 / 3.0,
-            font_size as f32,
-            current_color(),
-        );
+            set_color(if accent {
+                Color::new(0.2, 0.78, 0.65, 0.92)
+            } else {
+                Color::new(0.16, 0.18, 0.28, 0.92)
+            });
+            draw_rectangle(rect.x, rect.y, rect.w, rect.h);
+            set_color(if accent {
+                WHITE
+            } else {
+                Color::new(0.5, 0.9, 1.0, 1.0)
+            });
+            draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h);
+
+            let font_size = screen::mobile_text_size(if label.len() > 1 { 16 } else { 24 });
+            let tm = measure_text(label, None, font_size, 1.0);
+            draw_text(
+                label,
+                rect.x + rect.w / 2.0 - tm.w / 2.0,
+                rect.y + rect.h / 2.0 + font_size as f32 / 3.0,
+                font_size as f32,
+                current_color(),
+            );
+        }
     }
 }

@@ -2,10 +2,12 @@
 
 Star Crusher is an educational arcade collection about two young space travelers flying between dungeon planets. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.6.0`
+Current build: `1.6.1`
 
 ## Latest Mobile Release
 
+- **Version 1.6.1 Reading intro polish:** Reading Planet and Night Planet intro cards now show the hidden word, part of speech, and definition as one clean prompt, with the yellow `START` action above the helper text and a matching mobile tap target.
+- **Version 1.6.1 audit pass:** Re-ran the full iPhone CDP workflow across launch, mission select, Reading/Night, Math Invaders, Math Orbit, and right-edge tap states before release.
 - **Version 1.6.0 UI pass:** Unified the Star Crusher arcade aesthetic across the title flow, Launch Voyage intro, Math Invaders, Math Orbit, Reading Planet, Night Planet, and Word Cargo.
 - **Math Invaders shape-count enemies:** Preschool count prompts now ask clean `How many ...?` questions while the requested objects appear as the enemy wave; the player shoots the correctly numbered shape target.
 - **All-grade Math Invaders targets:** Numbered targets across Preschool through 5th Grade use the larger target footprint and the same yellow answer-number color as the question card.
@@ -358,8 +360,7 @@ Reading Snake Nightmare:
 - Local iPhone screenshots in `pictures/` are ignored and should stay out of commits.
 - The game uses `macroquad` for windowing, input, and drawing, and `rand` for question/enemy randomization.
 - CI runs `cargo audit` before each Pages deploy. Local check: `cargo audit --ignore RUSTSEC-2025-0035`.
-- Full iPhone screenshot audit for this mobile UI pass: `target/iphonescreenshots/5_24_2026_18_33` (scripted states reviewed after the 1.6.0 mobile UI pass).
-- Before/after screenshot comparisons can be generated with `scripts/compare-audit-screenshots.ps1`; see `docs/screenshot-change-review.md`.
+- Full iPhone screenshot QA was completed across 17 scripted mobile states before the 1.6.1 release.
 - The static web shell uses a restrictive Content Security Policy in `index.html`; `wasm-unsafe-eval` and inline script/style allowances are required for the Macroquad WASM loader.
 - Custom spelling input is capped at 64 words, 12 characters per word, and 180 characters per definition.
 

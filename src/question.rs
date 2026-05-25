@@ -23,34 +23,30 @@ pub fn generate_question(grade: Grade) -> Question {
     }
 }
 
-/// Math Pong uses only single-line counting prompts for hearts, circles, or X shapes.
+/// Math Orbit uses star-counting prompts so the visible targets match the
+/// instruction: count the stars, then shoot the star with that number.
 pub fn generate_math_pong_question(grade: Grade) -> Question {
     let (min_count, max_count) = math_pong_count_range(grade);
     let count = random::i32_inclusive(min_count, max_count);
-    let shapes = ["hearts", "circles", "X's"];
-    let shape = shapes[random::usize_exclusive(shapes.len())];
 
     Question {
-        text: format!("How many {}?", shape),
+        text: "How many stars?".to_string(),
         correct_answer: count as i64,
-        wrong_answers: gen_unique_wrongs(
-            count as i64,
-            min_count as i64,
-            max_count as i64,
-            3,
-        ),
+        wrong_answers: gen_unique_wrongs(count as i64, min_count as i64, max_count as i64, 3),
     }
 }
 
 fn math_pong_count_range(grade: Grade) -> (i32, i32) {
+    // Cap at 9 so the shape stays large enough to read on a phone — the
+    // shape-puzzle assets clamp to 1..=9 anyway via count_shape_from_question.
     match grade {
         Grade::Preschool => (1, 5),
-        Grade::Kindergarten => (1, 10),
-        Grade::FirstGrade => (1, 12),
-        Grade::SecondGrade => (1, 15),
-        Grade::ThirdGrade => (1, 18),
-        Grade::FourthGrade => (1, 20),
-        Grade::FifthGrade => (1, 25),
+        Grade::Kindergarten => (1, 7),
+        Grade::FirstGrade => (2, 8),
+        Grade::SecondGrade => (2, 8),
+        Grade::ThirdGrade => (3, 9),
+        Grade::FourthGrade => (3, 9),
+        Grade::FifthGrade => (4, 9),
     }
 }
 

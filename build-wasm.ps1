@@ -9,8 +9,8 @@ $rootWasm = Join-Path $Root "star-crusher.wasm"
 $targetWasm = Join-Path $Root "target\wasm32-unknown-unknown\release\star-crusher.wasm"
 $buildInfoPath = Join-Path $Root "star-crusher.wasm.buildinfo.json"
 
-$expectedMarker = "Tap a destination"
-$staleMarker = "Choose a destination"
+$expectedMarker = "STAR CRUSHER ARCADE LEARNING MISSIONS"
+$staleMarker = "Tap a destination"
 
 function Get-FileSha256([string]$Path) {
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()

@@ -131,9 +131,38 @@ impl Game {
             Some(&active_question),
         );
 
+        // Shell hints the desired starting mode via window.location.hash so the
+        // HTML landing buttons can skip the now-redundant in-canvas main title
+        // page entirely.
+        let initial_mode_code = platform::initial_mode_code();
+        let (mode, title_menu_page, adventure_active, adventure_step, intro_page) =
+            match initial_mode_code {
+                1 => (
+                    GameMode::AdventureIntro,
+                    TitleMenuPage::Main,
+                    true,
+                    AdventureStep::MathInvaders1,
+                    0,
+                ),
+                2 => (
+                    GameMode::Title,
+                    TitleMenuPage::MiniGames,
+                    false,
+                    AdventureStep::MathInvaders1,
+                    0,
+                ),
+                _ => (
+                    GameMode::Title,
+                    TitleMenuPage::Main,
+                    false,
+                    AdventureStep::MathInvaders1,
+                    0,
+                ),
+            };
+
         Self {
-            mode: GameMode::Title,
-            title_menu_page: TitleMenuPage::Main,
+            mode,
+            title_menu_page,
             title_selection: 0,
             title_tap_armed: false,
             grade,
@@ -154,9 +183,9 @@ impl Game {
             last_enemy_fire: 0.0,
             reading_snake: ReadingSnake::new(),
             math_pong: MathPong::new(),
-            intro_page: 0,
-            adventure_active: false,
-            adventure_step: AdventureStep::MathInvaders1,
+            intro_page,
+            adventure_active,
+            adventure_step,
             platform: ActivePlatformBridge::default(),
         }
     }
@@ -241,24 +270,12 @@ impl Game {
                 let menu_len = TitleMenuOption::menu_len(self.title_menu_page);
                 if let Some(tap) = primary_tap_position() {
                     if let Some(index) = title_menu_index_at(tap, menu_len) {
-                        if screen::portrait_layout() {
-                            let launch_selected =
-                                self.title_tap_armed && self.title_selection == index;
-                            self.title_selection = index;
-                            self.title_tap_armed = !launch_selected;
-                            if launch_selected {
-                                self.launch_title_option(TitleMenuOption::from_index(
-                                    self.title_menu_page,
-                                    self.title_selection,
-                                ));
-                            }
-                        } else {
-                            self.title_selection = index;
-                            self.launch_title_option(TitleMenuOption::from_index(
-                                self.title_menu_page,
-                                self.title_selection,
-                            ));
-                        }
+                        self.title_selection = index;
+                        self.title_tap_armed = false;
+                        self.launch_title_option(TitleMenuOption::from_index(
+                            self.title_menu_page,
+                            self.title_selection,
+                        ));
                         return;
                     }
                 }
@@ -439,8 +456,13 @@ impl Game {
     fn exit_to_title(&mut self) {
         self.adventure_active = false;
         self.adventure_step = AdventureStep::MathInvaders1;
-        self.title_menu_page = TitleMenuPage::Main;
         self.title_tap_armed = false;
+        // The HTML landing is the title screen now; the canvas main title page
+        // is dormant. Reload back to the landing instead of showing it.
+        // Native builds (and any case where the shell hook is unavailable) fall
+        // through to the legacy in-canvas title.
+        platform::return_to_landing();
+        self.title_menu_page = TitleMenuPage::Main;
         self.mode = GameMode::Title;
     }
 
@@ -791,7 +813,7 @@ impl Game {
             if self.mode == GameMode::Title && self.title_menu_page == TitleMenuPage::MiniGames {
                 ui::draw_mobile_back_button("BACK");
             } else {
-                ui::draw_mobile_back_button("TITLE");
+                ui::draw_mobile_back_button("HOME");
             }
         }
     }

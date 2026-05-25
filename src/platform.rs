@@ -285,12 +285,42 @@ fn forward_event_json(json: &str) {
 mod wasm_js {
     extern "C" {
         fn boohw_starcrusher_emit_event(ptr: *const u8, len: u32);
+        fn boohw_starcrusher_initial_mode() -> u32;
+        fn boohw_starcrusher_return_to_landing();
     }
 
     pub fn emit_platform_event(json: &str) {
         unsafe {
             boohw_starcrusher_emit_event(json.as_ptr(), json.len() as u32);
         }
+    }
+
+    pub fn initial_mode_code() -> u32 {
+        unsafe { boohw_starcrusher_initial_mode() }
+    }
+
+    pub fn return_to_landing() {
+        unsafe { boohw_starcrusher_return_to_landing() }
+    }
+}
+
+/// Returns the shell-hinted starting mode (0 = title, 1 = adventure, 2 = mission).
+pub fn initial_mode_code() -> u32 {
+    #[cfg(target_arch = "wasm32")]
+    {
+        wasm_js::initial_mode_code()
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        0
+    }
+}
+
+/// Asks the shell to reload back to the HTML landing page.
+pub fn return_to_landing() {
+    #[cfg(target_arch = "wasm32")]
+    {
+        wasm_js::return_to_landing();
     }
 }
 

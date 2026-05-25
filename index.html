@@ -97,9 +97,9 @@
             width: min(760px, 100%);
             margin: 0 auto;
             display: grid;
-            gap: clamp(18px, 3vh, 28px);
+            gap: clamp(16px, 2.8vh, 28px);
             align-content: center;
-            padding: clamp(26px, 5vh, 54px) 0 clamp(22px, 4vh, 40px);
+            padding: clamp(20px, 4vh, 44px) 0 clamp(18px, 3vh, 32px);
         }
 
         .hero-copy {
@@ -138,14 +138,14 @@
             display: flex;
             align-items: center;
             flex-direction: column;
-            gap: 12px;
-            margin-top: 22px;
+            gap: 16px;
+            margin-top: 26px;
         }
 
         button {
             border: 3px solid #d99f2f;
             border-radius: 18px;
-            min-height: 72px;
+            min-height: 82px;
             width: min(100%, 680px);
             padding: 0 24px;
             color: #071018;
@@ -178,87 +178,9 @@
             font-weight: 650;
         }
 
-        .mission-panel {
-            position: relative;
-            z-index: 2;
-            width: 100%;
-            min-width: 0;
-            border: 3px solid rgba(79, 183, 255, 0.78);
-            background: var(--panel);
-            border-radius: 18px;
-            padding: clamp(14px, 2vw, 18px);
-            box-shadow: inset 0 0 0 3px rgba(7, 23, 43, 0.72), 0 0 34px rgba(52, 171, 255, 0.12);
-        }
-
-        .mission-title {
-            margin: 0 0 14px;
-            color: var(--text);
-            font-size: clamp(1.1rem, 2.8vw, 1.4rem);
-            font-weight: 900;
-            text-transform: uppercase;
-            text-align: center;
-            letter-spacing: 0;
-        }
-
-        .mode-list {
-            display: grid;
-            gap: 14px;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-
-        .mode-list li {
-            display: grid;
-            grid-template-columns: clamp(42px, 7vw, 54px) minmax(0, 1fr);
-            gap: clamp(10px, 2vw, 14px);
-            align-items: center;
-            min-height: 78px;
-            border: 2px solid rgba(79, 183, 255, 0.66);
-            border-radius: 12px;
-            padding: clamp(12px, 2vw, 16px);
-            background: var(--panel-soft);
-            box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.22);
-        }
-
-        .badge {
-            display: grid;
-            place-items: center;
-            width: clamp(42px, 7vw, 54px);
-            height: clamp(42px, 7vw, 54px);
-            border-radius: 999px;
-            color: #071018;
-            font-weight: 950;
-            background: var(--cyan);
-        }
-
-        .mode-list li:nth-child(2) .badge {
-            background: var(--gold);
-        }
-
-        .mode-list li:nth-child(3) .badge {
-            background: var(--pink);
-            color: #fff;
-        }
-
-        .mode-name {
-            margin: 0;
-            font-weight: 850;
-            font-size: clamp(1rem, 2.5vw, 1.18rem);
-            overflow-wrap: anywhere;
-        }
-
-        .mode-detail {
-            margin: 2px 0 0;
-            color: var(--muted);
-            line-height: 1.35;
-            font-size: clamp(0.82rem, 2vw, 0.95rem);
-            overflow-wrap: anywhere;
-        }
-
         .deck-visual {
             position: relative;
-            min-height: clamp(116px, 20vh, 154px);
+            min-height: clamp(148px, 25vh, 196px);
             border: 3px solid rgba(79, 183, 255, 0.8);
             border-radius: 18px;
             background: rgba(5, 14, 29, 0.92);
@@ -483,8 +405,8 @@
             }
 
             .hero {
-                gap: 18px;
-                padding: 28px 0 24px;
+                gap: 20px;
+                padding: 18px 0 24px;
             }
 
             h1 {
@@ -504,7 +426,7 @@
             }
 
             .actions {
-                margin-top: 18px;
+                margin-top: 20px;
             }
 
             button:not(.site-exit) {
@@ -513,14 +435,6 @@
 
             .status {
                 min-height: 0;
-            }
-
-            .mission-panel {
-                padding: 14px;
-            }
-
-            .mode-list li {
-                min-height: 72px;
             }
         }
 
@@ -542,25 +456,8 @@
                 font-size: clamp(2rem, 10vw, 2.7rem);
             }
 
-            .mode-list li {
-                grid-template-columns: 38px minmax(0, 1fr);
-            }
-
-            .badge {
-                width: 38px;
-                height: 38px;
-            }
-
-            .mode-name {
-                font-size: 0.98rem;
-            }
-
-            .mode-detail {
-                font-size: 0.86rem;
-            }
-
             .deck-visual {
-                min-height: 108px;
+                min-height: 148px;
             }
 
             .ship {
@@ -585,20 +482,9 @@
     <main class="landing" id="landing">
         <header class="topbar">
             <div class="brand-mark">Star Crusher</div>
-            <div>Arcade Learning Missions</div>
         </header>
 
         <section class="hero" aria-labelledby="title">
-            <div class="hero-copy">
-                <p class="eyebrow">Launch Deck</p>
-                <h1 id="title">Star Crusher</h1>
-                <p class="subtitle">Choose a mission path, then jump into quick math and reading arcade runs.</p>
-                <div class="actions">
-                    <button id="launch" type="button">Launch Game</button>
-                    <span class="status" id="status" role="status" aria-live="polite">Ready when you are.</span>
-                </div>
-            </div>
-
             <div class="deck-visual" aria-hidden="true">
                 <span class="planet left"></span>
                 <span class="ship"></span>
@@ -607,38 +493,18 @@
                 <span class="planet right"></span>
             </div>
 
-            <aside class="mission-panel" aria-label="Game modes">
-                <p class="mission-title">Mission Select</p>
-                <ul class="mode-list">
-                    <li style="cursor:pointer" class="mode-item" data-game="mathinv">
-                        <span class="badge">+</span>
-                        <div>
-                            <p class="mode-name">Math Invaders</p>
-                            <p class="mode-detail">Shoot the answer before the wave closes in.</p>
-                        </div>
-                    </li>
-                    <li style="cursor:pointer" class="mode-item" data-game="mathpong">
-                        <span class="badge">=</span>
-                        <div>
-                            <p class="mode-name">Math Pong</p>
-                            <p class="mode-detail">Line up the paddle and launch at the right target.</p>
-                        </div>
-                    </li>
-                    <li style="cursor:pointer" class="mode-item" data-game="readsnake">
-                        <span class="badge">A</span>
-                        <div>
-                            <p class="mode-name">Reading Snake</p>
-                            <p class="mode-detail">Collect letters in order and complete the word.</p>
-                        </div>
-                    </li>
-                </ul>
-            </aside>
+            <div class="hero-copy">
+                <p class="eyebrow">Star Crusher Arcade Learning Missions</p>
+                <h1 id="title">Star Crusher</h1>
+                <p class="subtitle">Choose a mission path, then jump into quick math and reading arcade runs.</p>
+                <div class="actions">
+                    <button id="launch" type="button">Launch Game</button>
+                    <button id="select-mission" type="button">Select Mission</button>
+                    <span class="status" id="status" role="status" aria-live="polite">Ready when you are.</span>
+                </div>
+            </div>
         </section>
 
-        <footer class="footer">
-            <span>Keyboard and touch friendly</span>
-            <span>Built with Rust and Macroquad</span>
-        </footer>
     </main>
 
     <section class="game-shell" id="game-shell" aria-label="StarCrusher game">
@@ -650,6 +516,7 @@
         const stars = document.getElementById('starfield');
         const ctx = stars.getContext('2d');
         const launch = document.getElementById('launch');
+        const selectMission = document.getElementById('select-mission');
         const status = document.getElementById('status');
         const landing = document.getElementById('landing');
         const shell = document.getElementById('game-shell');
@@ -733,16 +600,11 @@
             syncSiteExitLabel();
         }
 
-        const mobileTitleRows = {
-            x: 24,
-            y: 620,
-            w: 672,
-            h: 136,
-            gap: 44
-        };
-        const mobileAction = { x: 24, y: 1208, w: 672, h: 56 };
-        const spellingPlay = { x: 24, y: 1048, w: 324, h: 74 };
-        const spellingNight = { x: 372, y: 1048, w: 324, h: 74 };
+        // Rust reads touch events directly via macroquad's touches() API and
+        // hit-tests against its own button rects. The JS bridge below used to
+        // intercept canvas taps and synthesize keyboard events, but that
+        // duplicated logic drifted out of sync with the Rust rects. Now we let
+        // every canvas tap fall through to Rust unmodified.
 
         function resizeStars() {
             const scale = Math.min(window.devicePixelRatio || 1, 2);
@@ -861,107 +723,32 @@
                     importObject.env.boohw_starcrusher_emit_event = function (ptr, len) {
                         boohwStarCrusherForwardEvent(UTF8ToString(ptr, len));
                     };
+                    // Shell hints the desired starting mode so WASM can skip the
+                    // (now redundant) in-canvas main title page. 0 = title,
+                    // 1 = adventure intro, 2 = mission select.
+                    importObject.env.boohw_starcrusher_initial_mode = function () {
+                        const hash = (window.location.hash || '').toLowerCase().replace('#', '');
+                        if (hash === 'adventure') return 1;
+                        if (hash === 'mission') return 2;
+                        return 0;
+                    };
+                    // Lets WASM hand control back to the HTML landing on exit.
+                    importObject.env.boohw_starcrusher_return_to_landing = function () {
+                        window.location.href = window.location.origin + window.location.pathname;
+                    };
                 }
             });
         }
 
         window.boohwStarCrusherForwardEvent = boohwStarCrusherForwardEvent;
 
-        function contains(rect, point) {
-            return point.x >= rect.x
-                && point.x <= rect.x + rect.w
-                && point.y >= rect.y
-                && point.y <= rect.y + rect.h;
-        }
-
-        function canvasPointToVirtual(clientX, clientY) {
-            const virtualScreen = activeVirtualScreen();
-            const rect = glcanvas.getBoundingClientRect();
-            return {
-                x: ((clientX - rect.left) / Math.max(rect.width, 1)) * virtualScreen.w,
-                y: ((clientY - rect.top) / Math.max(rect.height, 1)) * virtualScreen.h
-            };
-        }
-
-        function titleRowAt(point) {
-            if (point.x < mobileTitleRows.x || point.x > mobileTitleRows.x + mobileTitleRows.w) {
-                return -1;
-            }
-
-            for (let index = 0; index < 3; index += 1) {
-                const rowY = mobileTitleRows.y + index * (mobileTitleRows.h + mobileTitleRows.gap);
-                if (point.y >= rowY && point.y <= rowY + mobileTitleRows.h) {
-                    return index;
-                }
-            }
-
-            return -1;
-        }
-
-        function bridgeTitleRowTap(row) {
-            if (row < 0) {
-                return false;
-            }
-
-            if (gameInputState === 'title-mini') {
-                if (row === 0) {
-                    sendLetter('r');
-                } else if (row === 1) {
-                    sendLetter('p');
-                } else {
-                    sendLetter('n');
-                }
-                gameInputState = 'game';
-                return true;
-            }
-
-            if (gameInputState !== 'title-main') {
-                return false;
-            }
-
-            if (row === 0) {
-                sendEnter();
-                gameInputState = 'game';
-            } else if (row === 1) {
-                sendLetter('p');
-                gameInputState = 'title-mini';
-            } else {
-                sendLetter('l');
-                gameInputState = 'spelling';
-            }
-            return true;
-        }
-
-        function bridgeCanvasTap(clientX, clientY, fromTouch = false) {
+        function bridgeCanvasTap(_clientX, _clientY, _fromTouch = false) {
             if (!shell.classList.contains('active')) {
                 return false;
             }
-
             glcanvas.focus();
-            const point = canvasPointToVirtual(clientX, clientY);
-
-            if (fromTouch && bridgeTitleRowTap(titleRowAt(point))) {
-                return true;
-            }
-
-            if (gameInputState === 'spelling') {
-                if (contains(spellingPlay, point)) {
-                    sendEnter();
-                    gameInputState = 'game';
-                    return true;
-                }
-                if (contains(spellingNight, point)) {
-                    sendLetter('n');
-                    gameInputState = 'game';
-                    return true;
-                }
-            }
-
-            if (contains(mobileAction, point)) {
-                sendEnter();
-                return true;
-            }
-
+            // Rust handles all in-canvas tap targeting via macroquad touches().
+            // Don't preventDefault here — let the touch reach the WASM input layer.
             return false;
         }
 
@@ -971,8 +758,9 @@
             }
 
             loaderStarted = true;
-            gameInputState = game ? 'game' : 'title-main';
+            gameInputState = 'title-main';
             launch.disabled = true;
+            selectMission.disabled = true;
             status.textContent = 'Preparing launch...';
             landing.style.display = 'none';
             shell.classList.add('active');
@@ -992,20 +780,27 @@
                         throw new Error('Macroquad loader did not initialize.');
                     }
                     registerStarCrusherPlatformBridge();
-                    window.load('star-crusher.wasm?v=1.6.0-' + Date.now());
+                    window.load('star-crusher.wasm?v=1.6.1-' + Date.now());
                     syncGameCanvasSize();
                     requestAnimationFrame(syncGameCanvasSize);
                     setTimeout(syncGameCanvasSize, 100);
                     setTimeout(syncGameCanvasSize, 500);
                     setTimeout(syncGameCanvasSize, 1500);
-                    if (game) {
-                        const keyMap = { mathinv: 'm', mathpong: 'p', readsnake: 'r' };
-                        const key = keyMap[game];
-                        if (key) {
-                            setTimeout(() => {
-                                sendLetter(key);
-                            }, 3000);
-                        }
+                    // Mini-game shortcuts that target specific games (m/p/r)
+                    // still ride a synthesised key — they go through the
+                    // mini-games sub-screen. The main "Launch Game" and
+                    // "Select Mission" paths set window.location.hash earlier
+                    // and the WASM reads it via boohw_starcrusher_initial_mode
+                    // to skip the canvas title page entirely.
+                    const keyMap = { mathinv: 'm', mathpong: 'p', readsnake: 'r' };
+                    const key = keyMap[game];
+                    if (key) {
+                        setTimeout(() => {
+                            sendLetter(key);
+                            gameInputState = 'game';
+                        }, 2000);
+                    } else {
+                        gameInputState = 'game';
                     }
                 } catch (error) {
                     showLaunchError(error);
@@ -1023,6 +818,7 @@
             document.documentElement.style.overflow = '';
             document.body.style.overflow = '';
             launch.disabled = false;
+            selectMission.disabled = false;
             loaderStarted = false;
             gameInputState = 'site';
             status.textContent = 'Launch failed. Please refresh and try again.';
@@ -1052,12 +848,17 @@
         glcanvas.addEventListener('click', (event) => {
             bridgeCanvasTap(event.clientX, event.clientY);
         });
-        launch.addEventListener('click', () => launchGame(''));
-        document.querySelectorAll('.mode-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const game = item.dataset.game;
-                launchGame(game);
-            });
+        launch.addEventListener('click', () => {
+            // Hint the WASM to boot straight into the adventure intro,
+            // skipping the in-canvas main title page (which is now identical
+            // to this HTML landing).
+            history.replaceState(null, '', '#adventure');
+            launchGame('adventure');
+        });
+        selectMission.addEventListener('click', () => {
+            // Hint the WASM to boot straight into the mini-games sub-screen.
+            history.replaceState(null, '', '#mission');
+            launchGame('mission');
         });
         siteExit.addEventListener('click', () => {
             window.location.href = `${window.location.origin}${window.location.pathname}`;

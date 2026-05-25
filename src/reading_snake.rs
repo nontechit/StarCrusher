@@ -33,6 +33,8 @@ const MOBILE_SWIPE_THRESHOLD: f32 = 34.0;
 const MOBILE_PANEL_MARGIN: f32 = 24.0;
 const MOBILE_CARD_CONTENT_PAD: f32 = 36.0;
 const MOBILE_WRAPPED_LINE_GAP: f32 = 10.0;
+const MOBILE_DEFINITION_START_Y: f32 = 936.0;
+const MOBILE_DEFINITION_HINT_Y: f32 = 1114.0;
 
 fn mobile_panel_w() -> f32 {
     screen::screen_w() - MOBILE_PANEL_MARGIN * 2.0
@@ -249,8 +251,9 @@ impl ReadingSnake {
         }
 
         if self.showing_definition_card {
-            let mobile_start =
-                primary_tap_position().is_some_and(ui::mobile_action_button_contains);
+            let mobile_start = primary_tap_position().is_some_and(|tap| {
+                ui::mobile_button_rect_contains(tap, mobile_definition_start_button_rect())
+            });
             let desktop_start = !screen::portrait_layout() && primary_tap_position().is_some();
             if is_key_pressed(KeyCode::Enter)
                 || is_key_pressed(KeyCode::Space)
@@ -1093,9 +1096,8 @@ impl ReadingSnake {
     }
 
     fn draw_mobile_definition_card(&self) {
-        const CARD_H: f32 = 560.0;
-        const HEADER_H: f32 = 72.0;
-        let card_y = 140.0;
+        const CARD_H: f32 = 760.0;
+        let card_y = 126.0;
         let content_w = mobile_panel_w() - MOBILE_CARD_CONTENT_PAD * 2.0;
 
         draw_rectangle(
@@ -1136,10 +1138,9 @@ impl ReadingSnake {
             accent,
         );
 
-        let title_size = screen::mobile_text_size(28);
-        let word_size = screen::mobile_text_size(if self.nightmare_mode { 42 } else { 38 });
-        let pos_size = screen::mobile_text_size(20);
-        let def_size = screen::mobile_text_size(22);
+        let label_size = screen::mobile_text_size(32);
+        let detail_size = screen::mobile_text_size(28);
+        let def_size = screen::mobile_text_size(28);
         let hint_size = screen::mobile_text_size(18);
         let word_color = if self.nightmare_mode {
             planet_pink()
@@ -1147,51 +1148,45 @@ impl ReadingSnake {
             soft_cyan()
         };
 
-        centered_text_in_card(
-            self.definition_card_title,
-            MOBILE_PANEL_MARGIN,
-            mobile_panel_w(),
-            card_y + HEADER_H / 2.0 + title_size as f32 / 3.0,
-            title_size,
-            soft_white(),
-        );
-
-        let content_top = card_y + HEADER_H;
+        let content_top = card_y + 96.0;
         let content_bottom = card_y + CARD_H - 24.0;
         let content_h = content_bottom - content_top;
-        let pos_label = format!("{} word", self.part_of_speech);
-        let def_lines = wrapped_line_count(&self.definition, content_w, def_size).max(1) as f32;
-        let block_h = word_size as f32
-            + 22.0
-            + pos_size as f32
+        let progress = format_word_progress(&self.word, 0);
+        let new_word_label = format!("New Word: {}", progress.trim_end());
+        let pos_label = format!("Part of speech: {}", capitalize_first(&self.part_of_speech));
+        let definition_label = format!("Definition: {}", self.definition);
+        let def_lines = wrapped_line_count(&definition_label, content_w, def_size).max(1) as f32;
+        let block_h = label_size as f32
+            + 36.0
+            + detail_size as f32
             + 30.0
             + wrapped_block_height(def_lines as usize, def_size);
-        let mut content_y = content_top + (content_h - block_h) / 2.0 + word_size as f32 / 3.0;
+        let mut content_y = content_top + (content_h - block_h) / 2.0 + label_size as f32 / 3.0;
         centered_text_fit_in_card(
-            &self.word,
+            &new_word_label,
             MOBILE_PANEL_MARGIN,
             mobile_panel_w(),
             content_y,
             content_w,
-            word_size,
+            label_size,
             word_color,
         );
-        content_y += word_size as f32 + 22.0;
+        content_y += label_size as f32 + 36.0;
         centered_text_in_card(
             &pos_label,
             MOBILE_PANEL_MARGIN,
             mobile_panel_w(),
             content_y,
-            pos_size,
+            detail_size,
             if self.nightmare_mode {
                 soft_cyan()
             } else {
                 mint()
             },
         );
-        content_y += pos_size as f32 + 30.0;
+        content_y += detail_size as f32 + 30.0;
         draw_wrapped_centered_in_card(
-            &self.definition,
+            &definition_label,
             MOBILE_PANEL_MARGIN,
             mobile_panel_w(),
             content_y,
@@ -1199,13 +1194,13 @@ impl ReadingSnake {
             def_size,
             soft_white(),
         );
+        ui::draw_mobile_action_button_in_rect("START", mobile_definition_start_button_rect());
         centered_text(
             "Tap START when you know the word",
-            ui::MOBILE_ACTION_Y - 40.0,
+            MOBILE_DEFINITION_HINT_Y,
             hint_size,
             Color::new(0.78, 0.8, 0.88, 1.0),
         );
-        ui::draw_mobile_action_button("START");
     }
 
     fn next_letter_label(&self) -> String {
@@ -1275,6 +1270,14 @@ fn normalize_word(word: &str) -> Option<String> {
     }
 }
 
+fn capitalize_first(text: &str) -> String {
+    let mut chars = text.chars();
+    match chars.next() {
+        Some(first) => first.to_uppercase().chain(chars).collect(),
+        None => String::new(),
+    }
+}
+
 fn format_word_progress(word: &str, letter_index: usize) -> String {
     word.chars()
         .enumerate()
@@ -1341,6 +1344,10 @@ fn mobile_cell_w() -> f32 {
 
 fn mobile_board_x() -> f32 {
     MOBILE_BOARD_MARGIN
+}
+
+fn mobile_definition_start_button_rect() -> Rect {
+    ui::mobile_action_button_rect_at(MOBILE_DEFINITION_START_Y)
 }
 
 fn grid_width() -> i32 {

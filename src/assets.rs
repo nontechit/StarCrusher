@@ -155,7 +155,14 @@ pub fn draw_shape_puzzle_enemy(
     let edge_color = Color::new(color.r.min(1.0), (color.g + 0.2).min(1.0), 1.0, 1.0);
 
     set_color(Color::new(color.r, color.g, color.b, 0.18));
-    draw_shape_blob(cx, cy, target_w, target_h, shape, Color::new(color.r, color.g, color.b, 0.18));
+    draw_shape_blob(
+        cx,
+        cy,
+        target_w,
+        target_h,
+        shape,
+        Color::new(color.r, color.g, color.b, 0.18),
+    );
 
     draw_shape_blob(cx, cy, target_w, target_h, shape, shape_color);
     draw_shape_outline(cx, cy, target_w, target_h, shape, edge_color);

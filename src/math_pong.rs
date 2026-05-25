@@ -1,5 +1,7 @@
 use macroquad::prelude::*;
 
+use crate::assets;
+use crate::enemy::{count_shape_from_question, CountShape};
 use crate::levels::Grade;
 use crate::question::{generate_math_pong_question, Question};
 use crate::random;
@@ -9,18 +11,15 @@ use crate::screen::{
 use crate::ui;
 
 const DESKTOP_PADDLE_Y: f32 = 616.0;
-const MOBILE_PADDLE_GAP_ABOVE_START: f32 = 72.0;
+const MOBILE_PADDLE_GAP_ABOVE_START: f32 = 204.0;
 const PADDLE_H: f32 = 16.0;
 const TARGET_Y: f32 = 116.0;
-const MOBILE_HUD_TOP_OFFSET: f32 = 36.0;
+const MOBILE_HUD_TOP_OFFSET: f32 = 112.0;
 const MOBILE_TITLE_Y: f32 = 42.0 + MOBILE_HUD_TOP_OFFSET;
 const MOBILE_STAT_Y: f32 = 58.0 + MOBILE_HUD_TOP_OFFSET;
 const MOBILE_STAT_H: f32 = 36.0;
 const MOBILE_STACK_GAP: f32 = 10.0;
-const MOBILE_QUESTION_GAP: f32 = 12.0;
-const MOBILE_PADDLE_TOUCH_MIN_Y: f32 = 720.0;
-const MOBILE_FOOTER_MESSAGE_SIZE: u16 = 28;
-const MOBILE_FOOTER_CONTROLS_SIZE: u16 = 24;
+const MOBILE_PADDLE_TOUCH_MIN_Y: f32 = 620.0;
 const TARGET_W: f32 = 76.0;
 const TARGET_H: f32 = 42.0;
 const MOBILE_TARGET_W: f32 = 118.0;
@@ -41,12 +40,12 @@ struct Target {
     value: i64,
     correct: bool,
     flash_until: f64,
+    shape: Option<CountShape>,
 }
 
 struct MobileHudLayout {
     stat_y: f32,
     target_y: f32,
-    question_y: f32,
 }
 
 pub struct MathPong {
@@ -82,7 +81,7 @@ impl MathPong {
             score: 0,
             lives: 5,
             questions_cleared: 0,
-            message: "Aim the ball at the correct number.",
+            message: "Shoot the star with the matching number.",
             game_over: false,
             victory: false,
         };
@@ -136,9 +135,9 @@ impl MathPong {
                 Color::new(0.0, 0.0, 0.0, 0.76),
             );
             let title = if self.victory {
-                "MATH PONG MASTERED"
+                "MATH ORBIT MASTERED"
             } else {
-                "MATH PONG OVER"
+                "MATH ORBIT OVER"
             };
             let color = if self.victory { GREEN } else { RED };
             if portrait_layout() {
@@ -190,7 +189,7 @@ impl MathPong {
                 let grade_speed = 4.8 + self.grade.index() as f32 * 0.35;
                 self.ball_vel = vec2(0.0, -grade_speed);
                 self.ball_launched = true;
-                self.message = "Bounce into the correct number.";
+                self.message = "Aim for the matching star.";
             }
         }
     }
@@ -241,7 +240,7 @@ impl MathPong {
             } else {
                 self.targets[idx].flash_until = get_time() + 0.35;
                 self.ball_vel.y *= -1.0;
-                self.lose_life("Wrong number. Read the question carefully.");
+                self.lose_life("Wrong star. Count again.");
             }
         }
     }
@@ -254,7 +253,7 @@ impl MathPong {
             if let Some(next_grade) = self.grade.next() {
                 self.grade = next_grade;
                 self.paddle_w = (self.paddle_w - 7.0).max(72.0);
-                self.message = "Grade up! The ball is getting faster.";
+                self.message = "Grade up! Count the next stars.";
             } else {
                 self.victory = true;
                 return;
@@ -285,21 +284,21 @@ impl MathPong {
     }
 
     fn spawn_targets(&mut self) {
+        // If the question is a recognised "How many <shape>?" prompt, spawn
+        // `count` matching-shape targets (Math-Invaders style). One target
+        // carries the matching number; the rest carry distractors.
+        if let Some((shape, count)) = count_shape_from_question(&self.question) {
+            self.spawn_shape_targets(shape, count.max(1) as usize);
+            return;
+        }
+
+        // Fallback for non-shape questions: plain numeric answer choices.
         let mut answers = build_answer_choices(&self.question, 5);
         random::shuffle(&mut answers);
         let count = answers.len();
-        let mobile = portrait_layout();
-        let target_w = if mobile { MOBILE_TARGET_W } else { TARGET_W };
-        let target_h = if mobile { MOBILE_TARGET_H } else { TARGET_H };
-        let spacing = if mobile { 30.0 } else { 28.0 };
+        let (target_w, target_h, spacing, target_y) = numeric_target_layout();
         let total_w = count as f32 * target_w + count.saturating_sub(1) as f32 * spacing;
         let start_x = screen::screen_w() / 2.0 - total_w / 2.0;
-
-        let target_y = if mobile {
-            mobile_hud_layout().target_y
-        } else {
-            TARGET_Y
-        };
 
         self.targets = answers
             .into_iter()
@@ -315,6 +314,50 @@ impl MathPong {
                 value,
                 correct: value == self.question.correct_answer,
                 flash_until: 0.0,
+                shape: None,
+            })
+            .collect();
+    }
+
+    fn spawn_shape_targets(&mut self, shape: CountShape, count: usize) {
+        let mut numbers = build_answer_choices(&self.question, count);
+        random::shuffle(&mut numbers);
+        // build_answer_choices guarantees the correct value is included.
+
+        let mobile = portrait_layout();
+        // Match the Math-Invaders shape footprint (58x50 at scale 1.0). Bump on
+        // mobile so the hearts/stars/etc. stay legible at iPhone DPR.
+        let scale: f32 = if mobile { 1.6 } else { 1.1 };
+        let target_w = 58.0 * scale;
+        let target_h = 50.0 * scale;
+        let columns_per_row: usize = if count <= 5 { count.max(1) } else { 5 };
+        let spacing_x: f32 = if mobile { 16.0 } else { 18.0 };
+        let spacing_y: f32 = if mobile { 16.0 } else { 14.0 };
+        let row_w = columns_per_row as f32 * target_w
+            + columns_per_row.saturating_sub(1) as f32 * spacing_x;
+        let start_x = screen::screen_w() / 2.0 - row_w / 2.0;
+        let start_y = if mobile {
+            mobile_hud_layout().target_y
+        } else {
+            TARGET_Y
+        };
+
+        self.targets = numbers
+            .into_iter()
+            .take(count)
+            .enumerate()
+            .map(|(idx, value)| {
+                let col = idx % columns_per_row;
+                let row = idx / columns_per_row;
+                let x = start_x + col as f32 * (target_w + spacing_x);
+                let y = start_y + row as f32 * (target_h + spacing_y);
+                Target {
+                    rect: Rect::new(x, y, target_w, target_h),
+                    value,
+                    correct: value == self.question.correct_answer,
+                    flash_until: 0.0,
+                    shape: Some(shape),
+                }
             })
             .collect();
     }
@@ -329,7 +372,7 @@ impl MathPong {
         let meta_size = screen::mobile_text_size(18);
         let stat_size = screen::mobile_text_size(22);
         centered_text(
-            "MATH PONG",
+            "MATH ORBIT",
             42.0,
             title_size,
             Color::new(0.55, 0.85, 1.0, 1.0),
@@ -397,19 +440,47 @@ impl MathPong {
             Color::new(0.26, 0.18, 0.10, 0.92),
             Color::new(1.0, 0.82, 0.34, 1.0),
         );
+
+        centered_text(
+            "Count the stars.",
+            layout.stat_y + MOBILE_STAT_H + 48.0,
+            screen::mobile_text_size(28),
+            Color::new(0.96, 0.98, 1.0, 1.0),
+        );
+        centered_text(
+            "Shoot the star with that number.",
+            layout.stat_y + MOBILE_STAT_H + 82.0,
+            screen::mobile_text_size(22),
+            Color::new(0.72, 0.86, 1.0, 1.0),
+        );
     }
 
     fn draw_mobile_question(&self) {
-        if !portrait_layout() {
-            return;
-        }
-
-        let layout = mobile_hud_layout();
-        ui::draw_mobile_question_card(&self.question.text, layout.question_y);
+        // Shape-puzzle Math Orbit shows the question visually via the targets
+        // themselves (Math-Invaders style), so no question card is drawn.
+        // Non-shape questions fall through to the desktop footer text below.
     }
 
     fn draw_targets(&self) {
         for target in &self.targets {
+            if let Some(shape) = target.shape {
+                let base = if target.flash_until > get_time() {
+                    Color::new(1.0, 0.45, 0.45, 1.0)
+                } else {
+                    Color::new(1.0, 0.78, 0.32, 1.0)
+                };
+                let scale = target.rect.w / 58.0;
+                assets::draw_shape_puzzle_enemy(
+                    target.rect.x,
+                    target.rect.y,
+                    base,
+                    scale,
+                    shape,
+                    target.value,
+                );
+                continue;
+            }
+
             let color = if target.flash_until > get_time() {
                 RED
             } else {
@@ -489,44 +560,9 @@ impl MathPong {
             return;
         }
 
-        let lines: Vec<&str> = self.question.text.lines().collect();
         let mobile = portrait_layout();
-        let question_size = screen::mobile_text_size(22);
         let message_size = screen::mobile_text_size(18);
         let controls_size = screen::mobile_text_size(14);
-        let question_gap = if mobile { 38.0 } else { 22.0 };
-        let box_h = if mobile {
-            116.0 + (lines.len().saturating_sub(1) as f32 * question_gap)
-        } else {
-            62.0 + (lines.len().saturating_sub(1) as f32 * question_gap)
-        };
-        let box_x = 120.0;
-        let box_y = if mobile { 402.0 } else { 418.0 };
-        let box_w = screen::screen_w() - box_x * 2.0;
-        draw_rectangle(
-            box_x,
-            box_y,
-            box_w,
-            box_h,
-            Color::new(0.05, 0.08, 0.18, 0.88),
-        );
-        draw_rectangle_lines(
-            box_x,
-            box_y,
-            box_w,
-            box_h,
-            2.0,
-            Color::new(0.4, 0.7, 1.0, 1.0),
-        );
-
-        for (idx, line) in lines.iter().enumerate() {
-            centered_text(
-                line,
-                if mobile { 440.0 } else { 456.0 } + idx as f32 * question_gap,
-                question_size,
-                YELLOW,
-            );
-        }
         centered_text(
             self.message,
             if mobile { 536.0 } else { 500.0 },
@@ -550,21 +586,6 @@ impl MathPong {
     }
 
     fn draw_mobile_footer(&self) {
-        let (message_y, controls_y, message_size, controls_size) =
-            mobile_footer_layout(&self.question.text);
-        centered_text(
-            self.message,
-            message_y,
-            message_size,
-            Color::new(0.94, 0.98, 1.0, 1.0),
-        );
-        centered_text(
-            "Drag paddle. Tap START to launch.",
-            controls_y,
-            controls_size,
-            Color::new(0.72, 0.84, 1.0, 1.0),
-        );
-
         if !self.ball_launched {
             ui::draw_mobile_action_button("START");
         }
@@ -587,27 +608,10 @@ fn mobile_paddle_touch_max_y() -> f32 {
     paddle_y() + PADDLE_H + 8.0
 }
 
-fn mobile_footer_layout(question_text: &str) -> (f32, f32, u16, u16) {
-    let message_size = MOBILE_FOOTER_MESSAGE_SIZE;
-    let controls_size = MOBILE_FOOTER_CONTROLS_SIZE;
-    let line_gap = message_size.max(controls_size) as f32 + 10.0;
-    let layout = mobile_hud_layout();
-    let question_bottom = layout.question_y + ui::mobile_question_card_height(question_text);
-    let gap_mid = (question_bottom + paddle_y()) / 2.0;
-    let message_y = gap_mid - line_gap / 2.0;
-    let controls_y = gap_mid + line_gap / 2.0;
-    (message_y, controls_y, message_size, controls_size)
-}
-
 fn mobile_hud_layout() -> MobileHudLayout {
     let stat_y = MOBILE_STAT_Y;
-    let target_y = stat_y + MOBILE_STAT_H + MOBILE_STACK_GAP;
-    let question_y = target_y + MOBILE_TARGET_H + MOBILE_QUESTION_GAP;
-    MobileHudLayout {
-        stat_y,
-        target_y,
-        question_y,
-    }
+    let target_y = stat_y + MOBILE_STAT_H + MOBILE_STACK_GAP + 214.0;
+    MobileHudLayout { stat_y, target_y }
 }
 
 fn draw_mobile_stat_pill(x: f32, y: f32, w: f32, text: &str, fill: Color, text_color: Color) {
@@ -657,6 +661,19 @@ fn build_answer_choices(question: &Question, count: usize) -> Vec<i64> {
     answers
 }
 
+fn numeric_target_layout() -> (f32, f32, f32, f32) {
+    let mobile = screen::portrait_layout();
+    let target_w = if mobile { MOBILE_TARGET_W } else { TARGET_W };
+    let target_h = if mobile { MOBILE_TARGET_H } else { TARGET_H };
+    let spacing = if mobile { 30.0 } else { 28.0 };
+    let target_y = if mobile {
+        mobile_hud_layout().target_y
+    } else {
+        TARGET_Y
+    };
+    (target_w, target_h, spacing, target_y)
+}
+
 fn circle_hits_rect(center: Vec2, radius: f32, rect: Rect) -> bool {
     let closest_x = center.x.clamp(rect.x, rect.x + rect.w);
     let closest_y = center.y.clamp(rect.y, rect.y + rect.h);
@@ -704,7 +721,7 @@ mod tests {
     #[test]
     fn kindergarten_number_question_has_one_correct_answer() {
         let question = Question {
-            text: "How many circles?".to_string(),
+            text: "How many stars?".to_string(),
             correct_answer: 3,
             wrong_answers: vec![1, 2, 4],
         };
