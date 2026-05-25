@@ -514,7 +514,16 @@ impl Game {
                 self.adventure_step = AdventureStep::MathInvadersFinal;
                 self.begin_gate();
             }
-            _ => {}
+            // MathInvaders* and MathPong steps are paired with GameMode::Playing
+            // or GameMode::MathPong, never GameMode::ReadingSnake, so
+            // complete_reading_snake cannot be called while they are active.
+            AdventureStep::MathInvaders1
+            | AdventureStep::MathInvaders2
+            | AdventureStep::MathInvaders3
+            | AdventureStep::MathInvadersFinal
+            | AdventureStep::MathPong => {
+                unreachable!("MathInvaders/MathPong steps are not active in ReadingSnake mode")
+            }
         }
     }
 
