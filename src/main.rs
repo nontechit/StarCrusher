@@ -643,7 +643,7 @@ impl Game {
             }
         }
 
-        if is_key_pressed(KeyCode::Enter) && !screen::portrait_layout() {
+        if is_key_pressed(KeyCode::Enter) {
             submit_answer = true;
         }
 
@@ -894,7 +894,8 @@ impl Game {
                 .with_home("HOME", "escape")
                 .button("PLAY", "enter", "spelling-play")
                 .button("NIGHT", "key:n", "spelling-night"),
-            GameMode::Playing | GameMode::GateQuestion => overlay::OverlayState::empty(),
+            GameMode::Playing => overlay::OverlayState::empty(),
+            GameMode::GateQuestion => overlay::OverlayState::empty().with_home("HOME", "escape"),
         };
 
         overlay::publish(&state);
