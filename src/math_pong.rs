@@ -97,7 +97,7 @@ impl MathPong {
         if self.game_over || self.victory {
             let mobile_start =
                 primary_tap_position().is_some_and(ui::mobile_action_button_contains);
-            let desktop_start = !portrait_layout() && primary_tap_position().is_some();
+            let desktop_start = !screen::portrait_layout() && primary_tap_position().is_some();
             if is_key_pressed(KeyCode::Enter)
                 || is_key_pressed(KeyCode::Space)
                 || mobile_start
@@ -148,7 +148,7 @@ impl MathPong {
                 "MATH ORBIT OVER"
             };
             let color = if self.victory { GREEN } else { RED };
-            if portrait_layout() {
+            if screen::portrait_layout() {
                 centered_text(title, 210.0, 72, color);
                 centered_text(&format!("Final Score: {}", self.score), 304.0, 46, YELLOW);
                 ui::draw_mobile_action_button("START");
@@ -170,7 +170,7 @@ impl MathPong {
             self.paddle_x += speed;
         }
         if let Some(pointer) = primary_pointer_position() {
-            let in_paddle_zone = if portrait_layout() {
+            let in_paddle_zone = if screen::portrait_layout() {
                 pointer.y >= MOBILE_PADDLE_TOUCH_MIN_Y && pointer.y <= mobile_paddle_touch_max_y()
             } else {
                 pointer.y > 400.0
@@ -188,7 +188,7 @@ impl MathPong {
             self.ball_pos = vec2(self.paddle_x + self.paddle_w / 2.0, paddle_y() - 14.0);
             let mobile_start =
                 primary_tap_position().is_some_and(ui::mobile_action_button_contains);
-            let touch_launch = if portrait_layout() {
+            let touch_launch = if screen::portrait_layout() {
                 mobile_start
             } else {
                 primary_release_position().is_some()
@@ -332,7 +332,7 @@ impl MathPong {
         random::shuffle(&mut numbers);
         // build_answer_choices guarantees the correct value is included.
 
-        let mobile = portrait_layout();
+        let mobile = screen::portrait_layout();
         // Match the Math-Invaders shape footprint (58x50 at scale 1.0). Bump on
         // mobile so the hearts/stars/etc. stay legible at iPhone DPR.
         let scale: f32 = if mobile { 1.6 } else { 1.1 };
@@ -371,7 +371,7 @@ impl MathPong {
     }
 
     fn draw_header(&self) {
-        if portrait_layout() {
+        if screen::portrait_layout() {
             self.draw_mobile_header();
             return;
         }
@@ -494,7 +494,7 @@ impl MathPong {
             } else {
                 Color::new(0.2, 0.5, 0.95, 1.0)
             };
-            if portrait_layout() {
+            if screen::portrait_layout() {
                 draw_rectangle(
                     target.rect.x - 5.0,
                     target.rect.y - 4.0,
@@ -520,7 +520,7 @@ impl MathPong {
             );
 
             let text = target.value.to_string();
-            let target_text_size = if portrait_layout() {
+            let target_text_size = if screen::portrait_layout() {
                 if text.len() > 2 {
                     28
                 } else {
@@ -563,12 +563,12 @@ impl MathPong {
     }
 
     fn draw_footer(&self) {
-        if portrait_layout() {
+        if screen::portrait_layout() {
             self.draw_mobile_footer();
             return;
         }
 
-        let mobile = portrait_layout();
+        let mobile = screen::portrait_layout();
         let message_size = screen::mobile_text_size(18);
         let controls_size = screen::mobile_text_size(14);
         centered_text(
@@ -600,12 +600,8 @@ impl MathPong {
     }
 }
 
-fn portrait_layout() -> bool {
-    screen::portrait_layout()
-}
-
 fn paddle_y() -> f32 {
-    if portrait_layout() {
+    if screen::portrait_layout() {
         ui::MOBILE_ACTION_Y - MOBILE_PADDLE_GAP_ABOVE_START - PADDLE_H
     } else {
         DESKTOP_PADDLE_Y
