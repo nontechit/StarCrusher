@@ -355,12 +355,6 @@ impl EnemyGrid {
         Some((alive_indices[idx], &self.enemies[alive_indices[idx]]))
     }
 
-    /// Returns the count of alive enemies.
-    #[allow(dead_code)]
-    pub fn alive_count(&self) -> usize {
-        self.enemies.iter().filter(|e| e.alive).count()
-    }
-
     /// Checks if a bullet hits any enemy. Returns (index, is_correct_answer) for puzzle enemies.
     pub fn check_bullet_hit(
         &mut self,
@@ -382,26 +376,6 @@ impl EnemyGrid {
             }
         }
         None
-    }
-
-    /// Returns the lowest enemy in each column for smart firing (bottom-row targeting).
-    #[allow(dead_code)]
-    pub fn bottom_enemies(&self) -> Vec<(usize, &Enemy)> {
-        let mut result = Vec::new();
-        if self.enemies.is_empty() {
-            return result;
-        }
-
-        for e in &self.enemies {
-            if !e.alive {
-                continue;
-            }
-            result.push((0, e)); // Simplified: just return all alive enemies
-        }
-
-        result.sort_by(|a, b| b.1.y.partial_cmp(&a.1.y).unwrap());
-        result.truncate(5); // Limit to 5 potential shooters
-        result
     }
 }
 

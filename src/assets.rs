@@ -50,12 +50,6 @@ fn measure_text(text: &str, font: Option<&Font>, font_size: u16, font_scale: f32
     }
 }
 
-/// Draws a starfield background with randomly placed stars.
-#[allow(dead_code)]
-pub fn draw_background() {
-    clear_background(BLACK);
-}
-
 /// Draws the player ship at (x, y) using procedural shapes.
 pub fn draw_player_ship(x: f32, y: f32, scale: f32) {
     let s = 16.0 * scale;
@@ -331,23 +325,6 @@ pub fn draw_star(x: f32, y: f32, size: f32) {
     let brightness = (get_time() as f32 * 2.0 + x).sin() * 0.3 + 0.7;
     set_color(Color::new(brightness, brightness, brightness.min(1.0), 0.8));
     draw_circle(x, y, size);
-    set_default_color();
-}
-
-/// Draws a shield/power-up icon at (x, y).
-#[allow(dead_code)]
-pub fn draw_shield_icon(x: f32, y: f32) {
-    let s = 12.0;
-    // Shield shape - hexagon-ish
-    set_color(Color::new(0.3, 0.8, 0.9, 0.7));
-    draw_circle(x + s / 2.0, y + s / 2.0, s * 0.6);
-
-    // S symbol inside
-    let txt = "S";
-    let tm = measure_text(txt, None, 14, 1.0);
-    set_color(WHITE);
-    draw_text(txt, x + s - tm.w / 2.0, y + s * 0.75, 14.0);
-
     set_default_color();
 }
 

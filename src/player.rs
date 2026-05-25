@@ -111,23 +111,6 @@ impl Bullet {
     pub fn draw(&self) {
         assets::draw_bullet(self.x, self.y);
     }
-
-    /// Checks if this bullet collides with a rectangle (enemy hitbox).
-    #[allow(dead_code)]
-    pub fn hits_rect(&self, rx: f32, ry: f32, rw: f32, rh: f32) -> bool {
-        let margin = 4.0; // Bullet collision radius
-        self.x >= rx - margin
-            && self.x <= rx + rw + margin
-            && self.y >= ry - margin
-            && self.y <= ry + rh + margin
-    }
-
-    /// Checks if this bullet collides with another point (for enemy bullets).
-    #[allow(dead_code)]
-    pub fn hits_point(&self, px: f32, py: f32) -> bool {
-        let dist = ((self.x - px).powi(2) + (self.y - py).powi(2)).sqrt();
-        dist < 8.0
-    }
 }
 
 /// A bullet fired by enemies (moving downward toward player).
@@ -154,12 +137,5 @@ impl EnemyBullet {
     /// Draws the enemy bullet at current position.
     pub fn draw(&self) {
         assets::draw_enemy_bullet(self.x, self.y);
-    }
-
-    /// Checks if this bullet hits a point (player hitbox).
-    #[allow(dead_code)]
-    pub fn hits_point(&self, px: f32, py: f32) -> bool {
-        let dist = ((self.x - px).powi(2) + (self.y - py).powi(2)).sqrt();
-        dist < 10.0
     }
 }
