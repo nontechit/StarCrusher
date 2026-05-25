@@ -415,8 +415,15 @@ impl Game {
                     AdventureStep::MathInvadersFinal => {
                         self.begin_gate();
                     }
-                    _ => {
-                        self.begin_gate();
+                    // ReadingSnake / MathPong / NightmareSnake steps are always
+                    // paired with GameMode::ReadingSnake or GameMode::MathPong,
+                    // never GameMode::Playing, so update_playing cannot reach them.
+                    AdventureStep::ReadingSnake
+                    | AdventureStep::MathPong
+                    | AdventureStep::NightmareSnake => {
+                        unreachable!(
+                            "non-MathInvaders adventure steps are not active in Playing mode"
+                        )
                     }
                 }
             } else {
