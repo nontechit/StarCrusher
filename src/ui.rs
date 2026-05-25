@@ -244,11 +244,10 @@ pub fn gate_question_line_gap() -> f32 {
 }
 
 pub fn draw_mobile_back_button(label: &str) {
-    if !screen::portrait_layout() {
+    if mobile_html_overlay_controls() {
         return;
     }
-    if mobile_html_overlay_controls() {
-        let _ = label;
+    if !screen::portrait_layout() {
         return;
     }
 
@@ -260,11 +259,10 @@ pub fn draw_mobile_back_button(label: &str) {
 }
 
 pub fn draw_mobile_action_button(label: &str) {
-    if !screen::portrait_layout() {
+    if mobile_html_overlay_controls() {
         return;
     }
-    if mobile_html_overlay_controls() {
-        let _ = label;
+    if !screen::portrait_layout() {
         return;
     }
 
@@ -272,11 +270,10 @@ pub fn draw_mobile_action_button(label: &str) {
 }
 
 pub fn draw_mobile_action_button_in_rect(label: &str, rect: Rect) {
-    if !screen::portrait_layout() {
+    if mobile_html_overlay_controls() {
         return;
     }
-    if mobile_html_overlay_controls() {
-        let _ = (label, rect);
+    if !screen::portrait_layout() {
         return;
     }
 
