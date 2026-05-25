@@ -249,15 +249,20 @@ impl Game {
         match self.mode {
             GameMode::Title => {
                 let menu_len = TitleMenuOption::menu_len(self.title_menu_page);
-                if let Some(tap) = primary_tap_position() {
-                    if let Some(index) = title_menu_index_at(tap, menu_len) {
-                        self.title_selection = index;
-                        self.title_tap_armed = false;
-                        self.launch_title_option(TitleMenuOption::from_index(
-                            self.title_menu_page,
-                            self.title_selection,
-                        ));
-                        return;
+                // On portrait mobile the HTML overlay buttons dispatch keyboard
+                // events handled below; skip the canvas hit-test to avoid
+                // double-firing when a touch also reaches the canvas.
+                if !ui::mobile_html_overlay_controls() {
+                    if let Some(tap) = primary_tap_position() {
+                        if let Some(index) = title_menu_index_at(tap, menu_len) {
+                            self.title_selection = index;
+                            self.title_tap_armed = false;
+                            self.launch_title_option(TitleMenuOption::from_index(
+                                self.title_menu_page,
+                                self.title_selection,
+                            ));
+                            return;
+                        }
                     }
                 }
 
@@ -297,8 +302,8 @@ impl Game {
             }
             GameMode::Playing => self.update_playing(),
             GameMode::GateIntro => {
-                let mobile_start =
-                    primary_tap_position().is_some_and(ui::mobile_action_button_contains);
+                let mobile_start = !ui::mobile_html_overlay_controls()
+                    && primary_tap_position().is_some_and(ui::mobile_action_button_contains);
                 let desktop_start = !screen::portrait_layout() && primary_tap_position().is_some();
                 if is_key_pressed(KeyCode::Enter)
                     || is_key_pressed(KeyCode::Space)
@@ -310,8 +315,8 @@ impl Game {
             }
             GameMode::GateQuestion => self.update_gate_question(),
             GameMode::GameOver | GameMode::Victory => {
-                let mobile_start =
-                    primary_tap_position().is_some_and(ui::mobile_action_button_contains);
+                let mobile_start = !ui::mobile_html_overlay_controls()
+                    && primary_tap_position().is_some_and(ui::mobile_action_button_contains);
                 let desktop_start = !screen::portrait_layout() && primary_tap_position().is_some();
                 if is_key_pressed(KeyCode::Enter) || mobile_start || desktop_start {
                     self.reset();
@@ -333,6 +338,11 @@ impl Game {
     }
 
     fn update_mobile_navigation(&mut self) -> bool {
+        // On portrait mobile the HTML overlay HOME button handles back/escape.
+        if ui::mobile_html_overlay_controls() {
+            return false;
+        }
+
         if !self.should_show_mobile_back_button() {
             return false;
         }
@@ -650,17 +660,22 @@ impl Game {
             self.gate_answer.pop();
         }
 
-        if let Some(tap) = primary_tap_position() {
-            match gate_key_at(tap) {
-                Some(GateKey::Digit(digit)) if self.gate_answer.len() < MAX_GATE_ANSWER_LEN => {
-                    self.gate_answer.push(digit);
+        // On portrait mobile the HTML keypad buttons deliver input via
+        // keydown events (handled above); skip canvas hit-testing to avoid
+        // double-firing when a touch propagates through the overlay to the canvas.
+        if !ui::mobile_html_overlay_controls() {
+            if let Some(tap) = primary_tap_position() {
+                match gate_key_at(tap) {
+                    Some(GateKey::Digit(digit)) if self.gate_answer.len() < MAX_GATE_ANSWER_LEN => {
+                        self.gate_answer.push(digit);
+                    }
+                    Some(GateKey::Digit(_)) => {}
+                    Some(GateKey::Delete) => {
+                        self.gate_answer.pop();
+                    }
+                    Some(GateKey::Submit) => submit_answer = true,
+                    None => {}
                 }
-                Some(GateKey::Digit(_)) => {}
-                Some(GateKey::Delete) => {
-                    self.gate_answer.pop();
-                }
-                Some(GateKey::Submit) => submit_answer = true,
-                None => {}
             }
         }
 
@@ -727,12 +742,17 @@ impl Game {
         let mut start_nightmare = is_key_pressed(KeyCode::N);
         let mut start_reading = is_key_pressed(KeyCode::Enter) || start_nightmare;
 
-        if let Some(tap) = primary_tap_position() {
-            if ui::spelling_nightmare_button_contains(tap) {
-                start_nightmare = true;
-                start_reading = true;
-            } else if ui::spelling_play_button_contains(tap) {
-                start_reading = true;
+        // On portrait mobile the HTML PLAY/NIGHT overlay buttons fire key:n /
+        // enter keydown events handled above; suppress the canvas tap path to
+        // avoid double-firing.
+        if !ui::mobile_html_overlay_controls() {
+            if let Some(tap) = primary_tap_position() {
+                if ui::spelling_nightmare_button_contains(tap) {
+                    start_nightmare = true;
+                    start_reading = true;
+                } else if ui::spelling_play_button_contains(tap) {
+                    start_reading = true;
+                }
             }
         }
 
@@ -750,7 +770,8 @@ impl Game {
     fn update_adventure_intro(&mut self) {
         let total_pages = ui::adventure_intro_page_count();
 
-        let mobile_continue = primary_tap_position().is_some_and(ui::mobile_action_button_contains);
+        let mobile_continue = !ui::mobile_html_overlay_controls()
+            && primary_tap_position().is_some_and(ui::mobile_action_button_contains);
         let desktop_continue = !screen::portrait_layout() && primary_tap_position().is_some();
 
         if is_key_pressed(KeyCode::Enter)

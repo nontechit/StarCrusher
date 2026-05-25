@@ -1356,7 +1356,7 @@ fn draw_spelling_action_button(rect: Rect, label: &str, color: Color) {
     );
 }
 
-fn mobile_html_overlay_controls() -> bool {
+pub fn mobile_html_overlay_controls() -> bool {
     cfg!(target_arch = "wasm32") && screen::portrait_layout()
 }
 
