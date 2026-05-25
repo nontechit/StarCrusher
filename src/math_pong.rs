@@ -116,6 +116,14 @@ impl MathPong {
         MathPongAction::None
     }
 
+    pub fn mobile_overlay_action_label(&self) -> Option<&'static str> {
+        if !self.ball_launched || self.game_over || self.victory {
+            Some("START")
+        } else {
+            None
+        }
+    }
+
     pub fn draw(&self) {
         clear_background(Color::new(0.03, 0.03, 0.09, 1.0));
         draw_starfield();

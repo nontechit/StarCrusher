@@ -279,6 +279,16 @@ impl ReadingSnake {
         ReadingSnakeAction::None
     }
 
+    pub fn mobile_overlay_action(&self) -> Option<(&'static str, &'static str)> {
+        if self.showing_definition_card {
+            Some(("START", "definition-action"))
+        } else if self.game_over {
+            Some(("START", "action"))
+        } else {
+            None
+        }
+    }
+
     pub fn draw(&self) {
         let palette = reading_palette(self.nightmare_mode);
         clear_background(if screen::portrait_layout() {

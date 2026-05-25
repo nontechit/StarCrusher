@@ -816,6 +816,93 @@ impl Game {
                 ui::draw_mobile_back_button("HOME");
             }
         }
+
+        self.sync_html_overlay();
+    }
+
+    fn sync_html_overlay(&self) {
+        if !screen::portrait_layout() {
+            platform::set_html_overlay("");
+            return;
+        }
+
+        let mut buttons = Vec::new();
+        let mut home_label = None;
+
+        match self.mode {
+            GameMode::Title => {
+                if self.title_menu_page == TitleMenuPage::MiniGames {
+                    home_label = Some(("HOME", "escape"));
+                    buttons.push(("Reading Planet", "key:r", "menu-0"));
+                    buttons.push(("Math Orbit", "key:p", "menu-1"));
+                    buttons.push(("Night Planet", "key:n", "menu-2"));
+                } else {
+                    buttons.push(("Launch Game", "enter", "menu-0"));
+                    buttons.push(("Select Mission", "key:p", "menu-1"));
+                    buttons.push(("Word Cargo", "key:l", "menu-2"));
+                }
+            }
+            GameMode::AdventureIntro => {
+                home_label = Some(("HOME", "escape"));
+                let label = if self.intro_page + 1 >= ui::adventure_intro_page_count() {
+                    "START"
+                } else {
+                    "CONTINUE"
+                };
+                buttons.push((label, "enter", "action"));
+            }
+            GameMode::GateIntro => {
+                home_label = Some(("HOME", "escape"));
+                buttons.push(("START", "enter", "action"));
+            }
+            GameMode::GameOver | GameMode::Victory => {
+                home_label = Some(("HOME", "escape"));
+                buttons.push(("START", "enter", "action"));
+            }
+            GameMode::ReadingSnake => {
+                home_label = Some(("HOME", "escape"));
+                if let Some((label, slot)) = self.reading_snake.mobile_overlay_action() {
+                    buttons.push((label, "enter", slot));
+                }
+            }
+            GameMode::MathPong => {
+                home_label = Some(("HOME", "escape"));
+                if let Some(label) = self.math_pong.mobile_overlay_action_label() {
+                    buttons.push((label, "enter", "action"));
+                }
+            }
+            GameMode::SpellingList => {
+                home_label = Some(("HOME", "escape"));
+                buttons.push(("PLAY", "enter", "spelling-play"));
+                buttons.push(("NIGHT", "key:n", "spelling-night"));
+            }
+            GameMode::Playing | GameMode::GateQuestion => {}
+        }
+
+        if buttons.is_empty() && home_label.is_none() {
+            platform::set_html_overlay("");
+            return;
+        }
+
+        let payload = serde_json::json!({
+            "home": home_label.map(|(label, action)| {
+                serde_json::json!({
+                    "label": label,
+                    "action": action,
+                })
+            }),
+            "buttons": buttons.into_iter().map(|(label, action, slot)| {
+                serde_json::json!({
+                    "label": label,
+                    "action": action,
+                    "slot": slot,
+                })
+            }).collect::<Vec<_>>(),
+        });
+
+        if let Ok(json) = serde_json::to_string(&payload) {
+            platform::set_html_overlay(&json);
+        }
     }
 
     fn draw_playing(&self) {

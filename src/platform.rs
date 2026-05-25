@@ -281,12 +281,21 @@ fn forward_event_json(json: &str) {
     let _ = json;
 }
 
+pub fn set_html_overlay(json: &str) {
+    #[cfg(target_arch = "wasm32")]
+    wasm_js::set_html_overlay(json);
+
+    #[cfg(not(target_arch = "wasm32"))]
+    let _ = json;
+}
+
 #[cfg(target_arch = "wasm32")]
 mod wasm_js {
     extern "C" {
         fn boohw_starcrusher_emit_event(ptr: *const u8, len: u32);
         fn boohw_starcrusher_initial_mode() -> u32;
         fn boohw_starcrusher_return_to_landing();
+        fn boohw_starcrusher_set_overlay(ptr: *const u8, len: u32);
     }
 
     pub fn emit_platform_event(json: &str) {
@@ -301,6 +310,12 @@ mod wasm_js {
 
     pub fn return_to_landing() {
         unsafe { boohw_starcrusher_return_to_landing() }
+    }
+
+    pub fn set_html_overlay(json: &str) {
+        unsafe {
+            boohw_starcrusher_set_overlay(json.as_ptr(), json.len() as u32);
+        }
     }
 }
 

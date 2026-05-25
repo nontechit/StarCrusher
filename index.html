@@ -334,6 +334,84 @@
             background: rgba(23, 33, 52, 0.92);
         }
 
+        .game-overlay {
+            position: fixed;
+            z-index: 5;
+            display: none;
+            pointer-events: none;
+        }
+
+        .game-overlay.visible {
+            display: block;
+        }
+
+        .overlay-stage {
+            position: relative;
+            width: 720px;
+            height: 1280px;
+            transform-origin: top left;
+            transform: scale(var(--game-scale, 1));
+            pointer-events: none;
+        }
+
+        .overlay-button {
+            position: absolute;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .overlay-home {
+            left: 24px;
+            top: 24px;
+            width: 126px;
+            min-height: 58px;
+            height: 58px;
+            border-radius: 16px;
+            font-size: 18px;
+        }
+
+        .overlay-action,
+        .overlay-menu,
+        .overlay-spelling {
+            left: 24px;
+            width: 672px;
+            min-height: 132px;
+            height: 132px;
+            font-size: 40px;
+        }
+
+        .overlay-action {
+            top: 1120px;
+        }
+
+        .overlay-action.slot-definition-action {
+            top: 936px;
+        }
+
+        .overlay-menu.slot-menu-0 {
+            top: 640px;
+        }
+
+        .overlay-menu.slot-menu-1 {
+            top: 796px;
+        }
+
+        .overlay-menu.slot-menu-2 {
+            top: 952px;
+        }
+
+        .overlay-spelling.slot-spelling-play {
+            top: 864px;
+        }
+
+        .overlay-spelling.slot-spelling-night {
+            top: 1024px;
+        }
+
         @media (max-width: 700px) {
             .game-shell.active {
                 display: block;
@@ -509,6 +587,9 @@
 
     <section class="game-shell" id="game-shell" aria-label="StarCrusher game">
         <canvas id="glcanvas" tabindex="1"></canvas>
+        <div class="game-overlay" id="game-overlay" aria-hidden="false">
+            <div class="overlay-stage" id="game-overlay-stage"></div>
+        </div>
         <button class="site-exit" id="site-exit" type="button" aria-label="Back to Home">Back to Home</button>
     </section>
 
@@ -522,9 +603,13 @@
         const shell = document.getElementById('game-shell');
         const siteExit = document.getElementById('site-exit');
         const glcanvas = document.getElementById('glcanvas');
+        const gameOverlay = document.getElementById('game-overlay');
+        const gameOverlayStage = document.getElementById('game-overlay-stage');
         const particles = [];
         let loaderStarted = false;
         let gameInputState = 'site';
+        let latestOverlayJson = '';
+        let renderedOverlayJson = '';
 
         function activeVirtualScreen() {
             return isMobileShell() ? { w: 720, h: 1280 } : { w: 1280, h: 720 };
@@ -562,6 +647,13 @@
                 glcanvas.style.bottom = 'auto';
                 glcanvas.style.width = `${canvasWidth}px`;
                 glcanvas.style.height = `${canvasHeight}px`;
+                gameOverlay.style.left = `${offsetX}px`;
+                gameOverlay.style.top = `${offsetY}px`;
+                gameOverlay.style.width = `${canvasWidth}px`;
+                gameOverlay.style.height = `${canvasHeight}px`;
+                gameOverlayStage.style.width = `${virtualScreen.w}px`;
+                gameOverlayStage.style.height = `${virtualScreen.h}px`;
+                gameOverlayStage.style.setProperty('--game-scale', String(scale));
             } else {
                 glcanvas.style.position = '';
                 glcanvas.style.left = '';
@@ -570,9 +662,19 @@
                 glcanvas.style.bottom = '';
                 glcanvas.style.width = '';
                 glcanvas.style.height = '';
+                gameOverlay.style.left = '';
+                gameOverlay.style.top = '';
+                gameOverlay.style.width = '';
+                gameOverlay.style.height = '';
+                gameOverlayStage.style.width = `${virtualScreen.w}px`;
+                gameOverlayStage.style.height = `${virtualScreen.h}px`;
+                gameOverlayStage.style.setProperty('--game-scale', '1');
             }
 
             syncMobileSiteExitChrome();
+            if (latestOverlayJson) {
+                renderGameOverlay(latestOverlayJson, { force: true });
+            }
             window.dispatchEvent(new Event('resize'));
         }
 
@@ -600,11 +702,8 @@
             syncSiteExitLabel();
         }
 
-        // Rust reads touch events directly via macroquad's touches() API and
-        // hit-tests against its own button rects. The JS bridge below used to
-        // intercept canvas taps and synthesize keyboard events, but that
-        // duplicated logic drifted out of sync with the Rust rects. Now we let
-        // every canvas tap fall through to Rust unmodified.
+        // Precise mobile controls are real HTML buttons layered above the
+        // canvas. Gesture-heavy gameplay still falls through to Macroquad.
 
         function resizeStars() {
             const scale = Math.min(window.devicePixelRatio || 1, 2);
@@ -681,6 +780,80 @@
             sendGameKey('Backspace', 'Backspace');
         }
 
+        function runOverlayAction(action) {
+            glcanvas.focus();
+            if (action === 'enter') {
+                sendEnter();
+            } else if (action === 'escape') {
+                sendEscape();
+            } else if (action === 'backspace') {
+                sendBackspace();
+            } else if (action.startsWith('key:') && action.length > 4) {
+                sendLetter(action.slice(4, 5));
+            }
+        }
+
+        function overlayButtonClass(slot) {
+            if (slot === 'action') return 'overlay-action';
+            if (slot === 'definition-action') return 'overlay-action slot-definition-action';
+            if (slot && slot.startsWith('menu-')) return `overlay-menu slot-${slot}`;
+            if (slot && slot.startsWith('spelling-')) return `overlay-spelling slot-${slot}`;
+            return 'overlay-action';
+        }
+
+        function renderGameOverlay(jsonString, options = {}) {
+            const nextOverlayJson = jsonString || '';
+            latestOverlayJson = nextOverlayJson;
+
+            if (!options.force && nextOverlayJson === renderedOverlayJson) {
+                return;
+            }
+
+            renderedOverlayJson = nextOverlayJson;
+
+            if (!nextOverlayJson || !shell.classList.contains('active') || !isMobileShell()) {
+                gameOverlay.classList.remove('visible');
+                gameOverlayStage.replaceChildren();
+                return;
+            }
+
+            let overlay;
+            try {
+                overlay = JSON.parse(nextOverlayJson);
+            } catch (error) {
+                console.warn('StarCrusher overlay JSON parse failed', error);
+                gameOverlay.classList.remove('visible');
+                gameOverlayStage.replaceChildren();
+                return;
+            }
+
+            gameOverlayStage.replaceChildren();
+
+            const controls = [];
+            if (overlay.home) {
+                controls.push({ ...overlay.home, slot: 'home' });
+            }
+            for (const button of overlay.buttons || []) {
+                controls.push(button);
+            }
+
+            for (const control of controls) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = control.slot === 'home'
+                    ? 'overlay-button overlay-home'
+                    : `overlay-button ${overlayButtonClass(control.slot)}`;
+                button.textContent = control.label;
+                button.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    runOverlayAction(control.action);
+                });
+                gameOverlayStage.appendChild(button);
+            }
+
+            gameOverlay.classList.toggle('visible', controls.length > 0);
+        }
+
         const BOOHW_STARCRUSHER_EVENT_VERSION = 1;
 
         /**
@@ -735,6 +908,9 @@
                     // Lets WASM hand control back to the HTML landing on exit.
                     importObject.env.boohw_starcrusher_return_to_landing = function () {
                         window.location.href = window.location.origin + window.location.pathname;
+                    };
+                    importObject.env.boohw_starcrusher_set_overlay = function (ptr, len) {
+                        renderGameOverlay(UTF8ToString(ptr, len));
                     };
                 }
             });
