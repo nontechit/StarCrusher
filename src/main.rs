@@ -204,30 +204,12 @@ impl Game {
 
     fn launch_title_option(&mut self, option: TitleMenuOption) {
         match option {
-            TitleMenuOption::StartAdventure => {
-                self.intro_page = 0;
-                self.adventure_active = true;
-                self.adventure_step = AdventureStep::MathInvaders1;
-                self.mode = GameMode::AdventureIntro;
-            }
-            TitleMenuOption::PlayMiniGames => {
-                self.title_menu_page = TitleMenuPage::MiniGames;
-                self.title_selection = 0;
-                self.title_tap_armed = false;
-            }
+            TitleMenuOption::StartAdventure => self.start_adventure(),
+            TitleMenuOption::PlayMiniGames => self.go_to_mission_select(),
             TitleMenuOption::MathInvaders => self.reset(),
-            TitleMenuOption::MathPong => {
-                self.math_pong = MathPong::new();
-                self.mode = GameMode::MathPong;
-            }
-            TitleMenuOption::ReadingSnake => {
-                self.reading_snake = ReadingSnake::new();
-                self.mode = GameMode::ReadingSnake;
-            }
-            TitleMenuOption::NightmareSnake => {
-                self.reading_snake = ReadingSnake::new_nightmare();
-                self.mode = GameMode::ReadingSnake;
-            }
+            TitleMenuOption::MathPong => self.start_math_orbit(),
+            TitleMenuOption::ReadingSnake => self.start_reading_planet(),
+            TitleMenuOption::NightmareSnake => self.start_night_planet(),
             TitleMenuOption::SpellingList => {
                 self.spelling_input.clear();
                 self.mode = GameMode::SpellingList;
@@ -299,9 +281,7 @@ impl Game {
                 } else if is_key_pressed(KeyCode::Escape)
                     && self.title_menu_page == TitleMenuPage::MiniGames
                 {
-                    self.title_menu_page = TitleMenuPage::Main;
-                    self.title_selection = 1;
-                    self.title_tap_armed = false;
+                    self.back_to_main_menu();
                 } else if is_key_pressed(KeyCode::M) {
                     self.launch_title_option(TitleMenuOption::MathInvaders);
                 } else if is_key_pressed(KeyCode::R) {
@@ -370,9 +350,7 @@ impl Game {
 
         match self.mode {
             GameMode::Title if self.title_menu_page == TitleMenuPage::MiniGames => {
-                self.title_menu_page = TitleMenuPage::Main;
-                self.title_selection = 1;
-                self.title_tap_armed = false;
+                self.back_to_main_menu();
                 true
             }
             GameMode::Title => false,
@@ -434,8 +412,7 @@ impl Game {
                     }
                     AdventureStep::MathInvaders2 => {
                         self.adventure_step = AdventureStep::MathPong;
-                        self.math_pong = MathPong::new();
-                        self.mode = GameMode::MathPong;
+                        self.start_math_orbit();
                     }
                     AdventureStep::MathInvaders3 => {
                         self.adventure_step = AdventureStep::NightmareSnake;
@@ -466,6 +443,40 @@ impl Game {
         platform::return_to_landing();
         self.title_menu_page = TitleMenuPage::Main;
         self.mode = GameMode::Title;
+    }
+
+    fn back_to_main_menu(&mut self) {
+        self.title_menu_page = TitleMenuPage::Main;
+        self.title_selection = 1;
+        self.title_tap_armed = false;
+    }
+
+    fn go_to_mission_select(&mut self) {
+        self.title_menu_page = TitleMenuPage::MiniGames;
+        self.title_selection = 0;
+        self.title_tap_armed = false;
+    }
+
+    fn start_adventure(&mut self) {
+        self.intro_page = 0;
+        self.adventure_active = true;
+        self.adventure_step = AdventureStep::MathInvaders1;
+        self.mode = GameMode::AdventureIntro;
+    }
+
+    fn start_reading_planet(&mut self) {
+        self.reading_snake = ReadingSnake::new();
+        self.mode = GameMode::ReadingSnake;
+    }
+
+    fn start_math_orbit(&mut self) {
+        self.math_pong = MathPong::new();
+        self.mode = GameMode::MathPong;
+    }
+
+    fn start_night_planet(&mut self) {
+        self.reading_snake = ReadingSnake::new_nightmare();
+        self.mode = GameMode::ReadingSnake;
     }
 
     fn complete_reading_snake(&mut self) {
