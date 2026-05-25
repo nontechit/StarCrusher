@@ -1137,7 +1137,6 @@ pub fn draw_adventure_intro(page: usize) {
     let line1_size = screen::mobile_text_size(if page == 0 { 34 } else { 24 });
     let line2_size = screen::mobile_text_size(if page == 0 { 22 } else { 20 });
     let hint_size = screen::mobile_text_size(18);
-    let mobile = screen::portrait_layout();
 
     centered_text("START ADVENTURE", 96.0, title_size, parchment);
     centered_text_in(
@@ -1157,20 +1156,12 @@ pub fn draw_adventure_intro(page: usize) {
     let _title_card = page == 0;
     centered_text_in(line_one, 210.0, 542.0, 860.0, line1_size, parchment);
     centered_text_in(line_two, 210.0, 578.0, 860.0, line2_size, WHITE);
-    if mobile {
-        draw_mobile_action_button(if page + 1 >= ADVENTURE_INTRO_PAGES.len() {
-            "START"
-        } else {
-            "CONTINUE"
-        });
-    } else {
-        centered_text(
-            "ENTER / SPACE: continue     ESC: return to title",
-            686.0,
-            hint_size,
-            stone_light,
-        );
-    }
+    centered_text(
+        "ENTER / SPACE: continue     ESC: return to title",
+        686.0,
+        hint_size,
+        stone_light,
+    );
 
     set_default_color();
 }
@@ -1505,38 +1496,18 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str, show_start_button: b
         current_color(),
     );
 
-    // Instructions for gate questions
-    let instructions = if screen::portrait_layout() {
+    // Instructions for gate questions (landscape only — portrait returns early above).
+    let instructions = [
+        "Answer the math question correctly to advance.",
+        "",
+        "Type your answer and press ENTER.",
+        "",
         if show_start_button {
-            [
-                "Answer the math question correctly to advance.",
-                "",
-                "Use the number pad on the next screen.",
-                "",
-                "Tap START when ready.",
-            ]
+            "Press SPACE or ENTER when ready!"
         } else {
-            [
-                "Answer the math question correctly to advance.",
-                "",
-                "Use the number pad.",
-                "",
-                "Tap OK to submit.",
-            ]
-        }
-    } else {
-        [
-            "Answer the math question correctly to advance.",
-            "",
-            "Type your answer and press ENTER.",
-            "",
-            if show_start_button {
-                "Press SPACE or ENTER when ready!"
-            } else {
-                "Submit the answer to continue."
-            },
-        ]
-    };
+            "Submit the answer to continue."
+        },
+    ];
 
     set_color(WHITE);
     for (i, line) in instructions.iter().enumerate() {
@@ -1548,10 +1519,6 @@ pub fn draw_question_gate(grade: &Grade, math_topics: &str, show_start_button: b
             instr_size as f32,
             WHITE,
         );
-    }
-
-    if show_start_button {
-        draw_mobile_action_button("START");
     }
 
     set_default_color();
