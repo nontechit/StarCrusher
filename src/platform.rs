@@ -1,3 +1,9 @@
+// Most items in this module are live only on wasm32 (JS forwarding bridge,
+// serialisation helpers) or inside #[cfg(test)] (RecordingPlatformBridge,
+// platform_payload, serialize helpers).  cargo check without --tests compiles
+// neither, so suppress dead_code in that specific configuration.
+#![cfg_attr(not(any(test, target_arch = "wasm32")), allow(dead_code))]
+
 use crate::levels::Grade;
 use serde::Serialize;
 use std::cell::RefCell;
