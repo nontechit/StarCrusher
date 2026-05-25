@@ -247,6 +247,10 @@ pub fn draw_mobile_back_button(label: &str) {
     if !screen::portrait_layout() {
         return;
     }
+    if mobile_html_overlay_controls() {
+        let _ = label;
+        return;
+    }
 
     draw_mobile_yellow_button_rect(
         Rect::new(MOBILE_BACK_X, MOBILE_BACK_Y, MOBILE_BACK_W, MOBILE_BACK_H),
@@ -259,12 +263,20 @@ pub fn draw_mobile_action_button(label: &str) {
     if !screen::portrait_layout() {
         return;
     }
+    if mobile_html_overlay_controls() {
+        let _ = label;
+        return;
+    }
 
     draw_mobile_action_button_in_rect(label, mobile_action_button_rect());
 }
 
 pub fn draw_mobile_action_button_in_rect(label: &str, rect: Rect) {
     if !screen::portrait_layout() {
+        return;
+    }
+    if mobile_html_overlay_controls() {
+        let _ = (label, rect);
         return;
     }
 
@@ -790,7 +802,9 @@ fn draw_mobile_adventure_menu(
             MOBILE_TITLE_MENU_ROW_H,
         );
         let selected = selected_index % options.len() == index;
-        draw_mobile_yellow_button_rect_selectable(rect, label, 44, selected);
+        if !mobile_html_overlay_controls() {
+            draw_mobile_yellow_button_rect_selectable(rect, label, 44, selected);
+        }
     }
 }
 
@@ -1311,6 +1325,10 @@ pub fn draw_spelling_list_screen(input: &str) {
 
 fn draw_spelling_action_button(rect: Rect, label: &str, color: Color) {
     if screen::portrait_layout() {
+        if mobile_html_overlay_controls() {
+            let _ = (rect, label);
+            return;
+        }
         draw_mobile_yellow_button_rect(rect, label, 40);
         return;
     }
@@ -1336,6 +1354,10 @@ fn draw_spelling_action_button(rect: Rect, label: &str, color: Color) {
             WHITE
         },
     );
+}
+
+fn mobile_html_overlay_controls() -> bool {
+    cfg!(target_arch = "wasm32") && screen::portrait_layout()
 }
 
 fn centered_text(text: &str, y: f32, font_size: u16, color: Color) {
