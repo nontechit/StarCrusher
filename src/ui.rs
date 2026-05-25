@@ -1657,21 +1657,17 @@ pub fn draw_game_over(score: u32, grade_reached: &Grade) {
         current_color(),
     );
 
-    // Restart prompt
+    // Restart prompt (landscape only — portrait returns early above).
     set_color(WHITE);
-    if screen::portrait_layout() {
-        draw_mobile_action_button("START");
-    } else {
-        let restart = "Press ENTER to Play Again";
-        let tm_rs = measure_text(restart, None, restart_size, 1.0);
-        draw_text(
-            restart,
-            center_x() - tm_rs.w / 2.0,
-            450.0,
-            restart_size as f32,
-            current_color(),
-        );
-    }
+    let restart = "Press ENTER to Play Again";
+    let tm_rs = measure_text(restart, None, restart_size, 1.0);
+    draw_text(
+        restart,
+        center_x() - tm_rs.w / 2.0,
+        450.0,
+        restart_size as f32,
+        current_color(),
+    );
 
     set_default_color();
 }
@@ -1749,21 +1745,17 @@ pub fn draw_victory_screen(score: u32) {
         );
     }
 
-    // Restart prompt
-    if screen::portrait_layout() {
-        draw_mobile_action_button("START");
-    } else {
-        let restart = "Press ENTER to Play Again";
-        set_color(WHITE);
-        let tm_rs = measure_text(restart, None, restart_size, 1.0);
-        draw_text(
-            restart,
-            center_x() - tm_rs.w / 2.0,
-            500.0,
-            restart_size as f32,
-            current_color(),
-        );
-    }
+    // Restart prompt (landscape only — portrait returns early above).
+    let restart = "Press ENTER to Play Again";
+    set_color(WHITE);
+    let tm_rs = measure_text(restart, None, restart_size, 1.0);
+    draw_text(
+        restart,
+        center_x() - tm_rs.w / 2.0,
+        500.0,
+        restart_size as f32,
+        current_color(),
+    );
 
     set_default_color();
 }
