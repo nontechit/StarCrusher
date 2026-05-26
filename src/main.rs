@@ -5,6 +5,7 @@ mod levels;
 mod math_pong;
 mod meteor_catch;
 mod number_rain;
+mod plasma_breaker;
 mod overlay;
 mod platform;
 mod player;
@@ -24,6 +25,7 @@ use macroquad::prelude::*;
 use math_pong::{MathPong, MathPongAction};
 use meteor_catch::{MeteorCatch, MeteorCatchAction};
 use number_rain::{NumberRain, NumberRainAction};
+use plasma_breaker::{PlasmaBreaker, PlasmaAction};
 use platform::{ActivePlatformBridge, GameEvent, GameOverReason, LifeLossReason, PlatformBridge};
 use player::{Bullet, EnemyBullet, Player};
 use question::{generate_question, Question};
@@ -59,6 +61,8 @@ enum GameMode {
     MeteorCatch,
     /// Star Academy game #2: Number Rain (tap the correct falling number).
     NumberRain,
+    /// Star Academy game #3: Plasma Breaker (bounce ball to break correct block).
+    PlasmaBreaker,
     Title,
     Playing,
     GateIntro,
@@ -148,6 +152,7 @@ struct Game {
     math_pong: MathPong,
     meteor_catch: MeteorCatch,
     number_rain: NumberRain,
+    plasma_breaker: PlasmaBreaker,
     intro_page: usize,
     adventure_active: bool,
     adventure_step: AdventureStep,
@@ -241,6 +246,7 @@ impl Game {
             math_pong: MathPong::new(),
             meteor_catch: MeteorCatch::new(grade),
             number_rain: NumberRain::new(grade),
+            plasma_breaker: PlasmaBreaker::new(grade),
             intro_page,
             adventure_active,
             adventure_step,
@@ -312,8 +318,9 @@ impl Game {
         match self.mode {
             GameMode::StarAcademyHub => self.update_hub(),
             GameMode::StarAcademyGradePicker => self.update_grade_picker(),
-            GameMode::MeteorCatch => self.update_meteor_catch(),
-            GameMode::NumberRain  => self.update_number_rain(),
+            GameMode::MeteorCatch    => self.update_meteor_catch(),
+            GameMode::NumberRain     => self.update_number_rain(),
+            GameMode::PlasmaBreaker  => self.update_plasma_breaker(),
             GameMode::Title => {
                 let menu_len = TitleMenuOption::menu_len(self.title_menu_page);
                 // On portrait mobile the HTML overlay buttons dispatch keyboard
@@ -438,7 +445,8 @@ impl Game {
             GameMode::StarAcademyHub
             | GameMode::StarAcademyGradePicker
             | GameMode::MeteorCatch
-            | GameMode::NumberRain => false,
+            | GameMode::NumberRain
+            | GameMode::PlasmaBreaker => false,
             GameMode::Title if self.title_menu_page == TitleMenuPage::MiniGames => true,
             GameMode::Title | GameMode::Playing => false,
             _ => true,
@@ -595,8 +603,23 @@ impl Game {
                 self.number_rain = NumberRain::new(self.progress.grade());
                 self.mode = GameMode::NumberRain;
             }
-            // TODO Phase 4: AcademyGame::PlasmaBreaker → start plasma breaker
-            AcademyGame::PlasmaBreaker => {}
+            AcademyGame::PlasmaBreaker => {
+                self.plasma_breaker = PlasmaBreaker::new(self.progress.grade());
+                self.mode = GameMode::PlasmaBreaker;
+            }
+        }
+    }
+
+    fn update_plasma_breaker(&mut self) {
+        match self.plasma_breaker.update() {
+            PlasmaAction::None => {}
+            PlasmaAction::ExitToHub => self.exit_to_hub(),
+            PlasmaAction::Completed { stars } => {
+                self.progress.record_best(AcademyGame::PlasmaBreaker, stars);
+                let _meter_full = self.progress.add_stars(stars);
+                self.progress.save();
+                self.exit_to_hub();
+            }
         }
     }
 
@@ -1051,8 +1074,9 @@ impl Game {
                 hub::draw(&self.progress);
                 hub::draw_grade_picker(self.progress.grade());
             }
-            GameMode::MeteorCatch => self.meteor_catch.draw(),
-            GameMode::NumberRain  => self.number_rain.draw(),
+            GameMode::MeteorCatch   => self.meteor_catch.draw(),
+            GameMode::NumberRain    => self.number_rain.draw(),
+            GameMode::PlasmaBreaker => self.plasma_breaker.draw(),
             GameMode::Title => ui::draw_title_screen(
                 self.title_menu_page == TitleMenuPage::MiniGames,
                 self.title_selection,
@@ -1097,7 +1121,8 @@ impl Game {
             GameMode::StarAcademyHub
             | GameMode::StarAcademyGradePicker
             | GameMode::MeteorCatch
-            | GameMode::NumberRain => overlay::OverlayState::empty(),
+            | GameMode::NumberRain
+            | GameMode::PlasmaBreaker => overlay::OverlayState::empty(),
             GameMode::Title => {
                 if self.title_menu_page == TitleMenuPage::MiniGames {
                     overlay::OverlayState::empty()
@@ -1331,6 +1356,9 @@ mod tests {
             GameMode::ReadingSnake,
             GameMode::SpellingList,
             GameMode::MathPong,
+            GameMode::MeteorCatch,
+            GameMode::NumberRain,
+            GameMode::PlasmaBreaker,
         ] {
             assert!(
                 !mode_handles_overlay_home_escape(mode),

@@ -1027,7 +1027,7 @@
                         throw new Error('Macroquad loader did not initialize.');
                     }
                     registerStarCrusherPlatformBridge();
-                    window.load('star-crusher.wasm?v=1.7.2-' + Date.now());
+                    window.load('star-crusher.wasm?v=1.7.3-' + Date.now());
                     syncGameCanvasSize();
                     requestAnimationFrame(syncGameCanvasSize);
                     setTimeout(syncGameCanvasSize, 100);
