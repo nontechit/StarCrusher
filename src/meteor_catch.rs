@@ -33,7 +33,7 @@ const SH: f32 = 1280.0;
 const CX: f32 = SW / 2.0;
 
 // Shield (player paddle)
-const SHIELD_W: f32 = 200.0;
+const SHIELD_W: f32 = 140.0;
 const SHIELD_H: f32 = 28.0;
 const SHIELD_Y: f32 = 1110.0;
 const SHIELD_X_MIN: f32 = SHIELD_W / 2.0 + 20.0;
