@@ -29,7 +29,7 @@ const MOBILE_FOOTER_H: f32 = 184.0;
 const MOBILE_STAT_CHIP_H: f32 = 44.0;
 const MOBILE_STAT_CHIP_W: f32 = 210.0;
 const MOBILE_STAT_CHIP_GAP: f32 = 12.0;
-const MOBILE_SWIPE_THRESHOLD: f32 = 34.0;
+const MOBILE_SWIPE_THRESHOLD: f32 = 20.0;
 const MOBILE_PANEL_MARGIN: f32 = 24.0;
 const MOBILE_CARD_CONTENT_PAD: f32 = 36.0;
 const MOBILE_WRAPPED_LINE_GAP: f32 = 10.0;
@@ -47,7 +47,7 @@ struct MobilePlayfieldLayout {
     board_y: f32,
     cell_h: f32,
 }
-const STEP_SECONDS: f64 = 0.25;
+const STEP_SECONDS: f64 = 0.15;
 const SNAKE_HEAD_SAFE_RADIUS: i32 = 3;
 const MAX_LIVES: u8 = 9;
 
@@ -399,11 +399,13 @@ impl ReadingSnake {
 
         let handled_swipe = self.handle_touch_swipe();
 
-        if !handled_swipe {
+        // On portrait mobile we rely entirely on swipe gestures — the tap-to-
+        // steer fallback uses absolute position relative to the snake head, but
+        // the dynamic board_y (computed from word definition length) makes that
+        // mapping unreliable and causes the "touches don't align" symptom.
+        // On landscape / desktop the board is fixed, so tap steering still works.
+        if !handled_swipe && !screen::portrait_layout() {
             if let Some(tap) = primary_tap_position() {
-                if screen::portrait_layout() && self.tap_in_ui_chrome(tap) {
-                    return;
-                }
                 self.steer_from_tap(tap);
             }
         }
@@ -419,7 +421,10 @@ impl ReadingSnake {
             let point = to_virtual_position(touch.position);
             match touch.phase {
                 TouchPhase::Started => {
-                    if !self.tap_in_ui_chrome(point) && self.point_in_board(point) {
+                    // Accept any touch outside the header/button chrome as a
+                    // potential swipe start — don't require exact board entry,
+                    // since edge touches land just outside the grid bounds.
+                    if !self.tap_in_ui_chrome(point) {
                         self.touch_start = Some(point);
                     }
                 }

@@ -805,13 +805,16 @@ impl Game {
 
     fn update_touch_player(&mut self) -> bool {
         let ship_w = self.player.effective_width();
+        // Portrait: accept touches anywhere in the lower 2/3 of the virtual
+        // screen so the player can drag from a natural thumb position.
+        // Landscape: tighter zone to avoid conflicts with the enemy field.
         let move_threshold = if screen::portrait_layout() {
-            540.0
+            screen::screen_h() * 0.35
         } else {
             520.0
         };
         let fire_threshold = if screen::portrait_layout() {
-            500.0
+            screen::screen_h() * 0.30
         } else {
             470.0
         };
