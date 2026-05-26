@@ -4,6 +4,7 @@ mod hub;
 mod levels;
 mod math_pong;
 mod meteor_catch;
+mod number_rain;
 mod overlay;
 mod platform;
 mod player;
@@ -22,6 +23,7 @@ use progress::{AcademyGame, PlayerProgress};
 use macroquad::prelude::*;
 use math_pong::{MathPong, MathPongAction};
 use meteor_catch::{MeteorCatch, MeteorCatchAction};
+use number_rain::{NumberRain, NumberRainAction};
 use platform::{ActivePlatformBridge, GameEvent, GameOverReason, LifeLossReason, PlatformBridge};
 use player::{Bullet, EnemyBullet, Player};
 use question::{generate_question, Question};
@@ -33,8 +35,19 @@ use screen::{
     window_conf,
 };
 
+// JS bridge for site-exit button visibility (desktop "Back to Home" button).
+#[cfg(target_arch = "wasm32")]
+extern "C" {
+    fn boohw_starcrusher_set_site_exit_visible(visible: bool);
+}
+
 const MAX_GATE_ANSWER_LEN: usize = 8;
 const MAX_SPELLING_INPUT_CHARS: usize = 2_000;
+
+#[cfg(target_arch = "wasm32")]
+fn set_site_exit_visible(visible: bool) {
+    unsafe { boohw_starcrusher_set_site_exit_visible(visible) }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum GameMode {
@@ -44,6 +57,8 @@ enum GameMode {
     StarAcademyGradePicker,
     /// Star Academy game #1: Meteor Catch (drag shield to catch correct answer).
     MeteorCatch,
+    /// Star Academy game #2: Number Rain (tap the correct falling number).
+    NumberRain,
     Title,
     Playing,
     GateIntro,
@@ -132,6 +147,7 @@ struct Game {
     reading_snake: ReadingSnake,
     math_pong: MathPong,
     meteor_catch: MeteorCatch,
+    number_rain: NumberRain,
     intro_page: usize,
     adventure_active: bool,
     adventure_step: AdventureStep,
@@ -152,10 +168,18 @@ impl Game {
         );
 
         // On WASM (mobile web) the Star Academy hub is the home screen.
-        // On native desktop the legacy title screen is preserved.
+        // Only use it in portrait mode — landscape desktop falls back to
+        // legacy title screen so the hub layout isn't clipped.
+        #[cfg(target_arch = "wasm32")]
+        let hub_mode = if screen::portrait_layout() {
+            GameMode::StarAcademyHub
+        } else {
+            GameMode::Title
+        };
+
         #[cfg(target_arch = "wasm32")]
         let (mode, title_menu_page, adventure_active, adventure_step, intro_page) = (
-            GameMode::StarAcademyHub,
+            hub_mode,
             TitleMenuPage::Main,
             false,
             AdventureStep::MathInvaders1,
@@ -216,6 +240,7 @@ impl Game {
             reading_snake: ReadingSnake::new(),
             math_pong: MathPong::new(),
             meteor_catch: MeteorCatch::new(grade),
+            number_rain: NumberRain::new(grade),
             intro_page,
             adventure_active,
             adventure_step,
@@ -288,6 +313,7 @@ impl Game {
             GameMode::StarAcademyHub => self.update_hub(),
             GameMode::StarAcademyGradePicker => self.update_grade_picker(),
             GameMode::MeteorCatch => self.update_meteor_catch(),
+            GameMode::NumberRain  => self.update_number_rain(),
             GameMode::Title => {
                 let menu_len = TitleMenuOption::menu_len(self.title_menu_page);
                 // On portrait mobile the HTML overlay buttons dispatch keyboard
@@ -411,7 +437,8 @@ impl Game {
             // Star Academy games draw their own HOME button on canvas.
             GameMode::StarAcademyHub
             | GameMode::StarAcademyGradePicker
-            | GameMode::MeteorCatch => false,
+            | GameMode::MeteorCatch
+            | GameMode::NumberRain => false,
             GameMode::Title if self.title_menu_page == TitleMenuPage::MiniGames => true,
             GameMode::Title | GameMode::Playing => false,
             _ => true,
@@ -494,6 +521,7 @@ impl Game {
         #[cfg(target_arch = "wasm32")]
         {
             self.mode = GameMode::StarAcademyHub;
+            set_site_exit_visible(false);
             return;
         }
         // Native: reload back to the HTML landing (or stay on the canvas title).
@@ -527,6 +555,8 @@ impl Game {
                 self.mode = GameMode::StarAcademyGradePicker;
             }
             HubAction::LaunchGame(game) => {
+                #[cfg(target_arch = "wasm32")]
+                set_site_exit_visible(true);
                 self.launch_academy_game(game);
             }
         }
@@ -561,9 +591,25 @@ impl Game {
                 self.meteor_catch = MeteorCatch::new(self.progress.grade());
                 self.mode = GameMode::MeteorCatch;
             }
-            // TODO Phase 3: AcademyGame::NumberRain   → start number rain
-            // TODO Phase 4: AcademyGame::PlasmaBreaker→ start plasma breaker
-            AcademyGame::NumberRain | AcademyGame::PlasmaBreaker => {}
+            AcademyGame::NumberRain => {
+                self.number_rain = NumberRain::new(self.progress.grade());
+                self.mode = GameMode::NumberRain;
+            }
+            // TODO Phase 4: AcademyGame::PlasmaBreaker → start plasma breaker
+            AcademyGame::PlasmaBreaker => {}
+        }
+    }
+
+    fn update_number_rain(&mut self) {
+        match self.number_rain.update() {
+            NumberRainAction::None => {}
+            NumberRainAction::ExitToHub => self.exit_to_hub(),
+            NumberRainAction::Completed { stars } => {
+                self.progress.record_best(AcademyGame::NumberRain, stars);
+                let _meter_full = self.progress.add_stars(stars);
+                self.progress.save();
+                self.exit_to_hub();
+            }
         }
     }
 
@@ -1006,6 +1052,7 @@ impl Game {
                 hub::draw_grade_picker(self.progress.grade());
             }
             GameMode::MeteorCatch => self.meteor_catch.draw(),
+            GameMode::NumberRain  => self.number_rain.draw(),
             GameMode::Title => ui::draw_title_screen(
                 self.title_menu_page == TitleMenuPage::MiniGames,
                 self.title_selection,
@@ -1049,7 +1096,8 @@ impl Game {
             // no HTML overlay needed (the HOME button is drawn on the canvas).
             GameMode::StarAcademyHub
             | GameMode::StarAcademyGradePicker
-            | GameMode::MeteorCatch => overlay::OverlayState::empty(),
+            | GameMode::MeteorCatch
+            | GameMode::NumberRain => overlay::OverlayState::empty(),
             GameMode::Title => {
                 if self.title_menu_page == TitleMenuPage::MiniGames {
                     overlay::OverlayState::empty()
