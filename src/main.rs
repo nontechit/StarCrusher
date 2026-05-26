@@ -1,5 +1,6 @@
 mod assets;
 mod enemy;
+mod hub;
 mod levels;
 mod math_pong;
 mod overlay;
@@ -14,14 +15,16 @@ mod screen;
 mod ui;
 
 use enemy::{question_uses_visual_count, EnemyGrid, Explosion};
+use hub::HubAction;
 use levels::Grade;
-use progress::PlayerProgress;
+use progress::{AcademyGame, PlayerProgress};
 use macroquad::prelude::*;
 use math_pong::{MathPong, MathPongAction};
 use platform::{ActivePlatformBridge, GameEvent, GameOverReason, LifeLossReason, PlatformBridge};
 use player::{Bullet, EnemyBullet, Player};
 use question::{generate_question, Question};
 use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
+#[cfg(not(target_arch = "wasm32"))]
 use route::StartupRoute;
 use screen::{
     enter_fullscreen, primary_pointer_position, primary_tap_position, use_virtual_screen,
@@ -33,6 +36,10 @@ const MAX_SPELLING_INPUT_CHARS: usize = 2_000;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum GameMode {
+    /// Star Academy hub — grade badge, star meter, game cards.
+    StarAcademyHub,
+    /// Full-screen grade picker overlay drawn on top of the hub.
+    StarAcademyGradePicker,
     Title,
     Playing,
     GateIntro,
@@ -98,6 +105,8 @@ impl TitleMenuOption {
 
 struct Game {
     mode: GameMode,
+    /// Persistent player progress — grade, stars, best ratings.
+    progress: PlayerProgress,
     title_menu_page: TitleMenuPage,
     title_selection: usize,
     grade: Grade,
@@ -137,9 +146,22 @@ impl Game {
             Some(&active_question),
         );
 
+        // On WASM (mobile web) the Star Academy hub is the home screen.
+        // On native desktop the legacy title screen is preserved.
+        #[cfg(target_arch = "wasm32")]
+        let (mode, title_menu_page, adventure_active, adventure_step, intro_page) = (
+            GameMode::StarAcademyHub,
+            TitleMenuPage::Main,
+            false,
+            AdventureStep::MathInvaders1,
+            0,
+        );
+
         // Shell routing comes from the HTML landing hash, but the game only
         // deals in typed startup routes from here down.
+        #[cfg(not(target_arch = "wasm32"))]
         let startup_route = StartupRoute::from_platform();
+        #[cfg(not(target_arch = "wasm32"))]
         let (mode, title_menu_page, adventure_active, adventure_step, intro_page) =
             match startup_route {
                 StartupRoute::Adventure => (
@@ -167,6 +189,7 @@ impl Game {
 
         Self {
             mode,
+            progress,
             title_menu_page,
             title_selection: 0,
             grade,
@@ -256,6 +279,8 @@ impl Game {
         }
 
         match self.mode {
+            GameMode::StarAcademyHub => self.update_hub(),
+            GameMode::StarAcademyGradePicker => self.update_grade_picker(),
             GameMode::Title => {
                 let menu_len = TitleMenuOption::menu_len(self.title_menu_page);
                 // On portrait mobile the HTML overlay buttons dispatch keyboard
@@ -375,6 +400,8 @@ impl Game {
 
     fn should_show_mobile_back_button(&self) -> bool {
         match self.mode {
+            // Hub is the top-level screen — no back button needed.
+            GameMode::StarAcademyHub | GameMode::StarAcademyGradePicker => false,
             GameMode::Title if self.title_menu_page == TitleMenuPage::MiniGames => true,
             GameMode::Title | GameMode::Playing => false,
             _ => true,
@@ -452,13 +479,80 @@ impl Game {
     fn exit_to_title(&mut self) {
         self.adventure_active = false;
         self.adventure_step = AdventureStep::MathInvaders1;
-        // The HTML landing is the title screen now; the canvas main title page
-        // is dormant. Reload back to the landing instead of showing it.
-        // Native builds (and any case where the shell hook is unavailable) fall
-        // through to the legacy in-canvas title.
-        platform::return_to_landing();
-        self.title_menu_page = TitleMenuPage::Main;
-        self.mode = GameMode::Title;
+        // On WASM we go back to the Star Academy hub rather than the legacy
+        // title screen.  On native the old title screen is preserved.
+        #[cfg(target_arch = "wasm32")]
+        {
+            self.mode = GameMode::StarAcademyHub;
+            return;
+        }
+        // Native: reload back to the HTML landing (or stay on the canvas title).
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            platform::return_to_landing();
+            self.title_menu_page = TitleMenuPage::Main;
+            self.mode = GameMode::Title;
+        }
+    }
+
+    /// Navigate back to the Star Academy hub from any in-game screen.
+    fn exit_to_hub(&mut self) {
+        self.adventure_active = false;
+        self.adventure_step = AdventureStep::MathInvaders1;
+        self.mode = GameMode::StarAcademyHub;
+    }
+
+    // ── Hub & grade picker ────────────────────────────────────────────────────
+
+    fn update_hub(&mut self) {
+        // Keyboard escape for desktop testing
+        if is_key_pressed(KeyCode::Escape) || is_key_pressed(KeyCode::G) {
+            self.mode = GameMode::StarAcademyGradePicker;
+            return;
+        }
+
+        match hub::update(&self.progress) {
+            HubAction::None => {}
+            HubAction::OpenGradePicker => {
+                self.mode = GameMode::StarAcademyGradePicker;
+            }
+            HubAction::LaunchGame(game) => {
+                self.launch_academy_game(game);
+            }
+        }
+    }
+
+    fn update_grade_picker(&mut self) {
+        // Keyboard: Escape closes picker, number keys select grade
+        if is_key_pressed(KeyCode::Escape) {
+            self.mode = GameMode::StarAcademyHub;
+            return;
+        }
+
+        let Some(tap) = screen::primary_tap_position() else {
+            return;
+        };
+
+        if let Some(grade) = hub::grade_picker_tap(tap) {
+            self.progress.set_grade(grade);
+            self.grade = grade;
+            self.mode = GameMode::StarAcademyHub;
+        } else {
+            // Tap outside any button dismisses the picker
+            self.mode = GameMode::StarAcademyHub;
+        }
+    }
+
+    /// Launch a Star Academy game.  Placeholder routing until Phase 2-4.
+    fn launch_academy_game(&mut self, game: AcademyGame) {
+        match game {
+            // Phase 2-4 games are not yet implemented.
+            // For now: do nothing (the PLAY button is visual-only).
+            // TODO Phase 2: AcademyGame::MeteorCatch  → start meteor catch
+            // TODO Phase 3: AcademyGame::NumberRain   → start number rain
+            // TODO Phase 4: AcademyGame::PlasmaBreaker→ start plasma breaker
+            AcademyGame::MeteorCatch | AcademyGame::NumberRain | AcademyGame::PlasmaBreaker => {}
+        }
     }
 
     fn back_to_main_menu(&mut self) {
@@ -876,6 +970,15 @@ impl Game {
         clear_background(BLACK);
 
         match self.mode {
+            GameMode::StarAcademyHub => {
+                draw_starfield();
+                hub::draw(&self.progress);
+            }
+            GameMode::StarAcademyGradePicker => {
+                draw_starfield();
+                hub::draw(&self.progress);
+                hub::draw_grade_picker(self.progress.grade());
+            }
             GameMode::Title => ui::draw_title_screen(
                 self.title_menu_page == TitleMenuPage::MiniGames,
                 self.title_selection,
@@ -915,6 +1018,10 @@ impl Game {
         }
 
         let state = match self.mode {
+            // Hub and grade picker are fully canvas-driven — no HTML overlay needed.
+            GameMode::StarAcademyHub | GameMode::StarAcademyGradePicker => {
+                overlay::OverlayState::empty()
+            }
             GameMode::Title => {
                 if self.title_menu_page == TitleMenuPage::MiniGames {
                     overlay::OverlayState::empty()
