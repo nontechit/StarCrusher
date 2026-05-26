@@ -378,6 +378,12 @@ impl Game {
     }
 
     fn update_playing(&mut self) {
+        // HOME overlay button dispatches Escape on portrait mobile.
+        if is_key_pressed(KeyCode::Escape) {
+            self.exit_to_title();
+            return;
+        }
+
         self.player.update(screen::screen_w());
 
         let touch_fire = self.update_touch_player();
@@ -953,7 +959,9 @@ impl Game {
                 .with_home("HOME", "escape")
                 .button("PLAY", "enter", "spelling-play")
                 .button("NIGHT", "key:n", "spelling-night"),
-            GameMode::Playing => overlay::OverlayState::empty(),
+            // Playing (Math Invaders) needs a HOME button so mobile players can
+            // exit. Escape is handled locally in update_playing().
+            GameMode::Playing => overlay::OverlayState::empty().with_home("HOME", "escape"),
             GameMode::GateQuestion => {
                 const KEYPAD: [(&str, &str, &str); 12] = [
                     ("1", "key:1", "keypad-0"),
