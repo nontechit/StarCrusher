@@ -3,6 +3,7 @@ mod enemy;
 mod hub;
 mod levels;
 mod math_pong;
+mod meteor_catch;
 mod overlay;
 mod platform;
 mod player;
@@ -20,6 +21,7 @@ use levels::Grade;
 use progress::{AcademyGame, PlayerProgress};
 use macroquad::prelude::*;
 use math_pong::{MathPong, MathPongAction};
+use meteor_catch::{MeteorCatch, MeteorCatchAction};
 use platform::{ActivePlatformBridge, GameEvent, GameOverReason, LifeLossReason, PlatformBridge};
 use player::{Bullet, EnemyBullet, Player};
 use question::{generate_question, Question};
@@ -40,6 +42,8 @@ enum GameMode {
     StarAcademyHub,
     /// Full-screen grade picker overlay drawn on top of the hub.
     StarAcademyGradePicker,
+    /// Star Academy game #1: Meteor Catch (drag shield to catch correct answer).
+    MeteorCatch,
     Title,
     Playing,
     GateIntro,
@@ -127,6 +131,7 @@ struct Game {
     last_enemy_fire: f64,
     reading_snake: ReadingSnake,
     math_pong: MathPong,
+    meteor_catch: MeteorCatch,
     intro_page: usize,
     adventure_active: bool,
     adventure_step: AdventureStep,
@@ -210,6 +215,7 @@ impl Game {
             last_enemy_fire: 0.0,
             reading_snake: ReadingSnake::new(),
             math_pong: MathPong::new(),
+            meteor_catch: MeteorCatch::new(grade),
             intro_page,
             adventure_active,
             adventure_step,
@@ -281,6 +287,7 @@ impl Game {
         match self.mode {
             GameMode::StarAcademyHub => self.update_hub(),
             GameMode::StarAcademyGradePicker => self.update_grade_picker(),
+            GameMode::MeteorCatch => self.update_meteor_catch(),
             GameMode::Title => {
                 let menu_len = TitleMenuOption::menu_len(self.title_menu_page);
                 // On portrait mobile the HTML overlay buttons dispatch keyboard
@@ -401,7 +408,10 @@ impl Game {
     fn should_show_mobile_back_button(&self) -> bool {
         match self.mode {
             // Hub is the top-level screen — no back button needed.
-            GameMode::StarAcademyHub | GameMode::StarAcademyGradePicker => false,
+            // Star Academy games draw their own HOME button on canvas.
+            GameMode::StarAcademyHub
+            | GameMode::StarAcademyGradePicker
+            | GameMode::MeteorCatch => false,
             GameMode::Title if self.title_menu_page == TitleMenuPage::MiniGames => true,
             GameMode::Title | GameMode::Playing => false,
             _ => true,
@@ -543,15 +553,31 @@ impl Game {
         }
     }
 
-    /// Launch a Star Academy game.  Placeholder routing until Phase 2-4.
+    /// Launch a Star Academy game from the hub.  Each arm constructs a fresh
+    /// game-state struct seeded with the current grade and switches mode.
     fn launch_academy_game(&mut self, game: AcademyGame) {
         match game {
-            // Phase 2-4 games are not yet implemented.
-            // For now: do nothing (the PLAY button is visual-only).
-            // TODO Phase 2: AcademyGame::MeteorCatch  → start meteor catch
+            AcademyGame::MeteorCatch => {
+                self.meteor_catch = MeteorCatch::new(self.progress.grade());
+                self.mode = GameMode::MeteorCatch;
+            }
             // TODO Phase 3: AcademyGame::NumberRain   → start number rain
             // TODO Phase 4: AcademyGame::PlasmaBreaker→ start plasma breaker
-            AcademyGame::MeteorCatch | AcademyGame::NumberRain | AcademyGame::PlasmaBreaker => {}
+            AcademyGame::NumberRain | AcademyGame::PlasmaBreaker => {}
+        }
+    }
+
+    fn update_meteor_catch(&mut self) {
+        match self.meteor_catch.update() {
+            MeteorCatchAction::None => {}
+            MeteorCatchAction::ExitToHub => self.exit_to_hub(),
+            MeteorCatchAction::Completed { stars } => {
+                self.progress.record_best(AcademyGame::MeteorCatch, stars);
+                let _meter_full = self.progress.add_stars(stars);
+                self.progress.save();
+                // Future: trigger a Grade-Up ceremony if _meter_full is true.
+                self.exit_to_hub();
+            }
         }
     }
 
@@ -979,6 +1005,7 @@ impl Game {
                 hub::draw(&self.progress);
                 hub::draw_grade_picker(self.progress.grade());
             }
+            GameMode::MeteorCatch => self.meteor_catch.draw(),
             GameMode::Title => ui::draw_title_screen(
                 self.title_menu_page == TitleMenuPage::MiniGames,
                 self.title_selection,
@@ -1018,10 +1045,11 @@ impl Game {
         }
 
         let state = match self.mode {
-            // Hub and grade picker are fully canvas-driven — no HTML overlay needed.
-            GameMode::StarAcademyHub | GameMode::StarAcademyGradePicker => {
-                overlay::OverlayState::empty()
-            }
+            // Hub, picker, and Star Academy games are fully canvas-driven —
+            // no HTML overlay needed (the HOME button is drawn on the canvas).
+            GameMode::StarAcademyHub
+            | GameMode::StarAcademyGradePicker
+            | GameMode::MeteorCatch => overlay::OverlayState::empty(),
             GameMode::Title => {
                 if self.title_menu_page == TitleMenuPage::MiniGames {
                     overlay::OverlayState::empty()

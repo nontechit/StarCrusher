@@ -998,7 +998,10 @@
             landing.style.display = 'none';
             shell.classList.add('active');
             syncSiteExitLabel();
-            siteExit.classList.add('visible');
+            // Hub is home — no back button. Any other game mode shows it.
+            if (game !== 'hub') {
+                siteExit.classList.add('visible');
+            }
             document.body.style.overflow = 'hidden';
             document.documentElement.style.overflow = 'hidden';
             syncGameCanvasSize();
@@ -1013,7 +1016,7 @@
                         throw new Error('Macroquad loader did not initialize.');
                     }
                     registerStarCrusherPlatformBridge();
-                    window.load('star-crusher.wasm?v=1.7.0-' + Date.now());
+                    window.load('star-crusher.wasm?v=1.7.1-' + Date.now());
                     syncGameCanvasSize();
                     requestAnimationFrame(syncGameCanvasSize);
                     setTimeout(syncGameCanvasSize, 100);
@@ -1098,6 +1101,16 @@
         });
         resizeStars();
         drawStars();
+
+        // Star Academy hub: auto-launch on page load so mobile users land
+        // directly in the app without an extra tap on the landing page.
+        // The hub is the new home screen — no "Back to Home" needed.
+        (function autoLaunchHub() {
+            if (loaderStarted) return;
+            // Suppress the back-to-home button: hub IS home.
+            siteExit.style.display = 'none';
+            launchGame('hub');
+        })();
     </script>
 </body>
 </html>
