@@ -42,13 +42,27 @@ impl Grade {
     /// Index position (0 = Preschool, 6 = Fifth).
     pub fn index(&self) -> usize {
         match self {
-            Grade::Preschool => 0,
+            Grade::Preschool    => 0,
             Grade::Kindergarten => 1,
-            Grade::FirstGrade => 2,
-            Grade::SecondGrade => 3,
-            Grade::ThirdGrade => 4,
-            Grade::FourthGrade => 5,
-            Grade::FifthGrade => 6,
+            Grade::FirstGrade   => 2,
+            Grade::SecondGrade  => 3,
+            Grade::ThirdGrade   => 4,
+            Grade::FourthGrade  => 5,
+            Grade::FifthGrade   => 6,
+        }
+    }
+
+    /// Convert a raw index back to a Grade. Clamps out-of-range values to
+    /// FifthGrade so stored data never causes a panic on future schema changes.
+    pub fn from_index(i: usize) -> Grade {
+        match i {
+            0 => Grade::Preschool,
+            1 => Grade::Kindergarten,
+            2 => Grade::FirstGrade,
+            3 => Grade::SecondGrade,
+            4 => Grade::ThirdGrade,
+            5 => Grade::FourthGrade,
+            _ => Grade::FifthGrade,
         }
     }
 

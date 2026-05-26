@@ -5,6 +5,7 @@ mod math_pong;
 mod overlay;
 mod platform;
 mod player;
+mod progress;
 mod question;
 mod random;
 mod reading_snake;
@@ -14,6 +15,7 @@ mod ui;
 
 use enemy::{question_uses_visual_count, EnemyGrid, Explosion};
 use levels::Grade;
+use progress::PlayerProgress;
 use macroquad::prelude::*;
 use math_pong::{MathPong, MathPongAction};
 use platform::{ActivePlatformBridge, GameEvent, GameOverReason, LifeLossReason, PlatformBridge};
@@ -124,7 +126,9 @@ struct Game {
 
 impl Game {
     fn new() -> Self {
-        let grade = Grade::Preschool;
+        // Restore saved grade so returning players continue where they left off.
+        let progress = PlayerProgress::load();
+        let grade = progress.grade();
         let active_question = generate_question(grade);
         let enemies = EnemyGrid::new(
             grade,

@@ -295,6 +295,38 @@ pub fn set_html_overlay(json: &str) {
     let _ = json;
 }
 
+/// Persist `json` to localStorage under the given key.
+/// Silently no-ops on non-WASM targets (tests, native builds).
+pub fn save_progress(_key: &str, json: &str) {
+    #[cfg(target_arch = "wasm32")]
+    wasm_js::save_progress(json);
+
+    #[cfg(not(target_arch = "wasm32"))]
+    let _ = json;
+}
+
+/// Load the stored progress JSON from localStorage.
+/// Returns `None` if nothing is stored or the read buffer would overflow.
+/// `buf_size` controls the maximum JSON length accepted (typically 2 KiB).
+pub fn load_progress(buf_size: usize) -> Option<String> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let mut buf = vec![0u8; buf_size];
+        let len = wasm_js::load_progress(&mut buf);
+        if len == 0 {
+            return None;
+        }
+        buf.truncate(len);
+        String::from_utf8(buf).ok()
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = buf_size;
+        None
+    }
+}
+
 #[cfg(target_arch = "wasm32")]
 mod wasm_js {
     extern "C" {
@@ -302,6 +334,11 @@ mod wasm_js {
         fn boohw_starcrusher_initial_mode() -> u32;
         fn boohw_starcrusher_return_to_landing();
         fn boohw_starcrusher_set_overlay(ptr: *const u8, len: u32);
+        /// Write the stored progress JSON into the Rust-owned buffer.
+        /// Returns the number of bytes written (0 = nothing stored).
+        fn boohw_starcrusher_load_progress(buf: *mut u8, max_len: u32) -> u32;
+        /// Persist `len` bytes of JSON to localStorage.
+        fn boohw_starcrusher_save_progress(ptr: *const u8, len: u32);
     }
 
     pub fn emit_platform_event(json: &str) {
@@ -321,6 +358,21 @@ mod wasm_js {
     pub fn set_html_overlay(json: &str) {
         unsafe {
             boohw_starcrusher_set_overlay(json.as_ptr(), json.len() as u32);
+        }
+    }
+
+    /// Reads localStorage progress into a caller-supplied buffer.
+    /// Returns the number of valid UTF-8 bytes written.
+    pub fn load_progress(buf: &mut [u8]) -> usize {
+        unsafe {
+            boohw_starcrusher_load_progress(buf.as_mut_ptr(), buf.len() as u32) as usize
+        }
+    }
+
+    /// Writes `json` to localStorage via the JS bridge.
+    pub fn save_progress(json: &str) {
+        unsafe {
+            boohw_starcrusher_save_progress(json.as_ptr(), json.len() as u32);
         }
     }
 }

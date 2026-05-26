@@ -945,6 +945,31 @@
                     importObject.env.boohw_starcrusher_set_overlay = function (ptr, len) {
                         renderGameOverlay(UTF8ToString(ptr, len));
                     };
+
+                    // Star Academy progress persistence.
+                    // save: Rust passes a JSON string; we write it to localStorage.
+                    importObject.env.boohw_starcrusher_save_progress = function (ptr, len) {
+                        try {
+                            localStorage.setItem('star-academy-progress', UTF8ToString(ptr, len));
+                        } catch (e) {
+                            console.warn('StarAcademy: save_progress failed', e);
+                        }
+                    };
+                    // load: Rust passes a writable buffer; we copy the stored JSON
+                    // into WASM memory and return the byte count written (0 = none).
+                    importObject.env.boohw_starcrusher_load_progress = function (ptr, max_len) {
+                        try {
+                            const data = localStorage.getItem('star-academy-progress');
+                            if (!data) return 0;
+                            const bytes = new TextEncoder().encode(data);
+                            const len = Math.min(bytes.length, max_len);
+                            new Uint8Array(wasm_memory.buffer, ptr, len).set(bytes.subarray(0, len));
+                            return len;
+                        } catch (e) {
+                            console.warn('StarAcademy: load_progress failed', e);
+                            return 0;
+                        }
+                    };
                 }
             });
         }
