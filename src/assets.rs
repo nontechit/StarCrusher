@@ -22,10 +22,6 @@ fn current_color() -> Color {
     CURRENT_COLOR.with(|current| current.get())
 }
 
-fn draw_rect(x: f32, y: f32, w: f32, h: f32) {
-    macroquad::prelude::draw_rectangle(x, y, w, h, current_color());
-}
-
 fn draw_triangle(x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32) {
     macroquad::prelude::draw_triangle(vec2(x1, y1), vec2(x2, y2), vec2(x3, y3), current_color());
 }
@@ -81,7 +77,7 @@ pub fn draw_enemy_invader(x: f32, y: f32, color: Color, scale: f32) {
 
     // Main body
     set_color(color);
-    draw_rect(x + s * 0.25, y, s * 0.5, s * 0.6);
+    draw_rectangle(x + s * 0.25, y, s * 0.5, s * 0.6);
 
     // Side arms (animated slightly based on time)
     let arm_offset = if (get_time() as f32 * 4.0).fract() > 0.5 {
@@ -89,8 +85,8 @@ pub fn draw_enemy_invader(x: f32, y: f32, color: Color, scale: f32) {
     } else {
         -1.0
     };
-    draw_rect(x, y + s * 0.2 + arm_offset, s * 0.25, s * 0.3);
-    draw_rect(x + s * 0.75, y + s * 0.2 + arm_offset, s * 0.25, s * 0.3);
+    draw_rectangle(x, y + s * 0.2 + arm_offset, s * 0.25, s * 0.3);
+    draw_rectangle(x + s * 0.75, y + s * 0.2 + arm_offset, s * 0.25, s * 0.3);
 
     // Eyes (dark)
     set_color(BLACK);
@@ -100,8 +96,8 @@ pub fn draw_enemy_invader(x: f32, y: f32, color: Color, scale: f32) {
     // Legs (animated)
     set_color(color);
     let leg_offset = if arm_offset > 0.0 { -1.0 } else { 1.0 };
-    draw_rect(x + s * 0.2, y + s * 0.6 + leg_offset, s * 0.15, s * 0.3);
-    draw_rect(x + s * 0.65, y + s * 0.6 + leg_offset, s * 0.15, s * 0.3);
+    draw_rectangle(x + s * 0.2, y + s * 0.6 + leg_offset, s * 0.15, s * 0.3);
+    draw_rectangle(x + s * 0.65, y + s * 0.6 + leg_offset, s * 0.15, s * 0.3);
 
     set_default_color();
 }

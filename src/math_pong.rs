@@ -338,12 +338,13 @@ impl MathPong {
         let scale: f32 = if mobile { 1.6 } else { 1.1 };
         let target_w = 58.0 * scale;
         let target_h = 50.0 * scale;
-        let columns_per_row: usize = if count <= 5 { count.max(1) } else { 5 };
         let spacing_x: f32 = if mobile { 16.0 } else { 18.0 };
-        let spacing_y: f32 = if mobile { 16.0 } else { 14.0 };
-        let row_w = columns_per_row as f32 * target_w
-            + columns_per_row.saturating_sub(1) as f32 * spacing_x;
-        let start_x = screen::screen_w() / 2.0 - row_w / 2.0;
+
+        // Always lay out targets in a single row to prevent vertical stacking
+        // that can block shots (e.g., when the correct answer is hidden behind
+        // other targets).
+        let total_w = count as f32 * target_w + (count.saturating_sub(1) as f32) * spacing_x;
+        let start_x = screen::screen_w() / 2.0 - total_w / 2.0;
         let start_y = if mobile {
             mobile_hud_layout().target_y
         } else {
@@ -355,12 +356,9 @@ impl MathPong {
             .take(count)
             .enumerate()
             .map(|(idx, value)| {
-                let col = idx % columns_per_row;
-                let row = idx / columns_per_row;
-                let x = start_x + col as f32 * (target_w + spacing_x);
-                let y = start_y + row as f32 * (target_h + spacing_y);
+                let x = start_x + idx as f32 * (target_w + spacing_x);
                 Target {
-                    rect: Rect::new(x, y, target_w, target_h),
+                    rect: Rect::new(x, start_y, target_w, target_h),
                     value,
                     correct: value == self.question.correct_answer,
                     flash_until: 0.0,
@@ -568,29 +566,15 @@ impl MathPong {
             return;
         }
 
-        let mobile = screen::portrait_layout();
         let message_size = screen::mobile_text_size(18);
         let controls_size = screen::mobile_text_size(14);
+        centered_text(self.message, 500.0, message_size, WHITE);
         centered_text(
-            self.message,
-            if mobile { 536.0 } else { 500.0 },
-            message_size,
-            WHITE,
-        );
-        let controls = if mobile {
-            "Drag to aim, then tap START."
-        } else {
-            "Move: Arrow Keys / A,D or touch   Launch: Space/Enter or release touch   ESC: Title"
-        };
-        centered_text(
-            controls,
-            if mobile { 588.0 } else { 576.0 },
+            "Move: Arrow Keys / A,D or touch   Launch: Space/Enter or release touch   ESC: Title",
+            576.0,
             controls_size,
             GRAY,
         );
-        if mobile && !self.ball_launched {
-            ui::draw_mobile_action_button("START");
-        }
     }
 
     fn draw_mobile_footer(&self) {

@@ -989,7 +989,6 @@ fn draw_adventure_menu_row(
     let radius = 18.0;
 
     // Shadow bar at bottom
-    set_color(gold_shadow);
     draw_rounded_rect(rx + 4.0, ry + rh - 12.0, rw - 8.0, 8.0, 4.0, gold_shadow);
 
     // Outer border (gold edge)

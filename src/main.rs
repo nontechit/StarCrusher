@@ -811,16 +811,16 @@ impl Game {
 
     fn update_touch_player(&mut self) -> bool {
         let ship_w = self.player.effective_width();
-        // Portrait: accept touches anywhere in the lower 2/3 of the virtual
-        // screen so the player can drag from a natural thumb position.
-        // Landscape: tighter zone to avoid conflicts with the enemy field.
+        // Portrait: restrict to the lower ~32% of the screen (near the ship at
+        // y≈85%) so mid-screen gestures don't accidentally move or fire.
+        // Landscape: fixed zone below the enemy field.
         let move_threshold = if screen::portrait_layout() {
-            screen::screen_h() * 0.35
+            screen::screen_h() * 0.68
         } else {
             520.0
         };
         let fire_threshold = if screen::portrait_layout() {
-            screen::screen_h() * 0.30
+            screen::screen_h() * 0.63
         } else {
             470.0
         };

@@ -202,12 +202,9 @@ impl EnemyGrid {
                 question.wrong_answers[wrong_index]
             };
 
-            self.enemies[*enemy_index].r#type =
-                if let Some((shape, _)) = count_shape_from_question(question) {
-                    EnemyType::ShapePuzzle { shape, number }
-                } else {
-                    EnemyType::Puzzle(number)
-                };
+            // Shape questions early-return above; all enemies in this path
+            // are numeric puzzle targets.
+            self.enemies[*enemy_index].r#type = EnemyType::Puzzle(number);
         }
     }
 
@@ -242,6 +239,10 @@ impl EnemyGrid {
             }
             candidate += 1;
         }
+        debug_assert!(
+            numbers.len() >= alive_indices.len(),
+            "answer pool exhausted before filling all enemy slots"
+        );
 
         let mut wrong_cursor = 1;
         for (slot, enemy_index) in alive_indices.iter().enumerate() {

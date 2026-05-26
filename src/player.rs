@@ -131,7 +131,7 @@ impl EnemyBullet {
     /// Updates position each frame. Returns true if off-screen (bottom).
     pub fn update(&mut self) -> bool {
         self.y += self.speed * screen::frame_step();
-        self.y > 730.0 // Off bottom of the 1280x720 virtual screen
+        self.y > screen::screen_h() + 10.0 // Off bottom of virtual screen
     }
 
     /// Draws the enemy bullet at current position.

@@ -606,6 +606,7 @@ impl ReadingSnake {
         self.bonus_round = true;
         self.word_index = 0;
         self.letter_index = 0;
+        self.regenerate_word_order(); // fresh shuffle so bonus round differs from normal round
         self.lives = (self.lives + 1).min(MAX_LIVES);
         self.definition_card_title = "Bonus Nightmare round!";
         self.message = "Bonus round: all letters look alike.";
@@ -659,7 +660,8 @@ impl ReadingSnake {
     }
 
     fn place_letters(&mut self) {
-        let expected = self.word.chars().nth(self.letter_index).unwrap_or('A');
+        let expected = self.word.chars().nth(self.letter_index)
+            .expect("letter_index must be within word bounds");
         self.target = LetterTile {
             pos: self.random_empty_cell(&[]),
             letter: expected,
@@ -684,7 +686,8 @@ impl ReadingSnake {
     }
 
     fn random_empty_cell(&self, reserved: &[CellPos]) -> CellPos {
-        loop {
+        // Fast path: random probe (handles typical case).
+        for _ in 0..512 {
             let pos = CellPos::new(
                 random::i32_inclusive(0, grid_width() - 1),
                 random::i32_inclusive(0, grid_height() - 1),
@@ -696,6 +699,22 @@ impl ReadingSnake {
                 return pos;
             }
         }
+
+        // Slow path: exhaustive scan when the board is nearly full (e.g. deep
+        // into bonus round). Falls back to ignoring the head-safe area so the
+        // function always terminates.
+        for y in 0..grid_height() {
+            for x in 0..grid_width() {
+                let pos = CellPos::new(x, y);
+                if !self.snake.contains(&pos) && !reserved.contains(&pos) {
+                    return pos;
+                }
+            }
+        }
+
+        // Absolute last resort: board is completely full — return snake head
+        // position; the caller will overwrite whatever is there.
+        self.snake[0]
     }
 
     fn is_in_head_safe_area(&self, pos: CellPos) -> bool {

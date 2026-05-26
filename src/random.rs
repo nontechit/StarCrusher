@@ -7,6 +7,7 @@ pub fn f32_range(min: f32, max: f32) -> f32 {
 }
 
 pub fn i32_inclusive(min: i32, max: i32) -> i32 {
+    debug_assert!(max < i32::MAX, "i32_inclusive: max + 1 would overflow");
     macroquad::rand::gen_range(min, max + 1)
 }
 
