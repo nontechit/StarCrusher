@@ -509,13 +509,29 @@ impl ReadingSnake {
             return;
         }
 
-        let next = if delta.x.abs() > delta.y.abs() {
-            CellPos::new(delta.x.signum() as i32, 0)
+        // Compute primary and secondary axes from the click offset.
+        // If the primary direction would be a U-turn (illegal in snake),
+        // fall back to the secondary axis so clicking "behind" the head
+        // steers perpendicularly rather than silently doing nothing.
+        let (primary, secondary) = if delta.x.abs() >= delta.y.abs() {
+            let sec = (delta.y != 0.0).then(|| CellPos::new(0, delta.y.signum() as i32));
+            (CellPos::new(delta.x.signum() as i32, 0), sec)
         } else {
-            CellPos::new(0, delta.y.signum() as i32)
+            let sec = (delta.x != 0.0).then(|| CellPos::new(delta.x.signum() as i32, 0));
+            (CellPos::new(0, delta.y.signum() as i32), sec)
         };
 
-        self.set_next_dir(next);
+        let is_uturn = |d: CellPos| d.x == -self.dir.x && d.y == -self.dir.y;
+
+        if !is_uturn(primary) {
+            self.set_next_dir(primary);
+        } else if let Some(sec) = secondary {
+            if !is_uturn(sec) {
+                self.set_next_dir(sec);
+            }
+        }
+        // If both axes are U-turns (clicking exactly on the head with no
+        // lateral offset), nothing happens — correct behaviour.
     }
 
     fn point_in_board(&self, point: Vec2) -> bool {
