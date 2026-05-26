@@ -2,10 +2,18 @@
 
 Star Crusher is an educational arcade collection about two young space travelers flying between dungeon planets. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-Current build: `1.6.3`
+On mobile, the home screen is the **Star Academy** hub: a portrait-native landing page with a grade badge, 10-pip star meter, and three quick-tap math games — Meteor Catch, Number Rain, and Plasma Breaker. Stars earned in each game advance the player toward the next grade and persist between sessions.
+
+Current build: `1.7.5`
 
 ## Latest Mobile Release
 
+- **Version 1.7.5 Meteor Catch shield tuning:** Shrunk the catch shield from 200px to 140px so meteors require real aiming on the 720px portrait canvas without becoming unfair for K-5 players.
+- **Version 1.7.4 Touch DPI fix:** Normalized touch positions by `screen_dpi_scale()` before mapping to the virtual camera, fixing silently-broken canvas taps on every high-DPI mobile display — touches were landing off the right edge of the 720x1280 virtual canvas, so hub cards, HOME buttons, and Star Academy game taps never registered. Mouse paths were unaffected (already CSS-pixel correct).
+- **Version 1.7.3 Plasma Breaker:** Added the third Star Academy game — a Breakout-style math round where players drag a paddle to bounce a plasma ball into the block whose value matches the question. 5x3 block grid, grade-scaled ball speed, three lives, star award persists to the hub.
+- **Version 1.7.2 Number Rain:** Added the second Star Academy game — tap the falling number that matches the current math question before it lands. Waves of four drops, three lives, grade-scaled fall speed, star award persists to the hub.
+- **Version 1.7.1 Meteor Catch:** Added the first Star Academy game — drag a shield horizontally to catch the meteor whose value matches the current math question. Waves of four meteors, three lives, star award persists to the hub.
+- **Version 1.7.0 Star Academy hub:** New mobile home screen that auto-launches on page load — grade badge with picker overlay, 10-pip star meter for grade advancement, three game cards (Meteor Catch, Number Rain, Plasma Breaker), best-rating dots per game, and `PlayerProgress` persisted to `localStorage` via a JS bridge. Replaces the legacy mobile flow.
 - **Version 1.6.3 overlay architecture cleanup:** HTML overlay controls now use typed Rust payloads and startup routing now flows through a small `StartupRoute` abstraction instead of raw platform mode codes.
 - **Version 1.6.2 HTML overlay controls:** Mobile web buttons now render as real HTML controls layered over the canvas, giving iPhone Safari first-class tap handling for HOME, mission/menu choices, `CONTINUE`, `START`, `PLAY`, and `NIGHT`.
 - **Version 1.6.2 mobile shell sizing:** Landing and game shell sizing now use dynamic viewport units for better iPhone Safari behavior as browser chrome changes.
@@ -185,6 +193,11 @@ src/question.rs      Grade-specific math question generation
 src/random.rs        Shared randomization helpers
 src/math_pong.rs     Math Pong number target mini game
 src/reading_snake.rs Reading Snake mini game
+src/hub.rs           Star Academy hub screen + grade picker overlay (mobile home)
+src/progress.rs      PlayerProgress data model + localStorage persistence bridge
+src/meteor_catch.rs  Star Academy game #1 — drag shield to catch the correct meteor
+src/number_rain.rs   Star Academy game #2 — tap the correct falling number
+src/plasma_breaker.rs Star Academy game #3 — Breakout-style; break the correct block
 src/enemy.rs         Numbered Math Invaders targets, movement, explosions
 src/player.rs        Player ship, player bullets, enemy bullets
 src/ui.rs            HUD, title, mobile touch buttons, game over, victory, and question gate UI
