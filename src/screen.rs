@@ -89,14 +89,33 @@ pub fn enter_fullscreen() {
 }
 
 /// Maps screen/touch coordinates to the active virtual game space using the active camera.
+///
+/// `position` must be in **CSS pixels** (the same coordinate space as
+/// `screen_width()` / `screen_height()` and `mouse_position()`).  Macroquad's
+/// `touches()` reports raw canvas-pixel coordinates (multiplied by DPI), so
+/// touch positions must be divided by `screen_dpi_scale()` before passing
+/// them here — use `touch_to_virtual_position()` for touches.
 pub fn to_virtual_position(position: Vec2) -> Vec2 {
     virtual_camera().screen_to_world(position)
+}
+
+/// Same as `to_virtual_position` but for touch positions from `touches()`.
+///
+/// Touch positions arrive in canvas-pixel space (already multiplied by DPI
+/// by miniquad's `mouse_relative_position`), but the virtual camera expects
+/// CSS-pixel coordinates because `screen_width()` itself divides by DPI.
+/// Without this normalization, touches on high-DPI displays land outside
+/// the virtual canvas (e.g. virtual x = 720 for any touch on a 2× display),
+/// which silently breaks every canvas button on mobile.
+pub fn touch_to_virtual_position(position: Vec2) -> Vec2 {
+    let dpi = screen_dpi_scale().max(1.0);
+    to_virtual_position(position / dpi)
 }
 
 pub fn primary_tap_position() -> Option<Vec2> {
     for touch in touches() {
         if touch.phase == TouchPhase::Started {
-            return Some(to_virtual_position(touch.position));
+            return Some(touch_to_virtual_position(touch.position));
         }
     }
 
@@ -114,7 +133,7 @@ pub fn primary_pointer_position() -> Option<Vec2> {
             touch.phase,
             TouchPhase::Started | TouchPhase::Stationary | TouchPhase::Moved
         ) {
-            return Some(to_virtual_position(touch.position));
+            return Some(touch_to_virtual_position(touch.position));
         }
     }
 
@@ -129,7 +148,7 @@ pub fn primary_pointer_position() -> Option<Vec2> {
 pub fn primary_release_position() -> Option<Vec2> {
     for touch in touches() {
         if touch.phase == TouchPhase::Ended {
-            return Some(to_virtual_position(touch.position));
+            return Some(touch_to_virtual_position(touch.position));
         }
     }
 
