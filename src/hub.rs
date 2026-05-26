@@ -126,18 +126,9 @@ fn draw_header(grade: Grade, accent: Color) {
     let ls = fit_text(label, 34, BADGE_W - 24.0);
     centered_text_color(label, BADGE_Y + BADGE_H * 0.68, ls, dark_tint(0.05));
 
-    // "Change Grade" link
-    let cg_rect = change_grade_rect();
-    // subtle hover / tap target background
-    filled_pill(
-        cg_rect.x,
-        cg_rect.y,
-        cg_rect.w,
-        cg_rect.h,
-        cg_rect.h / 2.0,
-        Color { a: 0.12, ..accent },
-    );
-    centered_text_color("Change Grade  \u{25B8}", CHANGE_Y + 8.0, 26, C_LABEL);
+    // "Change Grade" link — plain text, no pill (avoids end-cap bleed on
+    // dark background; tap target is still the full change_grade_rect).
+    centered_text_color("< Change Grade >", CHANGE_Y + 8.0, 26, C_LABEL);
 }
 
 fn draw_star_meter(progress: &PlayerProgress, accent: Color) {
@@ -162,9 +153,9 @@ fn draw_star_meter(progress: &PlayerProgress, accent: Color) {
 
     // Label below meter
     let label = if stars >= total {
-        "Grade meter full! Keep playing to advance.".to_string()
+        "Meter full! Keep playing to advance grade.".to_string()
     } else {
-        format!("{}/{} stars — fill to advance grade", stars, total)
+        format!("{}/{} stars to next grade", stars, total)
     };
     centered_text_color(&label, METER_LABEL_Y, 20, C_LABEL);
 
@@ -280,16 +271,11 @@ pub fn draw_grade_picker(current: Grade) {
             // Filled with accent
             filled_pill(PICKER_BTN_X, y, PICKER_BTN_W, PICKER_BTN_H, 16.0, accent);
         } else {
-            // Dark fill + subtle accent border
-            filled_pill(PICKER_BTN_X, y, PICKER_BTN_W, PICKER_BTN_H, 16.0,
-                Color { r: 0.10, g: 0.10, b: 0.22, a: 1.0 });
-            // border: draw a slightly larger pill with accent then redraw fill on top
-            // (approximated with rectangle_lines)
-            draw_rectangle_lines(
-                PICKER_BTN_X + 1.0, y + 1.0,
-                PICKER_BTN_W - 2.0, PICKER_BTN_H - 2.0,
-                2.0,
-                Color { a: 0.45, ..accent },
+            // Dark fill + thin outline (no heavy circle end-caps)
+            outlined_pill(
+                PICKER_BTN_X, y,
+                PICKER_BTN_W, PICKER_BTN_H, 14.0,
+                Color { a: 0.35, ..accent },
             );
         }
 
@@ -342,6 +328,19 @@ fn filled_pill(x: f32, y: f32, w: f32, h: f32, radius: f32, color: Color) {
     draw_circle(x + w - r, y + r,     r, color);
     draw_circle(x + r,     y + h - r, r, color);
     draw_circle(x + w - r, y + h - r, r, color);
+}
+
+/// Outlined rounded rectangle — thin stroke with rounded corners but no
+/// heavy circle end-caps.  Draws a dark fill then an outline ring.
+fn outlined_pill(x: f32, y: f32, w: f32, h: f32, radius: f32, color: Color) {
+    let r = radius.min(w / 2.0).min(h / 2.0);
+
+    // Dark fill
+    draw_rectangle(x + r, y, w - r * 2.0, h, color);
+    draw_rectangle(x, y + r, w, h - r * 2.0, color);
+
+    // Thin outline ring (drawn slightly outside the fill)
+    draw_rectangle_lines(x - 1.5, y - 1.5, w + 3.0, h + 3.0, 2.0, color);
 }
 
 /// Draw white text centred horizontally at the given y baseline.
