@@ -4,10 +4,11 @@ Star Crusher is an educational arcade collection about two young space travelers
 
 On mobile, the home screen is the **Star Academy** hub: a portrait-native landing page with a grade badge, 10-pip star meter, and five quick-tap games grouped by subject — four math games (Meteor Catch, Number Rain, Plasma Breaker, Frog Lane) and one reading game (Reading Snake). Stars earned in each game advance the player toward the next grade and persist between sessions.
 
-Current build: `1.9.1`
+Current build: `1.9.2`
 
 ## Latest Mobile Release
 
+- **Version 1.9.2 Frog Lane mobile pacing:** Lowered the mobile speed scale to 0.05 — Frog Lane was still far too fast on touch devices at 0.5. Desktop speed is unchanged.
 - **Version 1.9.1 Reading Snake mobile touch fix:** Touch/swipe steering now works during Reading Snake gameplay on phones. Gameplay touches were being mapped with the CSS-pixel transform instead of the DPI-aware `touch_to_virtual_position`, so on high-DPI screens every touch landed outside the board and the snake never turned. Tap-to-steer (relative to the snake head, the same pattern Frog Lane uses) is also re-enabled on portrait. Desktop input is unchanged.
 - **Version 1.9.1 Frog Lane mobile pacing:** Frog Lane now runs at half speed on touch/portrait devices so PreK–6th players can keep up; desktop speed is unchanged.
 - **Version 1.9.1 audit:** Verified against the 12-state iPhone-portrait CDP audit (393×852 @3x) — all captures clean, both changed games render correctly, no visual regressions to the GW theme or other games.

@@ -45,7 +45,7 @@ const RESPAWN_INVINCIBLE_SEC: f32 = 1.6;
 /// Mobile gameplay slowdown. On touch devices (detected via the portrait
 /// layout used everywhere else in the app) the action runs at this fraction
 /// of desktop speed so PreK–6th players can keep up. Desktop is unscaled.
-const MOBILE_SPEED_SCALE: f32 = 0.5;
+const MOBILE_SPEED_SCALE: f32 = 0.05;
 
 /// Returns the per-frame time step scaled for the current platform: full speed
 /// on desktop, `MOBILE_SPEED_SCALE` on portrait/touch.
