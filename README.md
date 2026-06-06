@@ -4,10 +4,13 @@ Star Crusher is an educational arcade collection about two young space travelers
 
 On mobile, the home screen is the **Star Academy** hub: a portrait-native landing page with a grade badge, 10-pip star meter, and five quick-tap games grouped by subject — four math games (Meteor Catch, Number Rain, Plasma Breaker, Frog Lane) and one reading game (Reading Snake). Stars earned in each game advance the player toward the next grade and persist between sessions.
 
-Current build: `1.9.0`
+Current build: `1.9.1`
 
 ## Latest Mobile Release
 
+- **Version 1.9.1 Reading Snake mobile touch fix:** Touch/swipe steering now works during Reading Snake gameplay on phones. Gameplay touches were being mapped with the CSS-pixel transform instead of the DPI-aware `touch_to_virtual_position`, so on high-DPI screens every touch landed outside the board and the snake never turned. Tap-to-steer (relative to the snake head, the same pattern Frog Lane uses) is also re-enabled on portrait. Desktop input is unchanged.
+- **Version 1.9.1 Frog Lane mobile pacing:** Frog Lane now runs at half speed on touch/portrait devices so PreK–6th players can keep up; desktop speed is unchanged.
+- **Version 1.9.1 audit:** Verified against the 12-state iPhone-portrait CDP audit (393×852 @3x) — all captures clean, both changed games render correctly, no visual regressions to the GW theme or other games.
 - **Version 1.9.0 GW blue & gold theme:** Replaced the per-game color schemes with a single shared GW palette (`src/theme.rs`) — deep navy / royal-blue backgrounds with gold accents — applied consistently across the hub, Meteor Catch, Number Rain, and Plasma Breaker. Correct/wrong feedback stays green/crimson as gameplay signals.
 - **Version 1.9.0 Meteor Catch prompt:** Question now reads "Catch number [Word]" (e.g. "Catch number Two") and auto-fits so it never wraps on phone screens; the player still catches the meteor showing the matching numeral.
 - **Version 1.9.0 Meteor Catch difficulty:** Narrowed the catch paddle (140px → 104px) for a fairer-but-tougher catch, and made the per-wave drop count random within a grade-scaled range (Preschool 3-4 up to 5th grade 6-8) instead of a fixed 4.

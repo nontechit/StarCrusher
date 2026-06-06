@@ -42,6 +42,21 @@ const HOME_H: f32 = 56.0;
 const STARTING_LIVES: u32 = 3;
 const RESPAWN_INVINCIBLE_SEC: f32 = 1.6;
 
+/// Mobile gameplay slowdown. On touch devices (detected via the portrait
+/// layout used everywhere else in the app) the action runs at this fraction
+/// of desktop speed so PreK–6th players can keep up. Desktop is unscaled.
+const MOBILE_SPEED_SCALE: f32 = 0.5;
+
+/// Returns the per-frame time step scaled for the current platform: full speed
+/// on desktop, `MOBILE_SPEED_SCALE` on portrait/touch.
+fn play_speed_scale() -> f32 {
+    if screen::portrait_layout() {
+        MOBILE_SPEED_SCALE
+    } else {
+        1.0
+    }
+}
+
 // ── Action returned to main.rs ───────────────────────────────────────────────
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FrogLaneAction {
@@ -451,6 +466,10 @@ impl FrogLane {
     }
 
     fn update_playing(&mut self, dt: f32) -> FrogLaneAction {
+        // Slow the whole simulation on mobile (hazards, log drift, timers) so the
+        // pace is comfortable for young players. Desktop keeps full speed.
+        let dt = dt * play_speed_scale();
+
         self.hop_cd = (self.hop_cd - dt).max(0.0);
         self.invincible_for = (self.invincible_for - dt).max(0.0);
 

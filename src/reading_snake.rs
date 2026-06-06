@@ -1,7 +1,7 @@
 use crate::lesson_plans;
 use crate::levels::Grade;
 use crate::random;
-use crate::screen::{self, primary_tap_position, to_virtual_position, SCREEN_H, SCREEN_W};
+use crate::screen::{self, primary_tap_position, SCREEN_H, SCREEN_W};
 use crate::ui;
 use macroquad::prelude::*;
 
@@ -488,12 +488,12 @@ impl ReadingSnake {
 
         let handled_swipe = self.handle_touch_swipe();
 
-        // On portrait mobile we rely entirely on swipe gestures — the tap-to-
-        // steer fallback uses absolute position relative to the snake head, but
-        // the dynamic board_y (computed from word definition length) makes that
-        // mapping unreliable and causes the "touches don't align" symptom.
-        // On landscape / desktop the board is fixed, so tap steering still works.
-        if !handled_swipe && !screen::portrait_layout() {
+        // When a swipe wasn't performed, fall back to tap-to-steer. `steer_from_tap`
+        // works relative to the snake head (the same pattern Frog Lane uses for its
+        // touch steering) and `primary_tap_position` already normalizes DPI, so this
+        // is reliable on portrait mobile as well as desktop. A real swipe still wins
+        // because its later frames overwrite `next_dir` before the next step tick.
+        if !handled_swipe {
             if let Some(tap) = primary_tap_position() {
                 self.steer_from_tap(tap);
             }
@@ -507,7 +507,13 @@ impl ReadingSnake {
 
         let mut steered = false;
         for touch in touches() {
-            let point = to_virtual_position(touch.position);
+            // Touches arrive in DPI-multiplied canvas pixels; they must be
+            // normalized with `touch_to_virtual_position` (not the CSS-pixel
+            // `to_virtual_position`). Using the wrong mapping pushed every
+            // gameplay touch far outside the board on high-DPI phones, so the
+            // swipe never started — the "touch stops registering in gameplay"
+            // bug. This mirrors how `screen::primary_tap_position` handles it.
+            let point = screen::touch_to_virtual_position(touch.position);
             match touch.phase {
                 TouchPhase::Started => {
                     // Accept any touch outside the header/button chrome as a
