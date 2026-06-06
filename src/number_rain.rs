@@ -409,24 +409,6 @@ impl NumberRain {
         draw_text_ex(&score, SW - 30.0 - sm.width, 72.0,
             TextParams { font_size: 28, color: C_LABEL, ..Default::default() });
 
-        // Hearts
-        let heart_y = 196.0;
-        let heart_r = 9.0;
-        let heart_gap = 26.0;
-        let start_x = CX - heart_gap;
-        for i in 0..MAX_LIVES {
-            let cx = start_x + i as f32 * heart_gap;
-            let color = if i < self.lives_remaining() { C_HEART_ON } else { C_HEART_OFF };
-            draw_circle(cx - 4.0, heart_y, heart_r, color);
-            draw_circle(cx + 4.0, heart_y, heart_r, color);
-            draw_triangle(
-                Vec2::new(cx - 10.0, heart_y + 3.0),
-                Vec2::new(cx + 10.0, heart_y + 3.0),
-                Vec2::new(cx, heart_y + 14.0),
-                color,
-            );
-        }
-
         // "TAP THE ANSWER" hint until first correct
         if self.correct_count == 0 && self.wrong_count == 0 {
             let hint = "Tap the correct answer!";

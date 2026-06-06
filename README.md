@@ -2,12 +2,17 @@
 
 Star Crusher is an educational arcade collection about two young space travelers flying between dungeon planets. The current encounters include a Time Pilot-style Math Invaders game where drifting numbered targets display possible answers to grade-level math questions, Math Pong, and Reading Snake, a Snake-inspired mini game where players collect letters in order to spell words.
 
-On mobile, the home screen is the **Star Academy** hub: a portrait-native landing page with a grade badge, 10-pip star meter, and three quick-tap math games — Meteor Catch, Number Rain, and Plasma Breaker. Stars earned in each game advance the player toward the next grade and persist between sessions.
+On mobile, the home screen is the **Star Academy** hub: a portrait-native landing page with a grade badge, 10-pip star meter, and five quick-tap games grouped by subject — four math games (Meteor Catch, Number Rain, Plasma Breaker, Frog Lane) and one reading game (Reading Snake). Stars earned in each game advance the player toward the next grade and persist between sessions.
 
-Current build: `1.7.5`
+Current build: `1.8.0`
 
 ## Latest Mobile Release
 
+- **Version 1.8.0 question card cleanup:** Removed the hearts/lives row from the Meteor Catch and Number Rain question banners — the question card now shows the question text and score only. Lives still drive win/loss logic; the heart row simply no longer crowds the prompt.
+- **Version 1.8.0 Meteor Catch word matching:** Meteor Catch now shows a written number word ("three", "five") as the prompt and the player catches the meteor showing the matching numeral, reinforcing number-word recognition for early grades. Distractor meteors and the grade-scaled count range are unchanged.
+- **Version 1.8.0 hub two new games:** The Star Academy hub now lists five games across Math and Reading sections — adding **Frog Lane** (hop across lanes counting crossings) and **Reading Snake** to the original three, filling the previously empty lower half of the hub. `AcademyGame` and `PlayerProgress` gained the two new game columns while preserving existing saved stars.
+- **Version 1.8.0 hash routing on WASM:** `#adventure` and `#mission` URL hashes now route to the adventure intro and mission select on the WASM build via the shared `StartupRoute`, matching native behavior, instead of always landing on the hub.
+- **Version 1.8.0 grade picker tap fix:** Enlarged the hub "Change Grade" tap target and made the grade badge pill itself open the picker, so grade selection registers reliably on touch.
 - **Version 1.7.5 Meteor Catch shield tuning:** Shrunk the catch shield from 200px to 140px so meteors require real aiming on the 720px portrait canvas without becoming unfair for K-5 players.
 - **Version 1.7.4 Touch DPI fix:** Normalized touch positions by `screen_dpi_scale()` before mapping to the virtual camera, fixing silently-broken canvas taps on every high-DPI mobile display — touches were landing off the right edge of the 720x1280 virtual canvas, so hub cards, HOME buttons, and Star Academy game taps never registered. Mouse paths were unaffected (already CSS-pixel correct).
 - **Version 1.7.3 Plasma Breaker:** Added the third Star Academy game — a Breakout-style math round where players drag a paddle to bounce a plasma ball into the block whose value matches the question. 5x3 block grid, grade-scaled ball speed, three lives, star award persists to the hub.
@@ -195,9 +200,11 @@ src/math_pong.rs     Math Pong number target mini game
 src/reading_snake.rs Reading Snake mini game
 src/hub.rs           Star Academy hub screen + grade picker overlay (mobile home)
 src/progress.rs      PlayerProgress data model + localStorage persistence bridge
-src/meteor_catch.rs  Star Academy game #1 — drag shield to catch the correct meteor
+src/meteor_catch.rs  Star Academy game #1 — catch the meteor whose numeral matches the number word
 src/number_rain.rs   Star Academy game #2 — tap the correct falling number
 src/plasma_breaker.rs Star Academy game #3 — Breakout-style; break the correct block
+src/frog_lane.rs     Star Academy game #4 — hop across lanes, count crossings
+src/lesson_plans.rs  Lesson content (math concepts) consumed by Frog Lane
 src/enemy.rs         Numbered Math Invaders targets, movement, explosions
 src/player.rs        Player ship, player bullets, enemy bullets
 src/ui.rs            HUD, title, mobile touch buttons, game over, victory, and question gate UI

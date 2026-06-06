@@ -412,7 +412,7 @@ impl MeteorCatch {
             TextParams { font_size: qs, color: C_QUESTION, ..Default::default() },
         );
 
-        // Score (top-right) and lives (under question)
+        // Score (top-right)
         let score_label = format!("{}/{}", self.correct_count, WIN_CORRECT);
         let sm = measure_text(&score_label, None, 28, 1.0);
         draw_text_ex(
@@ -421,26 +421,6 @@ impl MeteorCatch {
             72.0,
             TextParams { font_size: 28, color: C_LABEL, ..Default::default() },
         );
-
-        // Hearts row
-        let heart_y = 196.0;
-        let heart_r = 9.0;
-        let heart_gap = 26.0;
-        let total_w = heart_gap * (MAX_LIVES as f32 - 1.0);
-        let start_x = CX - total_w / 2.0;
-        for i in 0..MAX_LIVES {
-            let cx = start_x + i as f32 * heart_gap;
-            let color = if i < self.lives_remaining() { C_HEART_ON } else { C_HEART_OFF };
-            // Simple heart approximation: two circles + a triangle (use circles only for now)
-            draw_circle(cx - 4.0, heart_y, heart_r, color);
-            draw_circle(cx + 4.0, heart_y, heart_r, color);
-            draw_triangle(
-                Vec2::new(cx - 10.0, heart_y + 3.0),
-                Vec2::new(cx + 10.0, heart_y + 3.0),
-                Vec2::new(cx, heart_y + 14.0),
-                color,
-            );
-        }
     }
 
     fn draw_meteor(&self, m: &Meteor) {
