@@ -271,6 +271,19 @@ fn gen_fifth_grade() -> Question {
     }
 }
 
+/// Meteor Catch question: show a number word; player catches the matching numeral orb.
+/// For Preschool/Kindergarten uses 1-5; higher grades extend to the same range as
+/// `math_pong_count_range` so the difficulty scales with grade.
+pub fn generate_meteor_catch_question(grade: Grade) -> Question {
+    let (min_count, max_count) = math_pong_count_range(grade);
+    let count = random::i32_inclusive(min_count, max_count);
+    Question {
+        text: number_word(count).to_string(),
+        correct_answer: count as i64,
+        wrong_answers: gen_unique_wrongs(count as i64, min_count as i64, max_count as i64, 3),
+    }
+}
+
 fn number_word(number: i32) -> &'static str {
     match number {
         1 => "one",

@@ -1,6 +1,8 @@
 mod assets;
 mod enemy;
+mod frog_lane;
 mod hub;
+mod lesson_plans;
 mod levels;
 mod math_pong;
 mod meteor_catch;
@@ -18,6 +20,7 @@ mod screen;
 mod ui;
 
 use enemy::{question_uses_visual_count, EnemyGrid, Explosion};
+use frog_lane::{FrogLane, FrogLaneAction};
 use hub::HubAction;
 use levels::Grade;
 use progress::{AcademyGame, PlayerProgress};
@@ -30,7 +33,6 @@ use platform::{ActivePlatformBridge, GameEvent, GameOverReason, LifeLossReason, 
 use player::{Bullet, EnemyBullet, Player};
 use question::{generate_question, Question};
 use reading_snake::{custom_words_from_input, ReadingSnake, ReadingSnakeAction};
-#[cfg(not(target_arch = "wasm32"))]
 use route::StartupRoute;
 use screen::{
     enter_fullscreen, primary_pointer_position, primary_tap_position, use_virtual_screen,
@@ -63,6 +65,8 @@ enum GameMode {
     NumberRain,
     /// Star Academy game #3: Plasma Breaker (bounce ball to break correct block).
     PlasmaBreaker,
+    /// Star Academy game #4: Frog Lane (hop across lanes, count crossings).
+    FrogLane,
     Title,
     Playing,
     GateIntro,
@@ -153,6 +157,7 @@ struct Game {
     meteor_catch: MeteorCatch,
     number_rain: NumberRain,
     plasma_breaker: PlasmaBreaker,
+    frog_lane: FrogLane,
     intro_page: usize,
     adventure_active: bool,
     adventure_step: AdventureStep,
@@ -172,30 +177,10 @@ impl Game {
             Some(&active_question),
         );
 
-        // On WASM (mobile web) the Star Academy hub is the home screen.
-        // Only use it in portrait mode — landscape desktop falls back to
-        // legacy title screen so the hub layout isn't clipped.
-        #[cfg(target_arch = "wasm32")]
-        let hub_mode = if screen::portrait_layout() {
-            GameMode::StarAcademyHub
-        } else {
-            GameMode::Title
-        };
-
-        #[cfg(target_arch = "wasm32")]
-        let (mode, title_menu_page, adventure_active, adventure_step, intro_page) = (
-            hub_mode,
-            TitleMenuPage::Main,
-            false,
-            AdventureStep::MathInvaders1,
-            0,
-        );
-
-        // Shell routing comes from the HTML landing hash, but the game only
-        // deals in typed startup routes from here down.
-        #[cfg(not(target_arch = "wasm32"))]
+        // Route based on the URL hash (WASM) or CLI flag (native).
+        // On WASM, portrait mode defaults to the Star Academy hub; landscape
+        // falls back to the legacy title screen so the hub layout isn't clipped.
         let startup_route = StartupRoute::from_platform();
-        #[cfg(not(target_arch = "wasm32"))]
         let (mode, title_menu_page, adventure_active, adventure_step, intro_page) =
             match startup_route {
                 StartupRoute::Adventure => (
@@ -212,13 +197,18 @@ impl Game {
                     AdventureStep::MathInvaders1,
                     0,
                 ),
-                StartupRoute::Title => (
-                    GameMode::Title,
-                    TitleMenuPage::Main,
-                    false,
-                    AdventureStep::MathInvaders1,
-                    0,
-                ),
+                StartupRoute::Title => {
+                    // On WASM in portrait mode the hub is the home screen.
+                    #[cfg(target_arch = "wasm32")]
+                    let default_mode = if screen::portrait_layout() {
+                        GameMode::StarAcademyHub
+                    } else {
+                        GameMode::Title
+                    };
+                    #[cfg(not(target_arch = "wasm32"))]
+                    let default_mode = GameMode::Title;
+                    (default_mode, TitleMenuPage::Main, false, AdventureStep::MathInvaders1, 0)
+                }
             };
 
         Self {
@@ -247,6 +237,7 @@ impl Game {
             meteor_catch: MeteorCatch::new(grade),
             number_rain: NumberRain::new(grade),
             plasma_breaker: PlasmaBreaker::new(grade),
+            frog_lane: FrogLane::new(grade),
             intro_page,
             adventure_active,
             adventure_step,
@@ -321,6 +312,7 @@ impl Game {
             GameMode::MeteorCatch    => self.update_meteor_catch(),
             GameMode::NumberRain     => self.update_number_rain(),
             GameMode::PlasmaBreaker  => self.update_plasma_breaker(),
+            GameMode::FrogLane       => self.update_frog_lane(),
             GameMode::Title => {
                 let menu_len = TitleMenuOption::menu_len(self.title_menu_page);
                 // On portrait mobile the HTML overlay buttons dispatch keyboard
@@ -395,7 +387,14 @@ impl Game {
             GameMode::ReadingSnake => match self.reading_snake.update() {
                 ReadingSnakeAction::None => {}
                 ReadingSnakeAction::ExitToTitle => self.exit_to_title(),
+                ReadingSnakeAction::ExitToHub => self.exit_to_hub(),
                 ReadingSnakeAction::Completed => self.complete_reading_snake(),
+                ReadingSnakeAction::AcademyCompleted { stars } => {
+                    self.progress.record_best(AcademyGame::ReadingSnake, stars);
+                    let _meter_full = self.progress.add_stars(stars);
+                    self.progress.save();
+                    self.exit_to_hub();
+                }
             },
             GameMode::SpellingList => self.update_spelling_list(),
             GameMode::MathPong => match self.math_pong.update() {
@@ -446,7 +445,8 @@ impl Game {
             | GameMode::StarAcademyGradePicker
             | GameMode::MeteorCatch
             | GameMode::NumberRain
-            | GameMode::PlasmaBreaker => false,
+            | GameMode::PlasmaBreaker
+            | GameMode::FrogLane => false,
             GameMode::Title if self.title_menu_page == TitleMenuPage::MiniGames => true,
             GameMode::Title | GameMode::Playing => false,
             _ => true,
@@ -606,6 +606,27 @@ impl Game {
             AcademyGame::PlasmaBreaker => {
                 self.plasma_breaker = PlasmaBreaker::new(self.progress.grade());
                 self.mode = GameMode::PlasmaBreaker;
+            }
+            AcademyGame::FrogLane => {
+                self.frog_lane = FrogLane::new(self.progress.grade());
+                self.mode = GameMode::FrogLane;
+            }
+            AcademyGame::ReadingSnake => {
+                self.reading_snake = ReadingSnake::new_academy(self.progress.grade());
+                self.mode = GameMode::ReadingSnake;
+            }
+        }
+    }
+
+    fn update_frog_lane(&mut self) {
+        match self.frog_lane.update() {
+            FrogLaneAction::None => {}
+            FrogLaneAction::ExitToHub => self.exit_to_hub(),
+            FrogLaneAction::Completed { stars } => {
+                self.progress.record_best(AcademyGame::FrogLane, stars);
+                let _meter_full = self.progress.add_stars(stars);
+                self.progress.save();
+                self.exit_to_hub();
             }
         }
     }
@@ -1077,6 +1098,7 @@ impl Game {
             GameMode::MeteorCatch   => self.meteor_catch.draw(),
             GameMode::NumberRain    => self.number_rain.draw(),
             GameMode::PlasmaBreaker => self.plasma_breaker.draw(),
+            GameMode::FrogLane      => self.frog_lane.draw(),
             GameMode::Title => ui::draw_title_screen(
                 self.title_menu_page == TitleMenuPage::MiniGames,
                 self.title_selection,
@@ -1122,7 +1144,8 @@ impl Game {
             | GameMode::StarAcademyGradePicker
             | GameMode::MeteorCatch
             | GameMode::NumberRain
-            | GameMode::PlasmaBreaker => overlay::OverlayState::empty(),
+            | GameMode::PlasmaBreaker
+            | GameMode::FrogLane => overlay::OverlayState::empty(),
             GameMode::Title => {
                 if self.title_menu_page == TitleMenuPage::MiniGames {
                     overlay::OverlayState::empty()
@@ -1359,6 +1382,7 @@ mod tests {
             GameMode::MeteorCatch,
             GameMode::NumberRain,
             GameMode::PlasmaBreaker,
+            GameMode::FrogLane,
         ] {
             assert!(
                 !mode_handles_overlay_home_escape(mode),

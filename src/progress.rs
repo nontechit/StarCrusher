@@ -21,8 +21,11 @@ use serde::{Deserialize, Serialize};
 /// Number of grade levels (Preschool → FifthGrade).
 pub const GRADE_COUNT: usize = 7;
 
-/// Number of playable games in Star Academy v1.
-pub const GAME_COUNT: usize = 3;
+/// Number of playable games in Star Academy.
+///
+/// v1 shipped 3 math drills (Meteor Catch, Number Rain, Plasma Breaker).
+/// v2 adds Frog Lane (educational arcade, math) and Reading Snake (spelling).
+pub const GAME_COUNT: usize = 5;
 
 /// Stars needed to fill a grade's meter and trigger the ceremony.
 pub const STARS_TO_ADVANCE: u8 = 10;
@@ -37,13 +40,23 @@ const PROGRESS_BUF_BYTES: usize = 2048;
 // AcademyGame — the three v1 games
 // ---------------------------------------------------------------------------
 
+/// Subject grouping shown in the hub layout.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AcademySubject {
+    Math,
+    Reading,
+}
+
 /// Identifies each playable game. The discriminant doubles as the
-/// `bests[grade][game_index]` column index.
+/// `bests[grade][game_index]` column index, so existing saves remain
+/// compatible — new variants must use new discriminants.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AcademyGame {
     MeteorCatch   = 0,
     NumberRain    = 1,
     PlasmaBreaker = 2,
+    FrogLane      = 3,
+    ReadingSnake  = 4,
 }
 
 impl AcademyGame {
@@ -52,7 +65,23 @@ impl AcademyGame {
     }
 
     pub fn all() -> [AcademyGame; GAME_COUNT] {
-        [Self::MeteorCatch, Self::NumberRain, Self::PlasmaBreaker]
+        [
+            Self::MeteorCatch,
+            Self::NumberRain,
+            Self::PlasmaBreaker,
+            Self::FrogLane,
+            Self::ReadingSnake,
+        ]
+    }
+
+    pub fn subject(self) -> AcademySubject {
+        match self {
+            Self::MeteorCatch
+            | Self::NumberRain
+            | Self::PlasmaBreaker
+            | Self::FrogLane => AcademySubject::Math,
+            Self::ReadingSnake => AcademySubject::Reading,
+        }
     }
 
     pub fn display_name(self) -> &'static str {
@@ -60,6 +89,8 @@ impl AcademyGame {
             Self::MeteorCatch   => "Meteor Catch",
             Self::NumberRain    => "Number Rain",
             Self::PlasmaBreaker => "Plasma Breaker",
+            Self::FrogLane      => "Frog Lane",
+            Self::ReadingSnake  => "Reading Snake",
         }
     }
 
@@ -68,6 +99,8 @@ impl AcademyGame {
             Self::MeteorCatch   => "Shield the right answer",
             Self::NumberRain    => "Tap before it lands",
             Self::PlasmaBreaker => "Break the right blocks",
+            Self::FrogLane      => "Hop, count, and dodge!",
+            Self::ReadingSnake  => "Spell the lesson word",
         }
     }
 }
@@ -291,10 +324,32 @@ mod tests {
 
     #[test]
     fn missing_version_field_defaults_to_one() {
-        // Simulate JSON from a hypothetical pre-version schema.
-        let json = r#"{"grade_index":0,"stars":[0,0,0,0,0,0,0],"bests":[[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]}"#;
+        // Simulate JSON from a hypothetical pre-version schema, with GAME_COUNT=5 columns.
+        let json = r#"{"grade_index":0,"stars":[0,0,0,0,0,0,0],"bests":[[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]}"#;
         let loaded: PlayerProgress = serde_json::from_str(json).expect("deserialise");
         assert_eq!(loaded.version, 1);
+    }
+
+    #[test]
+    fn all_returns_five_games_in_order() {
+        let all = AcademyGame::all();
+        assert_eq!(all.len(), 5);
+        assert_eq!(all[0], AcademyGame::MeteorCatch);
+        assert_eq!(all[1], AcademyGame::NumberRain);
+        assert_eq!(all[2], AcademyGame::PlasmaBreaker);
+        assert_eq!(all[3], AcademyGame::FrogLane);
+        assert_eq!(all[4], AcademyGame::ReadingSnake);
+        // Indices match their position
+        for (i, game) in all.iter().enumerate() {
+            assert_eq!(game.index(), i);
+        }
+    }
+
+    #[test]
+    fn subject_groups_games_correctly() {
+        assert_eq!(AcademyGame::MeteorCatch.subject(), AcademySubject::Math);
+        assert_eq!(AcademyGame::FrogLane.subject(), AcademySubject::Math);
+        assert_eq!(AcademyGame::ReadingSnake.subject(), AcademySubject::Reading);
     }
 
     #[test]

@@ -1,3 +1,5 @@
+use crate::lesson_plans;
+use crate::levels::Grade;
 use crate::random;
 use crate::screen::{self, primary_tap_position, to_virtual_position, SCREEN_H, SCREEN_W};
 use crate::ui;
@@ -100,8 +102,14 @@ impl CellPos {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ReadingSnakeAction {
     None,
+    /// Exit back to the legacy title menu (used by the mini-games path).
     ExitToTitle,
+    /// Word-list completed during the adventure / mini-game path.
     Completed,
+    /// Exit back to the Star Academy hub (academy mode).
+    ExitToHub,
+    /// Academy mode finished. `stars` is 0-3 based on words spelled.
+    AcademyCompleted { stars: u8 },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -151,6 +159,10 @@ pub struct ReadingSnake {
     definition_card_title: &'static str,
     message: &'static str,
     touch_start: Option<Vec2>,
+    /// Set when launched from the Star Academy hub. Changes exit/completion
+    /// signalling so main.rs routes the action back to the hub with stars.
+    academy_mode: bool,
+    academy_grade_label: Option<&'static str>,
 }
 
 #[derive(Clone, Debug)]
@@ -223,17 +235,81 @@ impl ReadingSnake {
             },
             message: "Collect the next letter.",
             touch_start: None,
+            academy_mode: false,
+            academy_grade_label: None,
         };
         game.reset_run();
         game
     }
 
+    /// Constructor for Star Academy. Pulls the spelling word list from
+    /// [`crate::lesson_plans::literacy_vocab_for_grade`] so the words match
+    /// what the lesson plans teach at the player's grade.
+    pub fn new_academy(grade: Grade) -> Self {
+        let vocab = lesson_plans::literacy_vocab_for_grade(grade);
+        let custom_words: Vec<WordEntry> = vocab
+            .into_iter()
+            .map(|(word, pos, def)| WordEntry::from_parts(word, pos, def))
+            .collect();
+        let mut game = if custom_words.is_empty() {
+            // Fall back to the hardcoded word bank for grades whose lesson
+            // plans haven't been transcribed yet.
+            Self::new_with_mode(Vec::new(), false)
+        } else {
+            Self::new_with_mode(custom_words, false)
+        };
+        game.academy_mode = true;
+        game.start_bonus_on_complete = false;
+        game.completion_returns_action = true;
+        game.academy_grade_label = Some(match grade {
+            Grade::Preschool   => "Preschool",
+            Grade::Kindergarten => "Kindergarten",
+            Grade::FirstGrade  => "1st Grade",
+            Grade::SecondGrade => "2nd Grade",
+            Grade::ThirdGrade  => "3rd Grade",
+            Grade::FourthGrade => "4th Grade",
+            Grade::FifthGrade  => "5th Grade",
+        });
+        game.definition_card_title = "Spell the lesson word:";
+        game
+    }
+
+    /// 0-3 stars based on how many words were spelled.
+    fn academy_stars(&self) -> u8 {
+        let total = self.word_count() as u32;
+        let done = self.word_index as u32;
+        if total == 0 { return 0; }
+        if self.completed { return 3; }
+        let frac = done as f32 / total as f32;
+        if frac >= 0.66 { 2 } else if frac >= 0.33 { 1 } else { 0 }
+    }
+
     pub fn update(&mut self) -> ReadingSnakeAction {
         if is_key_pressed(KeyCode::Escape) {
-            return ReadingSnakeAction::ExitToTitle;
+            return if self.academy_mode {
+                ReadingSnakeAction::ExitToHub
+            } else {
+                ReadingSnakeAction::ExitToTitle
+            };
         }
 
         if self.game_over {
+            // Academy mode: completion or game-over both lead back to the hub
+            // with a star count. Tap or Enter advances out — no in-place restart.
+            if self.academy_mode {
+                let mobile_start = primary_tap_position()
+                    .is_some_and(ui::mobile_action_button_contains);
+                let desktop_start = !screen::portrait_layout() && primary_tap_position().is_some();
+                if is_key_pressed(KeyCode::Enter)
+                    || is_key_pressed(KeyCode::Space)
+                    || mobile_start
+                    || desktop_start
+                {
+                    let stars = self.academy_stars();
+                    return ReadingSnakeAction::AcademyCompleted { stars };
+                }
+                return ReadingSnakeAction::None;
+            }
             if self.completed && self.completion_returns_action {
                 return ReadingSnakeAction::Completed;
             }
@@ -272,11 +348,24 @@ impl ReadingSnake {
             self.step();
             self.last_step = get_time();
             if self.completed && self.completion_returns_action {
+                if self.academy_mode {
+                    let stars = self.academy_stars();
+                    return ReadingSnakeAction::AcademyCompleted { stars };
+                }
                 return ReadingSnakeAction::Completed;
             }
         }
 
         ReadingSnakeAction::None
+    }
+
+    /// Optional grade label shown in the academy header.
+    pub fn academy_grade_label(&self) -> Option<&'static str> {
+        self.academy_grade_label
+    }
+
+    pub fn is_academy_mode(&self) -> bool {
+        self.academy_mode
     }
 
     pub fn mobile_overlay_action(&self) -> Option<(&'static str, &'static str)> {
@@ -1863,6 +1952,8 @@ mod tests {
             definition_card_title: "New word!",
             message: "Collect the next letter.",
             touch_start: None,
+            academy_mode: false,
+            academy_grade_label: None,
         }
     }
 

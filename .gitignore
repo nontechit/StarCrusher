@@ -2,9 +2,20 @@
 /pictures/
 /.opencode/
 /.cursor/
+/.claude/
 /docs/templates/
 /docs/screenshot-change-review.md
 /scripts/compare-audit-screenshots.ps1
 /rebase-log.txt
 /opencode.json
 *.pdb
+
+# Local audit screenshot directories
+/*_audit/
+
+# Dev tooling (local-only)
+/.codex/
+/trigger-audit.ps1
+
+# Temp / scratch files
+/autonomous-explorer.py

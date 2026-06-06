@@ -16,7 +16,7 @@
 //   • Lose with 0 correct  → 0 stars
 
 use crate::levels::Grade;
-use crate::question::{generate_question, Question};
+use crate::question::{generate_meteor_catch_question, Question};
 use crate::random;
 use crate::screen;
 use macroquad::prelude::*;
@@ -121,7 +121,7 @@ pub struct MeteorCatch {
 
 impl MeteorCatch {
     pub fn new(grade: Grade) -> Self {
-        let question = generate_question(grade);
+        let question = generate_meteor_catch_question(grade);
         let mut game = Self {
             grade,
             shield_x: CX,
@@ -335,7 +335,7 @@ impl MeteorCatch {
         }
         // Wave complete — queue next question if all spawned meteors are gone.
         if self.spawn_queue.is_empty() && self.meteors.is_empty() {
-            self.question = generate_question(self.grade);
+            self.question = generate_meteor_catch_question(self.grade);
             self.queue_wave();
         }
     }

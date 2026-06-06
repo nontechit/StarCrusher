@@ -27,7 +27,7 @@ const BADGE_Y: f32 = 104.0;
 const BADGE_H: f32 = 58.0;
 const BADGE_W: f32 = 290.0;
 const CHANGE_Y: f32 = 196.0; // centre of the tappable "Change Grade" row
-const CHANGE_H: f32 = 50.0;
+const CHANGE_H: f32 = 80.0;  // tall enough for a reliable finger tap (~44 CSS px)
 
 // Star meter
 const METER_CY: f32 = 272.0; // centre-y of the pip row
@@ -36,12 +36,15 @@ const PIP_GAP: f32 = 8.0;
 const METER_LABEL_Y: f32 = 316.0;
 
 // Game cards
-const CARD_H: f32 = 144.0;
-const CARD_GAP: f32 = 18.0;
-const CARD_SECTION_LABEL_Y: f32 = 356.0;
+const CARD_H: f32 = 128.0;
+const CARD_GAP: f32 = 12.0;
+const MATH_LABEL_Y: f32 = 356.0;
 const CARD_1_Y: f32 = 378.0;
-const CARD_2_Y: f32 = CARD_1_Y + CARD_H + CARD_GAP; // 540
-const CARD_3_Y: f32 = CARD_2_Y + CARD_H + CARD_GAP; // 702
+const CARD_2_Y: f32 = CARD_1_Y + CARD_H + CARD_GAP; // 518
+const CARD_3_Y: f32 = CARD_2_Y + CARD_H + CARD_GAP; // 658
+const CARD_4_Y: f32 = CARD_3_Y + CARD_H + CARD_GAP; // 798
+const READING_LABEL_Y: f32 = CARD_4_Y + CARD_H + 24.0; // 950
+const CARD_5_Y: f32 = READING_LABEL_Y + 24.0;          // 974
 
 // Colors (sRGB)
 const C_BG: Color      = Color { r: 0.04, g: 0.04, b: 0.12, a: 1.0 };
@@ -88,12 +91,11 @@ pub fn update(_progress: &PlayerProgress) -> HubAction {
         return HubAction::None;
     };
 
-    // "Change Grade" link
-    if change_grade_rect().contains(tap) {
+    // Grade badge pill OR "Change Grade" text row open the picker.
+    if badge_tap_rect().contains(tap) || change_grade_rect().contains(tap) {
         return HubAction::OpenGradePicker;
     }
 
-    // Game cards (all three)
     for (i, &game) in AcademyGame::all().iter().enumerate() {
         if card_rect(i).contains(tap) {
             return HubAction::LaunchGame(game);
@@ -163,10 +165,16 @@ fn draw_star_meter(progress: &PlayerProgress, accent: Color) {
 }
 
 fn draw_game_cards(progress: &PlayerProgress, accent: Color) {
-    // Section label
-    centered_text_color("MATH  GAMES", CARD_SECTION_LABEL_Y, 22, C_LABEL);
+    use crate::progress::AcademySubject;
 
+    centered_text_color("MATH  GAMES", MATH_LABEL_Y, 22, C_LABEL);
+
+    let mut reading_label_drawn = false;
     for (i, &game) in AcademyGame::all().iter().enumerate() {
+        if game.subject() == AcademySubject::Reading && !reading_label_drawn {
+            centered_text_color("READING  GAMES", READING_LABEL_Y, 22, C_LABEL);
+            reading_label_drawn = true;
+        }
         let best = progress.best_for(game);
         draw_card(i, game, best, accent);
     }
@@ -304,9 +312,15 @@ fn card_rect(index: usize) -> Rect {
     let y = match index {
         0 => CARD_1_Y,
         1 => CARD_2_Y,
-        _ => CARD_3_Y,
+        2 => CARD_3_Y,
+        3 => CARD_4_Y,
+        _ => CARD_5_Y,
     };
     Rect::new(CARD_X, y, CARD_W, CARD_H)
+}
+
+fn badge_tap_rect() -> Rect {
+    Rect::new(CX - BADGE_W / 2.0, BADGE_Y, BADGE_W, BADGE_H)
 }
 
 fn change_grade_rect() -> Rect {
