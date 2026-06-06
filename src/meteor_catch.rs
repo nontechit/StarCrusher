@@ -19,21 +19,22 @@ use crate::levels::Grade;
 use crate::question::{generate_meteor_catch_question, Question};
 use crate::random;
 use crate::screen;
+use crate::theme;
 use macroquad::prelude::*;
 
 // ── Tunables ──────────────────────────────────────────────────────────────────
 
 const WIN_CORRECT: u8 = 5;
 const MAX_LIVES: u8 = 3;
-const METEORS_PER_WAVE: usize = 4;
 
 /// Virtual screen — Meteor Catch is portrait-only.
 const SW: f32 = 720.0;
 const SH: f32 = 1280.0;
 const CX: f32 = SW / 2.0;
 
-// Shield (player paddle)
-const SHIELD_W: f32 = 140.0;
+// Shield (player paddle).  Narrowed for a fair-but-challenging catch on phone
+// screens — the old 140px paddle covered too much of the 720px canvas.
+const SHIELD_W: f32 = 104.0;
 const SHIELD_H: f32 = 28.0;
 const SHIELD_Y: f32 = 1110.0;
 const SHIELD_X_MIN: f32 = SHIELD_W / 2.0 + 20.0;
@@ -54,20 +55,45 @@ const HOME_Y: f32 = 24.0;
 const HOME_W: f32 = 110.0;
 const HOME_H: f32 = 56.0;
 
-// Colors
-const C_BG_TOP: Color    = Color { r: 0.04, g: 0.04, b: 0.14, a: 1.0 };
-const C_BG_BOT: Color    = Color { r: 0.10, g: 0.04, b: 0.20, a: 1.0 };
-const C_HEADER_BG: Color = Color { r: 0.07, g: 0.07, b: 0.18, a: 0.92 };
-const C_LABEL: Color     = Color { r: 0.62, g: 0.62, b: 0.78, a: 1.0 };
-const C_QUESTION: Color  = Color { r: 1.0,  g: 0.92, b: 0.45, a: 1.0 };
-const C_HOME_BG: Color   = Color { r: 0.16, g: 0.16, b: 0.28, a: 0.95 };
-const C_HEART_ON: Color  = Color { r: 1.0,  g: 0.32, b: 0.45, a: 1.0 };
-const C_HEART_OFF: Color = Color { r: 0.25, g: 0.18, b: 0.25, a: 1.0 };
-const C_METEOR: Color    = Color { r: 0.93, g: 0.47, b: 0.32, a: 1.0 };
-const C_METEOR_GLOW: Color = Color { r: 1.0,  g: 0.62, b: 0.30, a: 0.35 };
-const C_SHIELD_GLOW: Color = Color { r: 1.0,  g: 1.0,  b: 1.0,  a: 0.18 };
-const C_OK: Color        = Color { r: 0.18, g: 0.85, b: 0.42, a: 1.0 };
-const C_BAD: Color       = Color { r: 1.0,  g: 0.30, b: 0.30, a: 1.0 };
+// Colors — GW blue & gold palette (see theme.rs).
+const C_BG_TOP: Color    = theme::BG_TOP;
+const C_BG_BOT: Color    = theme::BG_BOTTOM;
+const C_HEADER_BG: Color = theme::PANEL;
+const C_LABEL: Color     = theme::LABEL;
+const C_QUESTION: Color  = theme::QUESTION;
+const C_HOME_BG: Color   = theme::BUTTON;
+const C_METEOR: Color    = theme::ROYAL;
+const C_METEOR_GLOW: Color = theme::ROYAL_GLOW;
+const C_SHIELD_GLOW: Color = theme::GOLD_GLOW;
+const C_OK: Color        = theme::CORRECT;
+const C_BAD: Color       = theme::WRONG;
+
+// Special bonus meteor — bright gold, visually distinct from royal-blue meteors.
+const C_SPECIAL: Color      = Color { r: 1.0, g: 0.88, b: 0.38, a: 1.0 };
+const C_SPECIAL_GLOW: Color = Color { r: 1.0, g: 0.92, b: 0.55, a: 0.55 };
+// Bonus level (coin collection).
+const C_COIN: Color      = Color { r: 1.0, g: 0.82, b: 0.22, a: 1.0 };
+const C_COIN_GLOW: Color = Color { r: 1.0, g: 0.88, b: 0.40, a: 0.40 };
+
+// Bonus level tunables.
+const BONUS_DURATION: f64 = 16.0;     // seconds of coin collecting
+const COIN_R: f32 = 26.0;
+const COIN_SPAWN_GAP: f32 = 0.42;     // seconds between coin spawns
+const COIN_BASE_SPEED: f32 = 3.0;     // px/frame
+
+/// Per-grade falling-meteor count range for a wave (1 correct + distractors).
+/// Harder grades get more simultaneous drops.
+fn wave_size_range(grade: Grade) -> (usize, usize) {
+    match grade {
+        Grade::Preschool    => (3, 4),
+        Grade::Kindergarten => (3, 5),
+        Grade::FirstGrade   => (4, 5),
+        Grade::SecondGrade  => (4, 6),
+        Grade::ThirdGrade   => (5, 6),
+        Grade::FourthGrade  => (5, 7),
+        Grade::FifthGrade   => (6, 8),
+    }
+}
 
 // ── Public action returned to main loop ───────────────────────────────────────
 
@@ -92,15 +118,32 @@ struct Meteor {
     y: f32,
     value: i64,
     is_correct: bool,
+    is_special: bool, // the rare glowing bonus meteor (no number)
     state: MeteorState,
     flash_until: f64, // wall-clock time; flashes green/red briefly when consumed
 }
+
+/// A falling coin in the secret bonus level.
+struct Coin {
+    x: f32,
+    y: f32,
+    speed: f32,
+}
+
+/// Riddles shown during the secret bonus level (one picked at random).
+const BONUS_RIDDLES: [&str; 4] = [
+    "I have hands but cannot clap. What am I?",
+    "The more you take, the more you leave behind. What are they?",
+    "What has to be broken before you can use it?",
+    "What gets wetter the more it dries?",
+];
 
 // ── Main game struct ──────────────────────────────────────────────────────────
 
 #[derive(Clone, Copy, PartialEq)]
 enum Phase {
     Playing,
+    Bonus,     // secret coin-collection level (entered via the special meteor)
     EndScreen, // game over OR won — show summary, tap to exit
 }
 
@@ -117,6 +160,16 @@ pub struct MeteorCatch {
     wrong_count: u8, // lives lost
     phase: Phase,
     end_time: f64, // wall-clock time when EndScreen started (for tap debouncing)
+
+    // ── Secret bonus level ──
+    /// Whether the special meteor still may appear this wave, and when.
+    special_due: Option<f32>,
+    special_timer: f32,
+    bonus_riddle: &'static str,
+    bonus_coins: Vec<Coin>,
+    bonus_collected: u32,
+    bonus_spawn_timer: f32,
+    bonus_end_at: f64,
 }
 
 impl MeteorCatch {
@@ -133,6 +186,13 @@ impl MeteorCatch {
             wrong_count: 0,
             phase: Phase::Playing,
             end_time: 0.0,
+            special_due: None,
+            special_timer: 0.0,
+            bonus_riddle: BONUS_RIDDLES[0],
+            bonus_coins: Vec::new(),
+            bonus_collected: 0,
+            bonus_spawn_timer: 0.0,
+            bonus_end_at: 0.0,
         };
         game.queue_wave();
         game
@@ -148,24 +208,29 @@ impl MeteorCatch {
         METEOR_BASE_SPEED * (1.0 + g * 0.08) * screen::frame_step()
     }
 
-    /// Build a new wave's spawn queue: one correct + (METEORS_PER_WAVE-1)
-    /// distractors from `question.wrong_answers` (padded if there aren't enough).
+    /// Build a new wave's spawn queue: one correct + (count-1) distractors from
+    /// `question.wrong_answers` (padded if there aren't enough).  The drop count
+    /// is random within the grade's range, so harder grades get more drops.
     fn queue_wave(&mut self) {
         self.spawn_queue.clear();
         self.spawn_timer = METEOR_SPAWN_GAP; // spawn first meteor immediately
 
+        let (min_n, max_n) = wave_size_range(self.grade);
+        let wave_size = random::i32_inclusive(min_n as i32, max_n as i32) as usize;
+
         // Collect distractors
         let mut distractors: Vec<i64> = self.question.wrong_answers.clone();
         random::shuffle(&mut distractors);
-        distractors.truncate(METEORS_PER_WAVE - 1);
+        distractors.truncate(wave_size - 1);
 
         // Pad if fewer than needed (e.g. easy questions with few alternatives)
-        while distractors.len() < METEORS_PER_WAVE - 1 {
-            let delta = random::i32_inclusive(-3, 3) as i64;
-            let candidate = self.question.correct_answer + delta.max(1);
+        let mut bump = 1i64;
+        while distractors.len() < wave_size - 1 {
+            let candidate = self.question.correct_answer + bump;
             if candidate != self.question.correct_answer && !distractors.contains(&candidate) {
                 distractors.push(candidate);
             }
+            bump += 1;
         }
 
         // Build wave with correct + distractors, then shuffle order
@@ -175,6 +240,14 @@ impl MeteorCatch {
         }
         random::shuffle(&mut wave);
         self.spawn_queue = wave;
+
+        // Secretly schedule a special bonus meteor for this wave (rare).
+        self.special_timer = 0.0;
+        self.special_due = if random::bool(0.18) {
+            Some(random::f32_range(0.6, 2.4))
+        } else {
+            None
+        };
     }
 
     /// Pick a fresh x within play bounds that avoids overlapping any meteor
@@ -209,6 +282,7 @@ impl MeteorCatch {
 
         match self.phase {
             Phase::Playing => self.update_playing(),
+            Phase::Bonus => self.update_bonus(),
             Phase::EndScreen => self.update_end_screen(),
         }
     }
@@ -216,10 +290,33 @@ impl MeteorCatch {
     fn update_playing(&mut self) -> MeteorCatchAction {
         self.update_shield();
         self.update_spawning();
+        self.update_special_spawn();
         self.update_meteors();
         self.resolve_consumed_meteors();
-        self.check_phase_transition();
+        // resolve_consumed_meteors may have switched us into the bonus level.
+        if self.phase == Phase::Playing {
+            self.check_phase_transition();
+        }
         MeteorCatchAction::None
+    }
+
+    /// Spawn the secretly-scheduled special meteor when its timer elapses.
+    fn update_special_spawn(&mut self) {
+        let Some(due) = self.special_due else { return };
+        self.special_timer += get_frame_time();
+        if self.special_timer >= due {
+            self.special_due = None;
+            let x = self.pick_spawn_x();
+            self.meteors.push(Meteor {
+                x,
+                y: METEOR_SPAWN_Y,
+                value: 0,
+                is_correct: false,
+                is_special: true,
+                state: MeteorState::Falling,
+                flash_until: 0.0,
+            });
+        }
     }
 
     fn update_shield(&mut self) {
@@ -252,6 +349,7 @@ impl MeteorCatch {
                 y: METEOR_SPAWN_Y,
                 value,
                 is_correct,
+                is_special: false,
                 state: MeteorState::Falling,
                 flash_until: 0.0,
             });
@@ -295,6 +393,7 @@ impl MeteorCatch {
         let now = get_time();
         let mut correct_caught = 0u8;
         let mut life_losses = 0u8;
+        let mut catch_special = false;
 
         self.meteors.retain(|m| {
             // Keep falling meteors
@@ -304,6 +403,14 @@ impl MeteorCatch {
             // Keep until flash window expires (visual feedback)
             if now < m.flash_until {
                 return true;
+            }
+            // Special bonus meteor: catching it opens the secret level; missing
+            // it is harmless and never costs a life.
+            if m.is_special {
+                if m.state == MeteorState::Hit {
+                    catch_special = true;
+                }
+                return false;
             }
             // Tally the outcome and drop the meteor.
             match (m.state, m.is_correct) {
@@ -318,6 +425,10 @@ impl MeteorCatch {
 
         self.correct_count = self.correct_count.saturating_add(correct_caught);
         self.wrong_count   = self.wrong_count.saturating_add(life_losses);
+
+        if catch_special {
+            self.enter_bonus();
+        }
     }
 
     fn check_phase_transition(&mut self) {
@@ -354,6 +465,66 @@ impl MeteorCatch {
         MeteorCatchAction::None
     }
 
+    // ── Secret bonus level ──────────────────────────────────────────────────
+
+    /// Switch into the hidden coin-collection level.  Does not touch lives or
+    /// the correct-catch tally, so it never affects the main game's win/loss.
+    fn enter_bonus(&mut self) {
+        self.phase = Phase::Bonus;
+        self.meteors.clear();
+        self.spawn_queue.clear();
+        self.special_due = None;
+        self.bonus_riddle = BONUS_RIDDLES[random::usize_exclusive(BONUS_RIDDLES.len())];
+        self.bonus_coins.clear();
+        self.bonus_collected = 0;
+        self.bonus_spawn_timer = COIN_SPAWN_GAP;
+        self.bonus_end_at = get_time() + BONUS_DURATION;
+    }
+
+    fn update_bonus(&mut self) -> MeteorCatchAction {
+        self.update_shield();
+
+        // Spawn coins on a steady cadence.
+        self.bonus_spawn_timer += get_frame_time();
+        if self.bonus_spawn_timer >= COIN_SPAWN_GAP {
+            self.bonus_spawn_timer = 0.0;
+            self.bonus_coins.push(Coin {
+                x: random::f32_range(COIN_R + 30.0, SW - COIN_R - 30.0),
+                y: -COIN_R,
+                speed: COIN_BASE_SPEED + random::f32_range(0.0, 1.4),
+            });
+        }
+
+        // Move and collect coins.
+        let step = screen::frame_step();
+        let shield_top = SHIELD_Y - SHIELD_H / 2.0;
+        let shield_left = self.shield_x - SHIELD_W / 2.0;
+        let shield_right = self.shield_x + SHIELD_W / 2.0;
+        let mut collected = 0u32;
+        self.bonus_coins.retain_mut(|c| {
+            c.y += c.speed * step;
+            let caught = c.y + COIN_R >= shield_top
+                && c.y <= SHIELD_Y + SHIELD_H
+                && c.x >= shield_left - COIN_R * 0.6
+                && c.x <= shield_right + COIN_R * 0.6;
+            if caught {
+                collected += 1;
+                return false;
+            }
+            c.y - COIN_R <= SH // drop fell off-screen → remove
+        });
+        self.bonus_collected += collected;
+
+        // Time up → resume the main game with a fresh wave.
+        if get_time() >= self.bonus_end_at {
+            self.bonus_coins.clear();
+            self.phase = Phase::Playing;
+            self.question = generate_meteor_catch_question(self.grade);
+            self.queue_wave();
+        }
+        MeteorCatchAction::None
+    }
+
     fn compute_stars(&self) -> u8 {
         let won = self.correct_count >= WIN_CORRECT;
         if won {
@@ -375,6 +546,13 @@ impl MeteorCatch {
         draw_rectangle(0.0, SH * 0.45, SW, SH * 0.55, C_BG_BOT);
 
         self.draw_starfield();
+
+        if self.phase == Phase::Bonus {
+            self.draw_bonus();
+            self.draw_home_button();
+            return;
+        }
+
         self.draw_header();
 
         for m in &self.meteors {
@@ -424,6 +602,20 @@ impl MeteorCatch {
     }
 
     fn draw_meteor(&self, m: &Meteor) {
+        // Special bonus meteor — gold, pulsing, no number. Visually unmistakable
+        // against the royal-blue answer meteors.
+        if m.is_special {
+            let pulse = 0.5 + 0.5 * (get_time() as f32 * 6.0).sin();
+            draw_circle(m.x, m.y, METEOR_R + 10.0 + pulse * 7.0, C_SPECIAL_GLOW);
+            draw_circle(m.x, m.y, METEOR_R, C_SPECIAL);
+            draw_circle_lines(m.x, m.y, METEOR_R, 3.5, Color { r: 1.0, g: 1.0, b: 0.85, a: 0.95 });
+            // Bright center shine for a "treasure" sparkle.
+            draw_circle(m.x - METEOR_R * 0.22, m.y - METEOR_R * 0.22, METEOR_R * 0.30,
+                Color { r: 1.0, g: 1.0, b: 0.95, a: 0.7 });
+            draw_circle(m.x, m.y, METEOR_R * 0.16, WHITE);
+            return;
+        }
+
         let (fill, glow, ring) = match m.state {
             MeteorState::Hit if m.is_correct => (C_OK, Color { a: 0.35, ..C_OK }, WHITE),
             MeteorState::Hit                 => (C_BAD, Color { a: 0.35, ..C_BAD }, WHITE),
@@ -455,7 +647,7 @@ impl MeteorCatch {
     fn draw_shield(&self) {
         let x = self.shield_x - SHIELD_W / 2.0;
         let y = SHIELD_Y - SHIELD_H / 2.0;
-        let accent = self.grade.enemy_color();
+        let accent = theme::GOLD;
 
         // Glow halo
         filled_pill(x - 4.0, y - 4.0, SHIELD_W + 8.0, SHIELD_H + 8.0, (SHIELD_H + 8.0) / 2.0, C_SHIELD_GLOW);
@@ -473,6 +665,81 @@ impl MeteorCatch {
                 CX - m.width / 2.0,
                 SHIELD_Y + 50.0,
                 TextParams { font_size: 22, color: C_LABEL, ..Default::default() },
+            );
+        }
+    }
+
+    fn draw_bonus(&self) {
+        // Riddle panel
+        filled_pill(20.0, 96.0, SW - 40.0, 174.0, 16.0, C_HEADER_BG);
+
+        let title = "BONUS!";
+        let tm = measure_text(title, None, 42, 1.0);
+        draw_text_ex(
+            title,
+            CX - tm.width / 2.0,
+            150.0,
+            TextParams { font_size: 42, color: C_SPECIAL, ..Default::default() },
+        );
+        self.draw_wrapped(self.bonus_riddle, 192.0, 24, SW - 80.0, C_QUESTION);
+
+        // Coins
+        for c in &self.bonus_coins {
+            draw_circle(c.x, c.y, COIN_R + 6.0, C_COIN_GLOW);
+            draw_circle(c.x, c.y, COIN_R, C_COIN);
+            draw_circle_lines(c.x, c.y, COIN_R, 2.5, Color { r: 1.0, g: 0.70, b: 0.20, a: 0.9 });
+            let g = "$";
+            let gm = measure_text(g, None, 28, 1.0);
+            draw_text_ex(
+                g,
+                c.x - gm.width / 2.0,
+                c.y + gm.offset_y / 2.0,
+                TextParams { font_size: 28, color: Color { r: 0.45, g: 0.30, b: 0.0, a: 1.0 }, ..Default::default() },
+            );
+        }
+
+        // Coin counter
+        let label = format!("Coins: {}", self.bonus_collected);
+        draw_text_ex(
+            &label,
+            30.0,
+            SH - 64.0,
+            TextParams { font_size: 34, color: C_COIN, ..Default::default() },
+        );
+
+        // Countdown bar
+        let remaining = (self.bonus_end_at - get_time()).max(0.0) as f32;
+        let frac = (remaining / BONUS_DURATION as f32).clamp(0.0, 1.0);
+        draw_rectangle(30.0, SH - 34.0, SW - 60.0, 10.0, C_HEADER_BG);
+        draw_rectangle(30.0, SH - 34.0, (SW - 60.0) * frac, 10.0, C_SPECIAL);
+
+        self.draw_shield();
+    }
+
+    /// Center-aligned word-wrapped text starting at `top_y`.
+    fn draw_wrapped(&self, text: &str, top_y: f32, size: u16, max_w: f32, color: Color) {
+        let mut lines: Vec<String> = Vec::new();
+        let mut cur = String::new();
+        for word in text.split(' ') {
+            let trial = if cur.is_empty() { word.to_string() } else { format!("{} {}", cur, word) };
+            if !cur.is_empty() && measure_text(&trial, None, size, 1.0).width > max_w {
+                lines.push(std::mem::take(&mut cur));
+                cur = word.to_string();
+            } else {
+                cur = trial;
+            }
+        }
+        if !cur.is_empty() {
+            lines.push(cur);
+        }
+        let line_h = size as f32 + 8.0;
+        for (i, line) in lines.iter().enumerate() {
+            let m = measure_text(line, None, size, 1.0);
+            draw_text_ex(
+                line,
+                CX - m.width / 2.0,
+                top_y + i as f32 * line_h,
+                TextParams { font_size: size, color, ..Default::default() },
             );
         }
     }
@@ -607,8 +874,13 @@ mod tests {
     #[test]
     fn queue_wave_includes_correct_and_distractors() {
         let g = MeteorCatch::new(Grade::FirstGrade);
-        // After new(), spawn_queue is filled
-        assert_eq!(g.spawn_queue.len(), METEORS_PER_WAVE);
+        // After new(), spawn_queue is filled with a grade-scaled random count.
+        let (min_n, max_n) = wave_size_range(Grade::FirstGrade);
+        assert!(
+            g.spawn_queue.len() >= min_n && g.spawn_queue.len() <= max_n,
+            "wave size {} out of range {}..={}",
+            g.spawn_queue.len(), min_n, max_n
+        );
         let correct_count = g.spawn_queue.iter().filter(|(_, c)| *c).count();
         assert_eq!(correct_count, 1, "exactly one correct meteor per wave");
         // All distractors should be different from the correct answer
@@ -617,6 +889,13 @@ mod tests {
                 assert_ne!(*val, g.question.correct_answer);
             }
         }
+    }
+
+    #[test]
+    fn wave_size_ranges_grow_with_grade() {
+        let (_, pre_max) = wave_size_range(Grade::Preschool);
+        let (fifth_min, _) = wave_size_range(Grade::FifthGrade);
+        assert!(fifth_min >= pre_max, "harder grades get more drops");
     }
 
     #[test]

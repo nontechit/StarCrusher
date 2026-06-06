@@ -17,6 +17,7 @@ mod random;
 mod reading_snake;
 mod route;
 mod screen;
+mod theme;
 mod ui;
 
 use enemy::{question_uses_visual_count, EnemyGrid, Explosion};
@@ -1087,10 +1088,12 @@ impl Game {
 
         match self.mode {
             GameMode::StarAcademyHub => {
+                clear_background(theme::BG_TOP);
                 draw_starfield();
                 hub::draw(&self.progress);
             }
             GameMode::StarAcademyGradePicker => {
+                clear_background(theme::BG_TOP);
                 draw_starfield();
                 hub::draw(&self.progress);
                 hub::draw_grade_picker(self.progress.grade());

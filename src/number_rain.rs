@@ -17,6 +17,7 @@ use crate::levels::Grade;
 use crate::question::{generate_question, Question};
 use crate::random;
 use crate::screen;
+use crate::theme;
 use macroquad::prelude::*;
 
 // ── Tunables ──────────────────────────────────────────────────────────────────
@@ -45,19 +46,18 @@ const HOME_Y: f32 = 24.0;
 const HOME_W: f32 = 110.0;
 const HOME_H: f32 = 56.0;
 
-// Colors
-const C_DROP: Color       = Color { r: 0.22, g: 0.45, b: 0.92, a: 1.0 };
-const C_DROP_GLOW: Color  = Color { r: 0.30, g: 0.55, b: 1.00, a: 0.28 };
-const C_CORRECT: Color    = Color { r: 0.18, g: 0.85, b: 0.42, a: 1.0 };
-const C_WRONG: Color      = Color { r: 0.95, g: 0.25, b: 0.25, a: 1.0 };
-const C_MISSED: Color     = Color { r: 0.95, g: 0.60, b: 0.10, a: 1.0 };
-const C_LABEL: Color      = Color { r: 0.60, g: 0.60, b: 0.78, a: 1.0 };
-const C_QUESTION: Color   = Color { r: 1.00, g: 0.92, b: 0.45, a: 1.0 };
-const C_HEADER_BG: Color  = Color { r: 0.07, g: 0.07, b: 0.18, a: 0.93 };
-const C_HOME_BG: Color    = Color { r: 0.16, g: 0.16, b: 0.28, a: 0.95 };
-const C_HEART_ON: Color   = Color { r: 1.00, g: 0.32, b: 0.45, a: 1.0 };
-const C_HEART_OFF: Color  = Color { r: 0.25, g: 0.18, b: 0.25, a: 1.0 };
-const C_STREAK: Color     = Color { r: 0.35, g: 0.65, b: 1.00, a: 0.18 };
+// Colors — GW blue & gold palette (see theme.rs).
+const C_BG: Color         = theme::BG_TOP;
+const C_DROP: Color       = theme::ROYAL;
+const C_DROP_GLOW: Color  = theme::ROYAL_GLOW;
+const C_CORRECT: Color    = theme::CORRECT;
+const C_WRONG: Color      = theme::WRONG;
+const C_MISSED: Color     = Color { r: 0.95, g: 0.60, b: 0.10, a: 1.0 }; // amber: missed-correct warning
+const C_LABEL: Color      = theme::LABEL;
+const C_QUESTION: Color   = theme::QUESTION;
+const C_HEADER_BG: Color  = theme::PANEL;
+const C_HOME_BG: Color    = theme::BUTTON;
+const C_STREAK: Color     = Color { r: 0.30, g: 0.50, b: 0.95, a: 0.16 };
 
 // ── Public action ─────────────────────────────────────────────────────────────
 
@@ -360,7 +360,7 @@ impl NumberRain {
 
     pub fn draw(&self) {
         // Background
-        draw_rectangle(0.0, 0.0, SW, SH, Color { r: 0.03, g: 0.04, b: 0.14, a: 1.0 });
+        draw_rectangle(0.0, 0.0, SW, SH, C_BG);
         self.draw_rain_bg();
         self.draw_starfield();
         self.draw_header();

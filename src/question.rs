@@ -278,9 +278,18 @@ pub fn generate_meteor_catch_question(grade: Grade) -> Question {
     let (min_count, max_count) = math_pong_count_range(grade);
     let count = random::i32_inclusive(min_count, max_count);
     Question {
-        text: number_word(count).to_string(),
+        text: format!("Catch number {}", capitalize(number_word(count))),
         correct_answer: count as i64,
         wrong_answers: gen_unique_wrongs(count as i64, min_count as i64, max_count as i64, 3),
+    }
+}
+
+/// Capitalize the first ASCII letter of a word ("two" -> "Two").
+fn capitalize(word: &str) -> String {
+    let mut chars = word.chars();
+    match chars.next() {
+        Some(first) => first.to_ascii_uppercase().to_string() + chars.as_str(),
+        None => String::new(),
     }
 }
 

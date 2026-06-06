@@ -4,10 +4,14 @@ Star Crusher is an educational arcade collection about two young space travelers
 
 On mobile, the home screen is the **Star Academy** hub: a portrait-native landing page with a grade badge, 10-pip star meter, and five quick-tap games grouped by subject — four math games (Meteor Catch, Number Rain, Plasma Breaker, Frog Lane) and one reading game (Reading Snake). Stars earned in each game advance the player toward the next grade and persist between sessions.
 
-Current build: `1.8.0`
+Current build: `1.9.0`
 
 ## Latest Mobile Release
 
+- **Version 1.9.0 GW blue & gold theme:** Replaced the per-game color schemes with a single shared GW palette (`src/theme.rs`) — deep navy / royal-blue backgrounds with gold accents — applied consistently across the hub, Meteor Catch, Number Rain, and Plasma Breaker. Correct/wrong feedback stays green/crimson as gameplay signals.
+- **Version 1.9.0 Meteor Catch prompt:** Question now reads "Catch number [Word]" (e.g. "Catch number Two") and auto-fits so it never wraps on phone screens; the player still catches the meteor showing the matching numeral.
+- **Version 1.9.0 Meteor Catch difficulty:** Narrowed the catch paddle (140px → 104px) for a fairer-but-tougher catch, and made the per-wave drop count random within a grade-scaled range (Preschool 3-4 up to 5th grade 6-8) instead of a fixed 4.
+- **Version 1.9.0 Plasma Breaker question card:** Removed the hearts/lives row from the Plasma Breaker question banner (same cleanup applied earlier to Meteor Catch and Number Rain); lives logic is unchanged.
 - **Version 1.8.0 question card cleanup:** Removed the hearts/lives row from the Meteor Catch and Number Rain question banners — the question card now shows the question text and score only. Lives still drive win/loss logic; the heart row simply no longer crowds the prompt.
 - **Version 1.8.0 Meteor Catch word matching:** Meteor Catch now shows a written number word ("three", "five") as the prompt and the player catches the meteor showing the matching numeral, reinforcing number-word recognition for early grades. Distractor meteors and the grade-scaled count range are unchanged.
 - **Version 1.8.0 hub two new games:** The Star Academy hub now lists five games across Math and Reading sections — adding **Frog Lane** (hop across lanes counting crossings) and **Reading Snake** to the original three, filling the previously empty lower half of the hub. `AcademyGame` and `PlayerProgress` gained the two new game columns while preserving existing saved stars.
@@ -198,6 +202,7 @@ src/question.rs      Grade-specific math question generation
 src/random.rs        Shared randomization helpers
 src/math_pong.rs     Math Pong number target mini game
 src/reading_snake.rs Reading Snake mini game
+src/theme.rs         Shared GW blue & gold color palette for the Star Academy games and hub
 src/hub.rs           Star Academy hub screen + grade picker overlay (mobile home)
 src/progress.rs      PlayerProgress data model + localStorage persistence bridge
 src/meteor_catch.rs  Star Academy game #1 — catch the meteor whose numeral matches the number word

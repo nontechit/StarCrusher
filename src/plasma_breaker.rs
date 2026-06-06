@@ -18,6 +18,7 @@ use crate::levels::Grade;
 use crate::question::{generate_question, Question};
 use crate::random;
 use crate::screen;
+use crate::theme;
 use macroquad::prelude::*;
 
 // ── Tunables ──────────────────────────────────────────────────────────────────
@@ -63,20 +64,18 @@ const HOME_Y: f32 =  24.0;
 const HOME_W: f32 = 110.0;
 const HOME_H: f32 =  56.0;
 
-// Colors
-const C_BG:        Color = Color { r: 0.04, g: 0.02, b: 0.14, a: 1.0 };
-const C_HEADER_BG: Color = Color { r: 0.07, g: 0.07, b: 0.18, a: 0.93 };
-const C_HOME_BG:   Color = Color { r: 0.16, g: 0.16, b: 0.28, a: 0.95 };
-const C_BALL:      Color = Color { r: 0.98, g: 0.92, b: 0.30, a: 1.0 };
-const C_BALL_GLOW: Color = Color { r: 1.00, g: 0.95, b: 0.40, a: 0.22 };
-const C_PAD:       Color = Color { r: 0.30, g: 0.80, b: 1.00, a: 1.0 };
-const C_PAD_GLOW:  Color = Color { r: 0.30, g: 0.80, b: 1.00, a: 0.18 };
-const C_CORRECT:   Color = Color { r: 0.18, g: 0.85, b: 0.42, a: 1.0 };
-const C_WRONG:     Color = Color { r: 0.90, g: 0.25, b: 0.25, a: 1.0 };
-const C_LABEL:     Color = Color { r: 0.60, g: 0.60, b: 0.78, a: 1.0 };
-const C_QUESTION:  Color = Color { r: 1.00, g: 0.92, b: 0.45, a: 1.0 };
-const C_HEART_ON:  Color = Color { r: 1.00, g: 0.32, b: 0.45, a: 1.0 };
-const C_HEART_OFF: Color = Color { r: 0.25, g: 0.18, b: 0.25, a: 1.0 };
+// Colors — GW blue & gold palette (see theme.rs).
+const C_BG:        Color = theme::BG_TOP;
+const C_HEADER_BG: Color = theme::PANEL;
+const C_HOME_BG:   Color = theme::BUTTON;
+const C_BALL:      Color = theme::GOLD;
+const C_BALL_GLOW: Color = theme::GOLD_GLOW;
+const C_PAD:       Color = theme::ROYAL;
+const C_PAD_GLOW:  Color = theme::ROYAL_GLOW;
+const C_CORRECT:   Color = theme::CORRECT;
+const C_WRONG:     Color = theme::WRONG;
+const C_LABEL:     Color = theme::LABEL;
+const C_QUESTION:  Color = theme::QUESTION;
 
 // ── Public action ─────────────────────────────────────────────────────────────
 
@@ -229,10 +228,6 @@ impl PlasmaBreaker {
             phase: Phase::Ready,
             end_time: 0.0,
         }
-    }
-
-    fn lives_remaining(&self) -> u8 {
-        MAX_LIVES.saturating_sub(self.wrong_count)
     }
 
     fn ball_speed(&self) -> f32 {
@@ -542,20 +537,6 @@ impl PlasmaBreaker {
         let sm = measure_text(&score, None, 28, 1.0);
         draw_text_ex(&score, SW - 30.0 - sm.width, 72.0,
             TextParams { font_size: 28, color: C_LABEL, ..Default::default() });
-
-        // Hearts
-        let hy = 196.0;
-        let hr = 9.0;
-        let hgap = 26.0;
-        let hx = CX - hgap;
-        for i in 0..MAX_LIVES {
-            let cx = hx + i as f32 * hgap;
-            let col = if i < self.lives_remaining() { C_HEART_ON } else { C_HEART_OFF };
-            draw_circle(cx - 4.0, hy, hr, col);
-            draw_circle(cx + 4.0, hy, hr, col);
-            draw_triangle(Vec2::new(cx - 10.0, hy + 3.0), Vec2::new(cx + 10.0, hy + 3.0),
-                Vec2::new(cx, hy + 14.0), col);
-        }
     }
 
     fn draw_blocks(&self) {

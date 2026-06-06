@@ -10,6 +10,7 @@
 use crate::levels::Grade;
 use crate::progress::{AcademyGame, PlayerProgress, STARS_TO_ADVANCE};
 use crate::screen;
+use crate::theme;
 use macroquad::prelude::*;
 
 // ── Layout constants ──────────────────────────────────────────────────────────
@@ -46,13 +47,12 @@ const CARD_4_Y: f32 = CARD_3_Y + CARD_H + CARD_GAP; // 798
 const READING_LABEL_Y: f32 = CARD_4_Y + CARD_H + 24.0; // 950
 const CARD_5_Y: f32 = READING_LABEL_Y + 24.0;          // 974
 
-// Colors (sRGB)
-const C_BG: Color      = Color { r: 0.04, g: 0.04, b: 0.12, a: 1.0 };
-const C_CARD: Color    = Color { r: 0.09, g: 0.09, b: 0.20, a: 1.0 };
-const C_LABEL: Color   = Color { r: 0.55, g: 0.55, b: 0.72, a: 1.0 };
-const C_STAR_ON: Color = Color { r: 1.00, g: 0.85, b: 0.10, a: 1.0 };
-const C_STAR_OFF: Color= Color { r: 0.22, g: 0.22, b: 0.38, a: 1.0 };
-const C_PLAY: Color    = Color { r: 0.12, g: 0.72, b: 0.38, a: 1.0 };
+// Colors — GW blue & gold palette (see theme.rs).
+const C_CARD: Color    = theme::CARD;
+const C_LABEL: Color   = theme::LABEL;
+const C_STAR_ON: Color = theme::STAR_ON;
+const C_STAR_OFF: Color= theme::STAR_OFF;
+const C_PLAY: Color    = theme::GOLD;
 
 // Grade picker
 const PICKER_BTN_X: f32 = GUTTER;
@@ -256,7 +256,8 @@ fn draw_card(index: usize, game: AcademyGame, best: u8, accent: Color) {
         "PLAY",
         right_x + (pb_w - pm.width) / 2.0,
         pb_y + pb_h * 0.72,
-        TextParams { font_size: 22, color: WHITE, ..Default::default() },
+        // Dark navy reads cleanly on the gold badge.
+        TextParams { font_size: 22, color: Color { r: 0.04, g: 0.06, b: 0.18, a: 1.0 }, ..Default::default() },
     );
 }
 
