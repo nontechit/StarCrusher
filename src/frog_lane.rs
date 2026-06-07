@@ -200,53 +200,63 @@ impl FrogLane {
         self.hazards.clear();
         let mut pat_counter: u8 = 0;
 
+        // Grade-scaled difficulty (0 = Preschool … 6 = FifthGrade). Patterns are
+        // kept simple and predictable for young players: one travel direction per
+        // lane, one consistent speed per lane type, and evenly spaced hazards.
+        // Only road-traffic density (and a little spacing jitter at the upper
+        // grades) ramps up with grade; river logs stay generous at every grade so
+        // crossing the water remains fair.
+        let g = self.grade.index();
+        let road_count: u8 = if g <= 1 { 2 } else if g <= 3 { 3 } else { 4 };
+        let river_count: u8 = 3;
+
         // Only spawn in danger lanes (1..LANES-1) — never goal (0) or start (6).
         for lane in 1..(LANES - 1) {
             let y = Self::lane_y(lane);
             let is_river = lane >= 2 && lane <= 4;
-            let count: u8 = 3; // pre-K tuning
+            let count: u8 = if is_river { river_count } else { road_count };
 
-            // Slow pre-K speeds
-            let base_speed = if is_river {
-                random::f32_range(35.0, 65.0)
-            } else {
-                random::f32_range(45.0, 90.0)
-            };
+            // Consistent, readable speed per lane type and a single direction per
+            // lane (alternating by lane) — no per-hazard speed/direction variation.
+            let base_speed = if is_river { 50.0 } else { 62.0 };
+            let direction = if lane % 2 == 0 { 1.0f32 } else { -1.0 };
 
-            // Even spacing so there's always a visible gap
+            // Even spacing so there's always a visible gap. Logs stay perfectly
+            // even (predictable landing); roads get slight jitter only at the
+            // upper grades.
             let lane_span = SW + 200.0;
             let spacing = lane_span / count as f32;
-            let jitter = spacing * 0.18;
+            let jitter = if !is_river && g >= 4 { spacing * 0.10 } else { 0.0 };
 
             for i in 0..count {
-                let direction = if i % 2 == 0 { 1.0f32 } else { -1.0 };
-
                 let size_big = match math.concept {
                     MathConcept::SizeComp | MathConcept::Sorting => i < count / 2 + 1,
-                    _ => random::bool(0.5),
+                    _ => false,
                 };
 
+                // Fixed widths keep gaps predictable; size concepts still show a
+                // clear big-vs-small contrast for the lesson.
                 let w = match math.concept {
                     MathConcept::SizeComp | MathConcept::Sorting => {
-                        if size_big { random::f32_range(120.0, 170.0) }
-                        else { random::f32_range(48.0, 70.0) }
+                        if size_big { 150.0 } else { 60.0 }
                     }
                     _ => {
-                        if is_river { random::f32_range(190.0, 270.0) }   // wide pre-K logs
-                        else { random::f32_range(80.0, 120.0) }
+                        if is_river { 240.0 } else { 100.0 } // wide pre-K logs
                     }
                 };
 
-                // Big vehicles only modestly faster
-                let speed_mult = if matches!(math.concept, MathConcept::SizeComp | MathConcept::Sorting) && size_big {
-                    1.20
-                } else { 1.0 };
-                let speed = base_speed * direction * speed_mult;
+                // Uniform speed — every hazard in a lane moves together.
+                let speed = base_speed * direction;
 
                 let pat_idx = if is_river { pat_counter % 3 } else { pat_counter % 2 };
                 pat_counter = pat_counter.wrapping_add(1);
 
-                let base_x = -100.0 + i as f32 * spacing + random::f32_range(-jitter, jitter);
+                let jitter_offset = if jitter > 0.0 {
+                    random::f32_range(-jitter, jitter)
+                } else {
+                    0.0
+                };
+                let base_x = -100.0 + i as f32 * spacing + jitter_offset;
 
                 self.hazards.push(Hazard {
                     x: base_x,
