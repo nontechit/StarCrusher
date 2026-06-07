@@ -117,9 +117,19 @@ pub struct NumberRain {
     end_time: f64,
 }
 
+/// Number Rain's own question generator. It reuses the shared question pool but
+/// rewords the prompt for touch: Number Rain is tap-based, so "Shoot number
+/// three" becomes "Tap number three". Other games keep the shared "Shoot"
+/// wording (Math Invaders actually shoots).
+fn generate_number_rain_question(grade: Grade) -> Question {
+    let mut question = generate_question(grade);
+    question.text = question.text.replace("Shoot", "Tap").replace("shoot", "tap");
+    question
+}
+
 impl NumberRain {
     pub fn new(grade: Grade) -> Self {
-        let question = generate_question(grade);
+        let question = generate_number_rain_question(grade);
         let mut game = Self {
             grade,
             question,
@@ -320,7 +330,7 @@ impl NumberRain {
         if need_new_wave && self.phase == Phase::Playing {
             // Remove any lingering drops from the old wave, then start fresh.
             self.drops.retain(|d| d.state == DropState::Falling && !d.is_correct);
-            self.question = generate_question(self.grade);
+            self.question = generate_number_rain_question(self.grade);
             self.queue_wave();
         }
     }
