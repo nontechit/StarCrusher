@@ -221,12 +221,13 @@ impl FrogLane {
             let base_speed = if is_river { 50.0 } else { 62.0 };
             let direction = if lane % 2 == 0 { 1.0f32 } else { -1.0 };
 
-            // Even spacing so there's always a visible gap. Logs stay perfectly
-            // even (predictable landing); roads get slight jitter only at the
-            // upper grades.
+            // Road hazards get random spacing variation at every grade so the
+            // traffic isn't perfectly rhythmic; river logs stay perfectly even
+            // for predictable landing. Count and speed are unchanged, so overall
+            // difficulty is the same — only the spacing rhythm varies.
             let lane_span = SW + 200.0;
             let spacing = lane_span / count as f32;
-            let jitter = if !is_river && g >= 4 { spacing * 0.10 } else { 0.0 };
+            let jitter = if is_river { 0.0 } else { spacing * 0.18 };
 
             for i in 0..count {
                 let size_big = match math.concept {
