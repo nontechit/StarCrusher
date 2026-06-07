@@ -42,6 +42,9 @@ pub enum MathConcept {
 #[derive(Clone, Copy, Debug)]
 pub struct VocabEntry {
     pub term: &'static str,
+    /// Part of speech for the term ("noun", "verb", "adjective", …). Shown on
+    /// the Reading Snake question card when words come from a lesson plan.
+    pub part_of_speech: &'static str,
     pub definition: &'static str,
 }
 
@@ -88,6 +91,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
         success: "You counted to 5! Great counting!",
         vocabulary: &[VocabEntry {
             term: "count",
+            part_of_speech: "verb",
             definition: "To say the number names one by one while pointing to each object",
         }],
         math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 0 }),
@@ -102,6 +106,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
         success: "Amazing! You counted all the way to 10!",
         vocabulary: &[VocabEntry {
             term: "count",
+            part_of_speech: "verb",
             definition: "To say the number names one by one while pointing to each object",
         }],
         math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 5 }),
@@ -116,6 +121,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
         success: "Wow, you counted to 15! Teen numbers done!",
         vocabulary: &[VocabEntry {
             term: "teen number",
+            part_of_speech: "noun",
             definition: "A number between 10 and 20 that ends in -teen, like eleven (ten-one)",
         }],
         math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 10 }),
@@ -130,6 +136,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
         success: "You counted all the way to 20! Incredible!",
         vocabulary: &[VocabEntry {
             term: "count",
+            part_of_speech: "verb",
             definition: "To say the number names one by one while pointing to each object",
         }],
         math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
@@ -143,9 +150,9 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
         instruction: "Frog = CIRCLE   Cars = RECTANGLES   Beacon = TRIANGLE",
         success: "Great shape spotting! Circle, rectangle, triangle!",
         vocabulary: &[
-            VocabEntry { term: "circle",   definition: "A shape that is perfectly round with no corners or straight sides" },
-            VocabEntry { term: "square",   definition: "A shape with four equal sides and four right angles" },
-            VocabEntry { term: "triangle", definition: "A shape with three straight sides and three corners" },
+            VocabEntry { term: "circle",   part_of_speech: "noun", definition: "A shape that is perfectly round with no corners or straight sides" },
+            VocabEntry { term: "square",   part_of_speech: "noun", definition: "A shape with four equal sides and four right angles" },
+            VocabEntry { term: "triangle", part_of_speech: "noun", definition: "A shape with three straight sides and three corners" },
         ],
         math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0 }),
     },
@@ -158,9 +165,9 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
         instruction: "Logs = OVALS   Cars = RECTANGLES   Beacon = STAR",
         success: "You found the star! Rectangle, oval, star!",
         vocabulary: &[
-            VocabEntry { term: "rectangle", definition: "A shape with four straight sides and four right angles, like a book" },
-            VocabEntry { term: "oval",      definition: "A round shape that is stretched out on one side, like an egg" },
-            VocabEntry { term: "star",      definition: "A five-pointed shape with sharp corners that reach outward" },
+            VocabEntry { term: "rectangle", part_of_speech: "noun", definition: "A shape with four straight sides and four right angles, like a book" },
+            VocabEntry { term: "oval",      part_of_speech: "noun", definition: "A round shape that is stretched out on one side, like an egg" },
+            VocabEntry { term: "star",      part_of_speech: "noun", definition: "A five-pointed shape with sharp corners that reach outward" },
         ],
         math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0 }),
     },
@@ -174,6 +181,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
         success: "You crossed all the colors!",
         vocabulary: &[VocabEntry {
             term: "color",
+            part_of_speech: "noun",
             definition: "The name we give to how things look — like red, blue, green, or yellow",
         }],
         math: Some(MathLessonData { concept: MathConcept::Colors, goal_hops: 5, start_count: 0 }),
@@ -188,6 +196,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
         success: "Amazing! Orange, Purple, Brown — you crossed them all!",
         vocabulary: &[VocabEntry {
             term: "color",
+            part_of_speech: "noun",
             definition: "Names for how things look — like orange, purple, brown, black, white, or gray",
         }],
         math: Some(MathLessonData { concept: MathConcept::Colors, goal_hops: 5, start_count: 0 }),
@@ -201,8 +210,8 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
         instruction: "ORANGE = BIG.   TEAL = small.",
         success: "You spotted big AND small!",
         vocabulary: &[
-            VocabEntry { term: "big",   definition: "Something that takes up a lot of space, like a big bus" },
-            VocabEntry { term: "small", definition: "Something that takes up little space, like a small toy car" },
+            VocabEntry { term: "big",   part_of_speech: "adjective", definition: "Something that takes up a lot of space, like a big bus" },
+            VocabEntry { term: "small", part_of_speech: "adjective", definition: "Something that takes up little space, like a small toy car" },
         ],
         math: Some(MathLessonData { concept: MathConcept::SizeComp, goal_hops: 5, start_count: 0 }),
     },
@@ -215,9 +224,9 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
         instruction: "Which side has MORE? Which has FEWER? Count them!",
         success: "Great comparing! More, fewer, equal -- you did it!",
         vocabulary: &[
-            VocabEntry { term: "more",  definition: "Having a greater quantity of something, like more apples" },
-            VocabEntry { term: "fewer", definition: "Having a smaller quantity of something, like fewer cookies" },
-            VocabEntry { term: "equal", definition: "The same amount or number, like two groups that have the same count" },
+            VocabEntry { term: "more",  part_of_speech: "adjective", definition: "Having a greater quantity of something, like more apples" },
+            VocabEntry { term: "fewer", part_of_speech: "adjective", definition: "Having a smaller quantity of something, like fewer cookies" },
+            VocabEntry { term: "equal", part_of_speech: "adjective", definition: "The same amount or number, like two groups that have the same count" },
         ],
         math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0 }),
     },
@@ -231,6 +240,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
         success: "You spotted the patterns! Patterns repeat!",
         vocabulary: &[VocabEntry {
             term: "pattern",
+            part_of_speech: "noun",
             definition: "A sequence that repeats over and over again, like a song that keeps going",
         }],
         math: Some(MathLessonData { concept: MathConcept::Patterns, goal_hops: 5, start_count: 0 }),
@@ -244,8 +254,8 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
         instruction: "BIG cars = RED.   Small cars = BLUE.   Two attributes!",
         success: "Perfect! Color AND size -- two attributes!",
         vocabulary: &[
-            VocabEntry { term: "sort",      definition: "To separate things into groups based on something they have in common" },
-            VocabEntry { term: "attribute", definition: "A characteristic — like color, shape, size, or texture that helps us sort" },
+            VocabEntry { term: "sort",      part_of_speech: "verb", definition: "To separate things into groups based on something they have in common" },
+            VocabEntry { term: "attribute", part_of_speech: "noun", definition: "A characteristic — like color, shape, size, or texture that helps us sort" },
         ],
         math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0 }),
     },
@@ -266,8 +276,8 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         instruction: "Spell the word from the lesson.",
         success: "Great spelling!",
         vocabulary: &[
-            VocabEntry { term: "letter",    definition: "A symbol that represents a sound in words" },
-            VocabEntry { term: "uppercase", definition: "Capital letters like A, B, C" },
+            VocabEntry { term: "letter",    part_of_speech: "noun", definition: "A symbol that represents a sound in words" },
+            VocabEntry { term: "uppercase", part_of_speech: "noun", definition: "Capital letters like A, B, C" },
         ],
         math: None,
     },
@@ -280,8 +290,8 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         instruction: "Spell the word from the lesson.",
         success: "Great spelling!",
         vocabulary: &[
-            VocabEntry { term: "letter",    definition: "A symbol that represents a sound in words" },
-            VocabEntry { term: "uppercase", definition: "Capital letters like A, B, C" },
+            VocabEntry { term: "letter",    part_of_speech: "noun", definition: "A symbol that represents a sound in words" },
+            VocabEntry { term: "uppercase", part_of_speech: "noun", definition: "Capital letters like A, B, C" },
         ],
         math: None,
     },
@@ -294,8 +304,8 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         instruction: "Spell the word from the lesson.",
         success: "Great spelling!",
         vocabulary: &[
-            VocabEntry { term: "sound",     definition: "What we hear when someone talks" },
-            VocabEntry { term: "beginning", definition: "The first sound you hear in a word, like /b/ in ball" },
+            VocabEntry { term: "sound",     part_of_speech: "noun", definition: "What we hear when someone talks" },
+            VocabEntry { term: "beginning", part_of_speech: "noun", definition: "The first sound you hear in a word, like /b/ in ball" },
         ],
         math: None,
     },
@@ -309,6 +319,7 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         success: "Great spelling!",
         vocabulary: &[VocabEntry {
             term: "vowel",
+            part_of_speech: "noun",
             definition: "Letters a, e, i, o, u that make special sounds in words",
         }],
         math: None,
@@ -323,6 +334,7 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         success: "Great spelling!",
         vocabulary: &[VocabEntry {
             term: "sound",
+            part_of_speech: "noun",
             definition: "What we hear when someone talks — like /f/ for f or /g/ for g",
         }],
         math: None,
@@ -337,6 +349,7 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         success: "Great spelling!",
         vocabulary: &[VocabEntry {
             term: "vowel",
+            part_of_speech: "noun",
             definition: "A quick, brief letter sound — like /a/ in ant, /e/ in bed, /i/ in sit",
         }],
         math: None,
@@ -350,8 +363,8 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         instruction: "Spell the word from the lesson.",
         success: "Great spelling!",
         vocabulary: &[
-            VocabEntry { term: "predict",   definition: "To guess what might happen next based on clues" },
-            VocabEntry { term: "character", definition: "A person or animal that appears in a story" },
+            VocabEntry { term: "predict",   part_of_speech: "verb", definition: "To guess what might happen next based on clues" },
+            VocabEntry { term: "character", part_of_speech: "noun", definition: "A person or animal that appears in a story" },
         ],
         math: None,
     },
@@ -365,6 +378,7 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         success: "Great spelling!",
         vocabulary: &[VocabEntry {
             term: "rhyme",
+            part_of_speech: "noun",
             definition: "Words that end with the same sound, like cat and hat",
         }],
         math: None,
@@ -379,6 +393,7 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         success: "Great spelling!",
         vocabulary: &[VocabEntry {
             term: "syllable",
+            part_of_speech: "noun",
             definition: "A beat in words — banana has three beats, cat has one beat",
         }],
         math: None,
@@ -393,6 +408,7 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         success: "Great spelling!",
         vocabulary: &[VocabEntry {
             term: "name",
+            part_of_speech: "noun",
             definition: "The special word that identifies who you are, like Emma or Noah",
         }],
         math: None,
@@ -407,6 +423,7 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         success: "Great spelling!",
         vocabulary: &[VocabEntry {
             term: "match",
+            part_of_speech: "verb",
             definition: "To find the same thing — like pairing letter A with an apple picture",
         }],
         math: None,
@@ -420,8 +437,8 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         instruction: "Spell the word from the lesson.",
         success: "Great spelling!",
         vocabulary: &[
-            VocabEntry { term: "first", definition: "The thing that happens before everything else" },
-            VocabEntry { term: "next",  definition: "The thing that comes after first in the sequence" },
+            VocabEntry { term: "first", part_of_speech: "adjective", definition: "The thing that happens before everything else" },
+            VocabEntry { term: "next",  part_of_speech: "adjective", definition: "The thing that comes after first in the sequence" },
         ],
         math: None,
     },
@@ -435,6 +452,7 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         success: "Great spelling!",
         vocabulary: &[VocabEntry {
             term: "direction",
+            part_of_speech: "noun",
             definition: "A way to tell someone what to do — like stand up or clap your hands",
         }],
         math: None,
@@ -449,6 +467,7 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         success: "Great spelling!",
         vocabulary: &[VocabEntry {
             term: "melody",
+            part_of_speech: "noun",
             definition: "The tune or music of a song — like how the ABC song sounds",
         }],
         math: None,
@@ -463,6 +482,7 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
         success: "Great spelling!",
         vocabulary: &[VocabEntry {
             term: "story",
+            part_of_speech: "noun",
             definition: "A make-believe tale with characters and a beginning, middle, and end",
         }],
         math: None,
@@ -502,7 +522,7 @@ pub fn literacy_vocab_for_grade(grade: Grade) -> Vec<(String, String, String)> {
             if out.iter().any(|(w, _, _)| *w == upper) {
                 continue;
             }
-            out.push((upper, "lesson term".to_string(), v.definition.to_string()));
+            out.push((upper, v.part_of_speech.to_string(), v.definition.to_string()));
         }
     }
     out
