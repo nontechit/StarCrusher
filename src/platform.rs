@@ -332,6 +332,10 @@ mod wasm_js {
     extern "C" {
         fn boohw_starcrusher_emit_event(ptr: *const u8, len: u32);
         fn boohw_starcrusher_initial_mode() -> u32;
+        // Bridge to the HTML shell's "return to landing" reload. Implemented in
+        // index.html; only invoked on the native path today, so the wasm build
+        // sees it as unused.
+        #[allow(dead_code)]
         fn boohw_starcrusher_return_to_landing();
         fn boohw_starcrusher_set_overlay(ptr: *const u8, len: u32);
         /// Write the stored progress JSON into the Rust-owned buffer.
@@ -351,6 +355,7 @@ mod wasm_js {
         unsafe { boohw_starcrusher_initial_mode() }
     }
 
+    #[allow(dead_code)]
     pub fn return_to_landing() {
         unsafe { boohw_starcrusher_return_to_landing() }
     }
@@ -390,6 +395,8 @@ pub fn initial_mode_code() -> u32 {
 }
 
 /// Asks the shell to reload back to the HTML landing page.
+/// Used on the native path; the wasm build returns to the hub instead.
+#[allow(dead_code)]
 pub fn return_to_landing() {
     #[cfg(target_arch = "wasm32")]
     {

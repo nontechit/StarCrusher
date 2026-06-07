@@ -359,13 +359,11 @@ impl ReadingSnake {
         ReadingSnakeAction::None
     }
 
-    /// Optional grade label shown in the academy header.
+    /// Optional grade label for the academy header. Kept for an upcoming
+    /// header tweak; the backing field is populated in `new_academy`.
+    #[allow(dead_code)]
     pub fn academy_grade_label(&self) -> Option<&'static str> {
         self.academy_grade_label
-    }
-
-    pub fn is_academy_mode(&self) -> bool {
-        self.academy_mode
     }
 
     pub fn mobile_overlay_action(&self) -> Option<(&'static str, &'static str)> {

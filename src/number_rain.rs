@@ -135,6 +135,7 @@ impl NumberRain {
         game
     }
 
+    #[cfg(test)]
     fn lives_remaining(&self) -> u8 {
         MAX_LIVES.saturating_sub(self.wrong_count)
     }

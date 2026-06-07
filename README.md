@@ -4,10 +4,11 @@ Star Crusher is an educational arcade collection about two young space travelers
 
 On mobile, the home screen is the **Star Academy** hub: a portrait-native landing page with a grade badge, 10-pip star meter, and five quick-tap games grouped by subject — four math games (Meteor Catch, Number Rain, Plasma Breaker, Frog Lane) and one reading game (Reading Snake). Stars earned in each game advance the player toward the next grade and persist between sessions.
 
-Current build: `1.9.4`
+Current build: `1.9.5`
 
 ## Latest Mobile Release
 
+- **Version 1.9.5 warning cleanup:** Cleared all 10 pre-existing dead-code compiler warnings — the build is now warning-clean. Removed genuinely dead items (`HEADER_BOTTOM`, `Block::center`, `is_academy_mode`), gated test-only helpers behind `#[cfg(test)]` (`lives_remaining` in Meteor Catch/Number Rain, `clear_stars_for_current_grade`), and annotated intentional bridge/API/data (`return_to_landing` JS bridge, `academy_grade_label`, `LessonPlan` grade/subject metadata) with `#[allow(dead_code)]`. No runtime behavior change.
 - **Version 1.9.4 Frog Lane road spacing variation:** Road traffic now spawns with random spacing variation at every grade so the pattern isn't perfectly rhythmic; river logs keep their even spacing for predictable landing. Hazard count and speed are unchanged, so overall difficulty stays the same — only the road rhythm varies.
 - **Version 1.9.3 Frog Lane difficulty rebalance:** Simplified the hazard patterns for the PreK–6th target. Each lane now has a single travel direction and one consistent speed (no more bidirectional traffic or random per-hazard speeds), hazards are evenly spaced, and road-traffic density scales gradually with grade (2 cars at the lowest grades up to 4 at the highest) while river logs stay generous so crossing is always fair. Speed is unchanged.
 - **Version 1.9.2 Frog Lane mobile pacing:** Lowered the mobile speed scale to 0.05 — Frog Lane was still far too fast on touch devices at 0.5. Desktop speed is unchanged.

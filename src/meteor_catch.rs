@@ -46,9 +46,6 @@ const METEOR_SPAWN_Y: f32 = -METEOR_R;
 const METEOR_SPAWN_GAP: f32 = 0.55; // seconds between meteors in a wave
 const METEOR_BASE_SPEED: f32 = 2.6; // px/frame at 60fps scale = 1.0
 
-// Header (question + HUD)
-const HEADER_BOTTOM: f32 = 220.0;
-
 // Home button (top-left)
 const HOME_X: f32 = 24.0;
 const HOME_Y: f32 = 24.0;
@@ -198,6 +195,7 @@ impl MeteorCatch {
         game
     }
 
+    #[cfg(test)]
     fn lives_remaining(&self) -> u8 {
         MAX_LIVES.saturating_sub(self.wrong_count)
     }

@@ -59,7 +59,11 @@ pub struct MathLessonData {
 pub struct LessonPlan {
     pub id: &'static str,
     pub title: &'static str,
+    // Metadata populated for every lesson; not read yet but kept so the data
+    // model stays complete for grade/subject filtering.
+    #[allow(dead_code)]
     pub grade: Grade,
+    #[allow(dead_code)]
     pub subject: Subject,
     pub concept: &'static str,
     pub instruction: &'static str,
