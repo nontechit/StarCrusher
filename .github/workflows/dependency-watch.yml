@@ -1,0 +1,80 @@
+name: Dependency Watch
+
+# Weekly watch over two temporary states (see README "build/CI repair" notes):
+#
+# 1. Security advisories — the push-triggered pages.yml audit only runs when
+#    someone pushes; this catches new RUSTSEC advisories during quiet weeks.
+# 2. Upstream canary — Rust 1.96 removed the implicit `--allow-undefined`
+#    wasm linker flag. We carry two temporary measures until macroquad/miniquad
+#    declare their JS imports properly:
+#      - .cargo/config.toml restores `--allow-undefined`
+#      - rust-toolchain.toml pins 1.95.0
+#    The canary builds with the LATEST stable toolchain and LATEST compatible
+#    deps, with the workaround removed. The week it goes green, both temporary
+#    measures can be deleted. (Verified still broken on macroquad 0.4.15 /
+#    miniquad 0.4.10 with Rust 1.96.0 on 2026-06-09.)
+
+on:
+  schedule:
+    - cron: "0 11 * * 1" # Mondays 11:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Install Rust (pinned by rust-toolchain.toml)
+        run: rustup toolchain install
+
+      - name: Audit dependencies
+        run: |
+          cargo install cargo-audit --locked
+          # RUSTSEC-2025-0035: known macroquad soundness advisory, accepted
+          # until an upstream fix exists (same allowlist as pages.yml).
+          cargo audit --ignore RUSTSEC-2025-0035
+
+  upstream-canary:
+    runs-on: ubuntu-latest
+    env:
+      # Bypass the rust-toolchain.toml pin — the whole point is testing
+      # against whatever stable is current.
+      RUSTUP_TOOLCHAIN: stable
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Install latest stable + WASM target
+        run: |
+          rustup toolchain install stable
+          rustup target add wasm32-unknown-unknown --toolchain stable
+          rustc --version
+
+      - name: Try WASM build without the --allow-undefined workaround
+        id: canary
+        continue-on-error: true
+        run: |
+          rm .cargo/config.toml
+          cargo update
+          cargo build --target wasm32-unknown-unknown --release
+
+      - name: Report verdict
+        run: |
+          if [ "${{ steps.canary.outcome }}" = "success" ]; then
+            echo "::notice title=Upstream fix shipped::macroquad/miniquad now link cleanly on latest stable. The .cargo/config.toml --allow-undefined workaround and the rust-toolchain.toml 1.95.0 pin can be removed (retest the deployed game after upgrading)."
+            {
+              echo "## Upstream canary: GREEN"
+              echo "Latest stable + latest compatible macroquad links without \`--allow-undefined\`."
+              echo "Action: remove \`.cargo/config.toml\` workaround, unpin/bump \`rust-toolchain.toml\`, upgrade macroquad in Cargo.toml, and verify the deployed game in a browser (the miniquad JS bundle may also need updating)."
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "## Upstream canary: still red"
+              echo "macroquad/miniquad still rely on undefined wasm symbols on latest stable — keep the \`--allow-undefined\` workaround and the 1.95.0 toolchain pin."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
