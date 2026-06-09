@@ -329,6 +329,10 @@ pub fn load_progress(buf_size: usize) -> Option<String> {
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_js {
+    // `wasm_import_module = "env"` is required since Rust 1.96: undefined
+    // symbols are now linker errors unless explicitly declared as wasm
+    // imports. These are implemented by the miniquad plugin in index.html.
+    #[link(wasm_import_module = "env")]
     extern "C" {
         fn boohw_starcrusher_emit_event(ptr: *const u8, len: u32);
         fn boohw_starcrusher_initial_mode() -> u32;

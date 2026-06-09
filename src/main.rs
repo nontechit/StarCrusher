@@ -41,7 +41,10 @@ use screen::{
 };
 
 // JS bridge for site-exit button visibility (desktop "Back to Home" button).
+// `wasm_import_module = "env"` is required since Rust 1.96: undefined symbols
+// are now linker errors unless explicitly declared as wasm imports.
 #[cfg(target_arch = "wasm32")]
+#[link(wasm_import_module = "env")]
 extern "C" {
     fn boohw_starcrusher_set_site_exit_visible(visible: bool);
 }

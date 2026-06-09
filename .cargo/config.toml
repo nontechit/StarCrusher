@@ -1,0 +1,7 @@
+# Rust 1.96 removed the implicit `--allow-undefined` wasm linker flag
+# (https://blog.rust-lang.org/2026/04/04/changes-to-webassembly-targets-and-handling-undefined-symbols/).
+# Our own extern blocks declare `#[link(wasm_import_module = "env")]`, but
+# macroquad/miniquad 0.4.x's JS imports (console_log, init_webgl, ...) do not,
+# so the flag is restored here until an upstream macroquad release fixes it.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "link-arg=--allow-undefined"]

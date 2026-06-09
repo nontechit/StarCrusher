@@ -4,10 +4,11 @@ Star Crusher is an educational arcade collection about two young space travelers
 
 On mobile, the home screen is the **Star Academy** hub: a portrait-native landing page with a grade badge, 10-pip star meter, and five quick-tap games grouped by subject — four math games (Meteor Catch, Number Rain, Plasma Breaker, Frog Lane) and one reading game (Reading Snake). Stars earned in each game advance the player toward the next grade and persist between sessions.
 
-Current build: `1.9.7`
+Current build: `1.9.8`
 
 ## Latest Mobile Release
 
+- **Version 1.9.8 build/CI repair for Rust 1.96:** Restored the GitHub Pages WASM build, which had failed on every push since Rust 1.96 removed the implicit `--allow-undefined` wasm linker flag. The JS-bridge `extern "C"` blocks now declare `#[link(wasm_import_module = "env")]`, a new `.cargo/config.toml` restores `--allow-undefined` for macroquad/miniquad's own JS imports until upstream adds import modules, and a new `rust-toolchain.toml` pins Rust 1.95.0 (+ wasm target) so CI and local builds match. CI now installs the pinned toolchain and all GitHub Actions pins were refreshed to Node 24-ready releases ahead of the June 16, 2026 forcing date. Verified on both Rust 1.95.0 and 1.96.0; no gameplay changes.
 - **Version 1.9.7 Reading Snake part-of-speech label:** The academy Reading Snake question card now shows the word's real part of speech (noun, verb, adjective, …) instead of the placeholder "Lesson Term". Added a `part_of_speech` field to `VocabEntry` in lesson_plans.rs, populated it for every lesson term, and wired it through `literacy_vocab_for_grade` to the card.
 - **Version 1.9.6 Number Rain tap wording:** Number Rain now generates its own prompt wording so the touch instruction reads correctly — the shared "Shoot number three" prompt is reworded to "Tap number three" for Number Rain only. Math Invaders and other games keep the shared "Shoot" wording (they actually shoot). Change is contained entirely in `number_rain.rs`.
 - **Version 1.9.5 warning cleanup:** Cleared all 10 pre-existing dead-code compiler warnings — the build is now warning-clean. Removed genuinely dead items (`HEADER_BOTTOM`, `Block::center`, `is_academy_mode`), gated test-only helpers behind `#[cfg(test)]` (`lives_remaining` in Meteor Catch/Number Rain, `clear_stars_for_current_grade`), and annotated intentional bridge/API/data (`return_to_landing` JS bridge, `academy_grade_label`, `LessonPlan` grade/subject metadata) with `#[allow(dead_code)]`. No runtime behavior change.

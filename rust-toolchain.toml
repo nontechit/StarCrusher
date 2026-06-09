@@ -1,0 +1,6 @@
+# Pin the toolchain so local builds and CI produce identical artifacts.
+# Bump deliberately (and retest the wasm build) rather than riding `stable`:
+# the unpinned CI toolchain silently jumped to 1.96 and broke wasm linking.
+[toolchain]
+channel = "1.95.0"
+targets = ["wasm32-unknown-unknown"]
