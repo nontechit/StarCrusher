@@ -8,13 +8,12 @@
 //
 // Source layout: D:/lesson-plans/<Grade>/<Subject>/<ID>.json
 //
-// Currently transcribed:
-// - Pre-Kindergarten / Mathematics  / PK-MATH-01..12   (used by Frog Lane)
-// - Pre-Kindergarten / Literacy     / PK-LIT-01..15    (used by Reading Snake)
-//
-// As interns publish more lesson plans, add them here and extend the
-// `*_for_grade()` accessors.
+// Pre-Kindergarten content is hand-tuned below (Frog Lane special-cases the
+// PK-MATH-* ids for bespoke rendering). Kindergarten through 5th Grade live
+// in `lesson_plans_gen.rs`, generated from the corpus by
+// tools/generate-lesson-plans-rs.mjs — regenerate rather than editing it.
 
+use crate::lesson_plans_gen as gen;
 use crate::levels::Grade;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -494,17 +493,29 @@ pub const PK_LIT_LESSONS: &[LessonPlan] = &[
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// Math lessons that apply to the given grade.
-///
-/// Currently we only have a PK math set; older grades fall back to it so the
-/// games don't ship empty. Replace with grade-specific banks as interns
-/// publish more lesson plans.
-pub fn math_lessons_for_grade(_grade: Grade) -> &'static [LessonPlan] {
-    PK_MATH_LESSONS
+pub fn math_lessons_for_grade(grade: Grade) -> &'static [LessonPlan] {
+    match grade {
+        Grade::Preschool    => PK_MATH_LESSONS,
+        Grade::Kindergarten => gen::K_MATH_LESSONS,
+        Grade::FirstGrade   => gen::G1_MATH_LESSONS,
+        Grade::SecondGrade  => gen::G2_MATH_LESSONS,
+        Grade::ThirdGrade   => gen::G3_MATH_LESSONS,
+        Grade::FourthGrade  => gen::G4_MATH_LESSONS,
+        Grade::FifthGrade   => gen::G5_MATH_LESSONS,
+    }
 }
 
 /// Literacy lessons that apply to the given grade.
-pub fn literacy_lessons_for_grade(_grade: Grade) -> &'static [LessonPlan] {
-    PK_LIT_LESSONS
+pub fn literacy_lessons_for_grade(grade: Grade) -> &'static [LessonPlan] {
+    match grade {
+        Grade::Preschool    => PK_LIT_LESSONS,
+        Grade::Kindergarten => gen::K_LIT_LESSONS,
+        Grade::FirstGrade   => gen::G1_LIT_LESSONS,
+        Grade::SecondGrade  => gen::G2_LIT_LESSONS,
+        Grade::ThirdGrade   => gen::G3_LIT_LESSONS,
+        Grade::FourthGrade  => gen::G4_LIT_LESSONS,
+        Grade::FifthGrade   => gen::G5_LIT_LESSONS,
+    }
 }
 
 /// All vocabulary terms across the literacy lessons for the grade, flattened
@@ -600,5 +611,58 @@ mod tests {
         let vocab = literacy_vocab_for_grade(Grade::Preschool);
         let letter_count = vocab.iter().filter(|(w, _, _)| w == "LETTER").count();
         assert_eq!(letter_count, 1);
+    }
+
+    const ALL_GRADES: [Grade; 7] = [
+        Grade::Preschool,
+        Grade::Kindergarten,
+        Grade::FirstGrade,
+        Grade::SecondGrade,
+        Grade::ThirdGrade,
+        Grade::FourthGrade,
+        Grade::FifthGrade,
+    ];
+
+    #[test]
+    fn every_grade_has_math_and_literacy_lessons() {
+        for grade in ALL_GRADES {
+            let math = math_lessons_for_grade(grade);
+            assert!(math.len() >= 8, "{grade:?} has only {} math lessons", math.len());
+            assert!(math.iter().all(|l| l.math.is_some()), "{grade:?} math lesson missing math data");
+            assert!(math.iter().all(|l| l.grade == grade), "{grade:?} math bank holds foreign lessons");
+
+            let lit = literacy_lessons_for_grade(grade);
+            assert!(lit.len() >= 8, "{grade:?} has only {} literacy lessons", lit.len());
+            assert!(lit.iter().all(|l| l.grade == grade), "{grade:?} literacy bank holds foreign lessons");
+        }
+    }
+
+    #[test]
+    fn every_grade_has_playable_vocab() {
+        for grade in ALL_GRADES {
+            let vocab = literacy_vocab_for_grade(grade);
+            assert!(vocab.len() >= 10, "{grade:?} has only {} vocab words", vocab.len());
+            for (word, pos, def) in &vocab {
+                // Reading Snake constraints: letters only, <= 12 chars.
+                assert!(word.chars().all(|c| c.is_ascii_uppercase()), "{grade:?}: bad word {word}");
+                assert!(word.len() <= 12, "{grade:?}: word too long {word}");
+                assert!(!pos.is_empty(), "{grade:?}: {word} missing part of speech");
+                assert!(!def.is_empty(), "{grade:?}: {word} missing definition");
+            }
+        }
+    }
+
+    #[test]
+    fn grades_receive_distinct_content() {
+        // The whole point of per-grade banks: a 5th grader must not get
+        // preschool material.
+        let pk: Vec<String> = literacy_vocab_for_grade(Grade::Preschool).into_iter().map(|(w, _, _)| w).collect();
+        let g5: Vec<String> = literacy_vocab_for_grade(Grade::FifthGrade).into_iter().map(|(w, _, _)| w).collect();
+        assert_ne!(pk, g5, "5th grade still serves preschool vocab");
+
+        let pk_ids: Vec<&str> = math_lessons_for_grade(Grade::Preschool).iter().map(|l| l.id).collect();
+        let k_ids: Vec<&str> = math_lessons_for_grade(Grade::Kindergarten).iter().map(|l| l.id).collect();
+        assert_ne!(pk_ids, k_ids, "kindergarten still serves PK math lessons");
+        assert!(k_ids.iter().all(|id| id.starts_with("K-MATH-")));
     }
 }

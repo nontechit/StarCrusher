@@ -307,6 +307,93 @@ pub fn grade_picker_tap(tap: Vec2) -> Option<Grade> {
     None
 }
 
+// ── Grade-up ceremony ─────────────────────────────────────────────────────────
+
+// Layout for the ceremony overlay (same coordinate space as the picker).
+const CEREMONY_TITLE_Y: f32 = 320.0;
+const CEREMONY_SUB_Y: f32 = 380.0;
+const CEREMONY_BADGE_Y: f32 = 470.0;
+const CEREMONY_BADGE_H: f32 = 86.0;
+const CEREMONY_ADVANCE_Y: f32 = 680.0;
+const CEREMONY_STAY_Y: f32 = CEREMONY_ADVANCE_Y + PICKER_BTN_H + PICKER_BTN_GAP * 2.0;
+
+/// Player's choice on the grade-up ceremony screen.
+pub enum CeremonyChoice {
+    Advance,
+    Stay,
+}
+
+/// Draw the grade-up ceremony overlay (drawn on top of the hub).
+/// Only shown when the star meter is full and a next grade exists.
+pub fn draw_grade_ceremony(current: Grade) {
+    let Some(next) = current.next() else { return };
+
+    // Dim backdrop
+    draw_rectangle(0.0, 0.0, SW, SH, Color { r: 0.0, g: 0.0, b: 0.0, a: 0.86 });
+
+    // Celebration star ring around the title
+    for i in 0..8 {
+        let angle = i as f32 / 8.0 * std::f32::consts::TAU;
+        let cx = CX + angle.cos() * 240.0;
+        let cy = CEREMONY_TITLE_Y - 14.0 + angle.sin() * 90.0;
+        draw_circle(cx, cy, 6.0, C_STAR_ON);
+    }
+
+    centered_text("GRADE  UP!", CEREMONY_TITLE_Y, 52, C_STAR_ON);
+    centered_text_color("You filled the star meter!", CEREMONY_SUB_Y, 26, WHITE);
+
+    // Current grade → next grade badges
+    let badge_w = 250.0;
+    let gap = 70.0;
+    let cur_x = CX - gap / 2.0 - badge_w;
+    let next_x = CX + gap / 2.0;
+    filled_pill(cur_x, CEREMONY_BADGE_Y, badge_w, CEREMONY_BADGE_H, 22.0, Color { a: 0.45, ..current.enemy_color() });
+    filled_pill(next_x, CEREMONY_BADGE_Y, badge_w, CEREMONY_BADGE_H, 22.0, next.enemy_color());
+    let cur_size = fit_text(current.display_name(), 28, badge_w - 20.0);
+    let next_size = fit_text(next.display_name(), 28, badge_w - 20.0);
+    text_centered_in(current.display_name(), cur_x + badge_w / 2.0, CEREMONY_BADGE_Y + CEREMONY_BADGE_H * 0.66, cur_size, WHITE);
+    text_centered_in(next.display_name(), next_x + badge_w / 2.0, CEREMONY_BADGE_Y + CEREMONY_BADGE_H * 0.66, next_size, dark_tint(0.05));
+    // Arrow between badges
+    centered_text_color(">", CEREMONY_BADGE_Y + CEREMONY_BADGE_H * 0.68, 40, C_STAR_ON);
+
+    // Advance button (gold, primary)
+    filled_pill(PICKER_BTN_X, CEREMONY_ADVANCE_Y, PICKER_BTN_W, PICKER_BTN_H, 16.0, C_PLAY);
+    let advance_label = format!("ADVANCE TO {}", next.display_name().to_uppercase());
+    let asize = fit_text(&advance_label, 32, PICKER_BTN_W - 40.0);
+    centered_text_color(&advance_label, CEREMONY_ADVANCE_Y + PICKER_BTN_H * 0.66, asize, Color { r: 0.04, g: 0.06, b: 0.18, a: 1.0 });
+
+    // Stay button (outlined, secondary)
+    outlined_pill(PICKER_BTN_X, CEREMONY_STAY_Y, PICKER_BTN_W, PICKER_BTN_H, 14.0, Color { a: 0.35, ..current.enemy_color() });
+    let stay_label = format!("STAY AT {}", current.display_name().to_uppercase());
+    let ssize = fit_text(&stay_label, 30, PICKER_BTN_W - 40.0);
+    centered_text_color(&stay_label, CEREMONY_STAY_Y + PICKER_BTN_H * 0.66, ssize, WHITE);
+
+    centered_text_color("You can keep playing at any grade.", SH - 48.0, 22, C_LABEL);
+}
+
+/// Returns the ceremony choice the player tapped, or None for taps elsewhere.
+pub fn ceremony_tap(tap: Vec2) -> Option<CeremonyChoice> {
+    if Rect::new(PICKER_BTN_X, CEREMONY_ADVANCE_Y, PICKER_BTN_W, PICKER_BTN_H).contains(tap) {
+        return Some(CeremonyChoice::Advance);
+    }
+    if Rect::new(PICKER_BTN_X, CEREMONY_STAY_Y, PICKER_BTN_W, PICKER_BTN_H).contains(tap) {
+        return Some(CeremonyChoice::Stay);
+    }
+    None
+}
+
+/// Text centred horizontally on `cx` (not the screen centre).
+fn text_centered_in(text: &str, cx: f32, y: f32, size: u16, color: Color) {
+    if text.is_empty() || size == 0 { return; }
+    let m = measure_text(text, None, size, 1.0);
+    draw_text_ex(
+        text,
+        cx - m.width / 2.0,
+        y,
+        TextParams { font_size: size, color, ..Default::default() },
+    );
+}
+
 // ── Helpers: geometry ─────────────────────────────────────────────────────────
 
 fn card_rect(index: usize) -> Rect {

@@ -179,9 +179,8 @@ impl PlayerProgress {
         self.stars[gi] >= STARS_TO_ADVANCE
     }
 
-    /// Drain the current grade's star meter after the ceremony completes.
-    /// Currently exercised only by tests; kept for the grade-up ceremony.
-    #[cfg(test)]
+    /// Drain the current grade's star meter after the grade-up ceremony
+    /// completes (the player advanced, so the old grade's meter resets).
     pub fn clear_stars_for_current_grade(&mut self) {
         self.stars[self.grade_index as usize] = 0;
     }

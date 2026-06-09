@@ -3,6 +3,7 @@ mod enemy;
 mod frog_lane;
 mod hub;
 mod lesson_plans;
+mod lesson_plans_gen;
 mod levels;
 mod math_pong;
 mod meteor_catch;
@@ -63,6 +64,8 @@ enum GameMode {
     StarAcademyHub,
     /// Full-screen grade picker overlay drawn on top of the hub.
     StarAcademyGradePicker,
+    /// Grade-up ceremony overlay — offered when the star meter fills.
+    GradeUpCeremony,
     /// Star Academy game #1: Meteor Catch (drag shield to catch correct answer).
     MeteorCatch,
     /// Star Academy game #2: Number Rain (tap the correct falling number).
@@ -313,6 +316,7 @@ impl Game {
         match self.mode {
             GameMode::StarAcademyHub => self.update_hub(),
             GameMode::StarAcademyGradePicker => self.update_grade_picker(),
+            GameMode::GradeUpCeremony => self.update_grade_up_ceremony(),
             GameMode::MeteorCatch    => self.update_meteor_catch(),
             GameMode::NumberRain     => self.update_number_rain(),
             GameMode::PlasmaBreaker  => self.update_plasma_breaker(),
@@ -394,10 +398,7 @@ impl Game {
                 ReadingSnakeAction::ExitToHub => self.exit_to_hub(),
                 ReadingSnakeAction::Completed => self.complete_reading_snake(),
                 ReadingSnakeAction::AcademyCompleted { stars } => {
-                    self.progress.record_best(AcademyGame::ReadingSnake, stars);
-                    let _meter_full = self.progress.add_stars(stars);
-                    self.progress.save();
-                    self.exit_to_hub();
+                    self.finish_academy_game(AcademyGame::ReadingSnake, stars);
                 }
             },
             GameMode::SpellingList => self.update_spelling_list(),
@@ -447,6 +448,7 @@ impl Game {
             // Star Academy games draw their own HOME button on canvas.
             GameMode::StarAcademyHub
             | GameMode::StarAcademyGradePicker
+            | GameMode::GradeUpCeremony
             | GameMode::MeteorCatch
             | GameMode::NumberRain
             | GameMode::PlasmaBreaker
@@ -574,6 +576,47 @@ impl Game {
         }
     }
 
+    /// Route an academy game completion: award stars, then either offer the
+    /// grade-up ceremony (meter just filled and a next grade exists) or
+    /// return straight to the hub.
+    fn finish_academy_game(&mut self, game: AcademyGame, stars: u8) {
+        self.progress.record_best(game, stars);
+        let meter_full = self.progress.add_stars(stars);
+        self.progress.save();
+        if meter_full && self.progress.grade().next().is_some() {
+            self.mode = GameMode::GradeUpCeremony;
+        } else {
+            self.exit_to_hub();
+        }
+    }
+
+    fn update_grade_up_ceremony(&mut self) {
+        // Escape dismisses the offer (the ceremony is offered, never forced).
+        if is_key_pressed(KeyCode::Escape) {
+            self.exit_to_hub();
+            return;
+        }
+
+        let Some(tap) = screen::primary_tap_position() else {
+            return;
+        };
+
+        match hub::ceremony_tap(tap) {
+            Some(hub::CeremonyChoice::Advance) => {
+                if let Some(next) = self.progress.grade().next() {
+                    // Reset the old grade's meter, then advance and persist.
+                    self.progress.clear_stars_for_current_grade();
+                    self.progress.set_grade(next);
+                    self.grade = next;
+                }
+                self.exit_to_hub();
+            }
+            // Tap on STAY or anywhere else dismisses; the full meter stays
+            // and the ceremony is re-offered after the next game.
+            Some(hub::CeremonyChoice::Stay) | None => self.exit_to_hub(),
+        }
+    }
+
     fn update_grade_picker(&mut self) {
         // Keyboard: Escape closes picker, number keys select grade
         if is_key_pressed(KeyCode::Escape) {
@@ -627,10 +670,7 @@ impl Game {
             FrogLaneAction::None => {}
             FrogLaneAction::ExitToHub => self.exit_to_hub(),
             FrogLaneAction::Completed { stars } => {
-                self.progress.record_best(AcademyGame::FrogLane, stars);
-                let _meter_full = self.progress.add_stars(stars);
-                self.progress.save();
-                self.exit_to_hub();
+                self.finish_academy_game(AcademyGame::FrogLane, stars);
             }
         }
     }
@@ -640,10 +680,7 @@ impl Game {
             PlasmaAction::None => {}
             PlasmaAction::ExitToHub => self.exit_to_hub(),
             PlasmaAction::Completed { stars } => {
-                self.progress.record_best(AcademyGame::PlasmaBreaker, stars);
-                let _meter_full = self.progress.add_stars(stars);
-                self.progress.save();
-                self.exit_to_hub();
+                self.finish_academy_game(AcademyGame::PlasmaBreaker, stars);
             }
         }
     }
@@ -653,10 +690,7 @@ impl Game {
             NumberRainAction::None => {}
             NumberRainAction::ExitToHub => self.exit_to_hub(),
             NumberRainAction::Completed { stars } => {
-                self.progress.record_best(AcademyGame::NumberRain, stars);
-                let _meter_full = self.progress.add_stars(stars);
-                self.progress.save();
-                self.exit_to_hub();
+                self.finish_academy_game(AcademyGame::NumberRain, stars);
             }
         }
     }
@@ -666,11 +700,7 @@ impl Game {
             MeteorCatchAction::None => {}
             MeteorCatchAction::ExitToHub => self.exit_to_hub(),
             MeteorCatchAction::Completed { stars } => {
-                self.progress.record_best(AcademyGame::MeteorCatch, stars);
-                let _meter_full = self.progress.add_stars(stars);
-                self.progress.save();
-                // Future: trigger a Grade-Up ceremony if _meter_full is true.
-                self.exit_to_hub();
+                self.finish_academy_game(AcademyGame::MeteorCatch, stars);
             }
         }
     }
@@ -1101,6 +1131,12 @@ impl Game {
                 hub::draw(&self.progress);
                 hub::draw_grade_picker(self.progress.grade());
             }
+            GameMode::GradeUpCeremony => {
+                clear_background(theme::BG_TOP);
+                draw_starfield();
+                hub::draw(&self.progress);
+                hub::draw_grade_ceremony(self.progress.grade());
+            }
             GameMode::MeteorCatch   => self.meteor_catch.draw(),
             GameMode::NumberRain    => self.number_rain.draw(),
             GameMode::PlasmaBreaker => self.plasma_breaker.draw(),
@@ -1148,6 +1184,7 @@ impl Game {
             // no HTML overlay needed (the HOME button is drawn on the canvas).
             GameMode::StarAcademyHub
             | GameMode::StarAcademyGradePicker
+            | GameMode::GradeUpCeremony
             | GameMode::MeteorCatch
             | GameMode::NumberRain
             | GameMode::PlasmaBreaker
@@ -1389,6 +1426,7 @@ mod tests {
             GameMode::NumberRain,
             GameMode::PlasmaBreaker,
             GameMode::FrogLane,
+            GameMode::GradeUpCeremony,
         ] {
             assert!(
                 !mode_handles_overlay_home_escape(mode),
