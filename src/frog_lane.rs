@@ -79,7 +79,7 @@ struct Hazard {
     pat_idx: u8,
 }
 
-struct HopLabel { num: u32, x: f32, y: f32, ttl: f32 }
+struct HopLabel { text: String, x: f32, y: f32, ttl: f32 }
 
 #[derive(Clone)]
 struct Particle {
@@ -176,6 +176,7 @@ impl FrogLane {
                 concept: MathConcept::Counting,
                 goal_hops: 5,
                 start_count: 0,
+                step: 1,
             })
     }
 
@@ -297,9 +298,9 @@ impl FrogLane {
 
     fn score_crossing(&mut self) {
         self.hops_done += 1;
-        let start_count = self.current_math().start_count;
+        let math = self.current_math();
         self.hop_labels.push(HopLabel {
-            num: self.hops_done + start_count,
+            text: hop_value_label(&math, self.hops_done),
             x: self.px,
             y: self.py - 16.0,
             ttl: 1.6,
@@ -732,6 +733,9 @@ impl FrogLane {
         if math.concept == MathConcept::Patterns {
             draw_pattern_legend();
         }
+        if math.concept == MathConcept::Fractions {
+            draw_fraction_bar(self.hops_done, math.goal_hops);
+        }
 
         // ── Hazards ───────────────────────────────────────────────────────────
         for h in &self.hazards {
@@ -775,14 +779,16 @@ impl FrogLane {
             let alpha = (lbl.ttl / 1.6).clamp(0.0, 1.0);
             let scale = 1.0 + (1.0 - alpha) * 1.3;
             let fsz = (54.0 * scale) as u16;
+            let text = format!("{}!", lbl.text);
+            let tw = measure_text(&text, None, fsz, 1.0).width;
             draw_text_ex(
-                &format!("{}!", lbl.num),
-                lbl.x - fsz as f32 * 0.30 + 2.0, lbl.y + 2.0,
+                &text,
+                lbl.x - tw * 0.5 + 2.0, lbl.y + 2.0,
                 TextParams { font_size: fsz, color: Color::new(0.0, 0.0, 0.0, alpha * 0.6), ..Default::default() },
             );
             draw_text_ex(
-                &format!("{}!", lbl.num),
-                lbl.x - fsz as f32 * 0.30, lbl.y,
+                &text,
+                lbl.x - tw * 0.5, lbl.y,
                 TextParams { font_size: fsz, color: Color::new(1.0, 0.88, 0.15, alpha), ..Default::default() },
             );
         }
@@ -826,7 +832,27 @@ impl FrogLane {
             if active {
                 draw_circle_lines(dot_x, dot_y, dot_r, 1.5, Color::from_rgba(180, 255, 200, 255));
             }
-            if active || in_pre {
+            let sequence_mode = matches!(
+                math.concept,
+                MathConcept::SkipCount | MathConcept::Decimals | MathConcept::Fractions
+            );
+            if sequence_mode {
+                // Show the full sequence under the dots so the player can
+                // preview where they're headed (3, 6, 9 … / 0.2, 0.4 … / 1/5, 2/5 …).
+                let label = hop_value_label(math, i.saturating_sub(math.start_count) + 1);
+                let lm = measure_text(&label, None, 13, 1.0);
+                let col = if active {
+                    Color::from_rgba(140, 255, 190, 255)
+                } else {
+                    Color::from_rgba(140, 165, 150, 220)
+                };
+                draw_text_ex(
+                    &label,
+                    dot_x - lm.width * 0.5,
+                    dot_y + dot_r + 16.0,
+                    TextParams { font_size: 13, color: col, ..Default::default() },
+                );
+            } else if active || in_pre {
                 let label = format!("{}", i + 1);
                 let lm = measure_text(&label, None, 12, 1.0);
                 draw_text_ex(
@@ -1052,6 +1078,36 @@ fn draw_lesson_icon(cx: f32, cy: f32, kind: MathConcept) {
             draw_rectangle(cx - 11.0, cy - 6.0, 8.0, 12.0, Color::from_rgba(220, 60, 60, 255));
             draw_circle(cx + 6.0, cy, 5.5, Color::from_rgba(60, 110, 230, 255));
         }
+        MathConcept::SkipCount => {
+            // Ascending staircase of dots — counting up by steps.
+            for i in 0..3u32 {
+                draw_circle(
+                    cx - 9.0 + i as f32 * 9.0,
+                    cy + 6.0 - i as f32 * 6.0,
+                    3.5,
+                    Color::from_rgba(120, 220, 160, 255),
+                );
+            }
+        }
+        MathConcept::Fractions => {
+            // Bar split into quarters with three filled.
+            for i in 0..4u32 {
+                let c = if i < 3 {
+                    Color::from_rgba(120, 220, 160, 255)
+                } else {
+                    Color::from_rgba(50, 70, 60, 255)
+                };
+                draw_rectangle(cx - 12.0 + i as f32 * 6.0, cy - 4.0, 5.0, 8.0, c);
+            }
+            draw_rectangle_lines(cx - 12.0, cy - 4.0, 23.0, 8.0, 1.5, Color::from_rgba(200, 230, 210, 255));
+        }
+        MathConcept::Decimals => {
+            draw_text_ex(
+                "0.1",
+                cx - 11.0, cy + 5.0,
+                TextParams { font_size: 15, color: Color::from_rgba(120, 220, 160, 255), ..Default::default() },
+            );
+        }
     }
 }
 
@@ -1124,14 +1180,89 @@ fn draw_goal_beacon(cy: f32, lesson: &LessonPlan, time: f32) {
             TextParams { font_size: 16, color: Color::from_rgba(40, 30, 10, 255), ..Default::default() });
     } else {
         draw_circle(cx, cy, 22.0, Color::from_rgba(255, 165, 30, 255));
-        let m = measure_text("GOAL", None, 16, 1.0);
+        let label = goal_target_label(lesson);
+        let m = measure_text(&label, None, 16, 1.0);
         draw_text_ex(
-            "GOAL",
+            &label,
             cx - m.width * 0.5,
             cy + 6.0,
             TextParams { font_size: 16, color: Color::from_rgba(40, 30, 10, 255), ..Default::default() },
         );
     }
+}
+
+/// Floating-label text for the `hops`-th crossing: the running count for
+/// counting lessons, the sequence value for skip-count/decimal lessons, and
+/// the accumulated fraction for fraction lessons.
+fn hop_value_label(math: &MathLessonData, hops: u32) -> String {
+    let step = math.step.max(1);
+    match math.concept {
+        MathConcept::SkipCount => format!("{}", math.start_count + hops * step),
+        MathConcept::Decimals => {
+            let tenths = hops * step;
+            format!("{}.{}", tenths / 10, tenths % 10)
+        }
+        MathConcept::Fractions => format!("{}/{}", hops, math.goal_hops.max(1)),
+        _ => format!("{}", math.start_count + hops),
+    }
+}
+
+/// What the goal beacon reads: the sequence target for upper-grade modes
+/// ("30", "1.0", "5/5"), plain "GOAL" for the PreK modes.
+fn goal_target_label(lesson: &LessonPlan) -> String {
+    let Some(m) = lesson.math else { return "GOAL".to_string() };
+    match m.concept {
+        MathConcept::SkipCount | MathConcept::Decimals | MathConcept::Fractions => {
+            hop_value_label(&m, m.goal_hops)
+        }
+        _ => "GOAL".to_string(),
+    }
+}
+
+/// In-play fraction bar shown below the lanes for `Fractions` lessons: one
+/// segment per crossing, filling left to right as the frog crosses.
+fn draw_fraction_bar(hops: u32, goal: u32) {
+    let goal = goal.max(1);
+    let bx = 24.0;
+    let by = FOOTER_TOP + 46.0;
+    let bw = SW - 48.0;
+    let bh = 46.0;
+    draw_rectangle(bx - 8.0, by - 30.0, bw + 16.0, bh + 64.0, Color::from_rgba(8, 16, 28, 220));
+    draw_rectangle_lines(bx - 8.0, by - 30.0, bw + 16.0, bh + 64.0, 1.5, Color::from_rgba(60, 100, 80, 200));
+    draw_text_ex(
+        "Each crossing fills one part:", bx, by - 8.0,
+        TextParams { font_size: 17, color: Color::from_rgba(220, 235, 220, 255), ..Default::default() },
+    );
+    let seg_w = bw / goal as f32;
+    let cell_label = format!("1/{}", goal);
+    for i in 0..goal {
+        let x = bx + i as f32 * seg_w;
+        let filled = i < hops;
+        let fill = if filled {
+            Color::from_rgba(80, 255, 160, 255)
+        } else {
+            Color::from_rgba(35, 50, 45, 255)
+        };
+        draw_rectangle(x + 2.0, by, seg_w - 4.0, bh, fill);
+        draw_rectangle_lines(x + 2.0, by, seg_w - 4.0, bh, 2.0, Color::from_rgba(180, 220, 200, 230));
+        let lm = measure_text(&cell_label, None, 15, 1.0);
+        let lc = if filled {
+            Color::from_rgba(8, 30, 18, 255)
+        } else {
+            Color::from_rgba(150, 175, 160, 230)
+        };
+        draw_text_ex(
+            &cell_label,
+            x + seg_w * 0.5 - lm.width * 0.5,
+            by + bh * 0.5 + 5.0,
+            TextParams { font_size: 15, color: lc, ..Default::default() },
+        );
+    }
+    draw_text_ex(
+        &format!("{} / {} filled", hops.min(goal), goal),
+        bx, by + bh + 22.0,
+        TextParams { font_size: 16, color: Color::from_rgba(140, 255, 190, 255), ..Default::default() },
+    );
 }
 
 fn hazard_color(h: &Hazard, lesson: &LessonPlan) -> Color {

@@ -27,6 +27,14 @@ pub enum Subject {
 }
 
 /// Math concept family — drives Frog Lane's per-lesson rendering mode.
+///
+/// The first seven are the original PreK modes. The last three were added for
+/// upper-grade (K-5) lessons so arithmetic content plays like the skill it
+/// teaches instead of falling back to plain counting:
+/// - `SkipCount`: each crossing advances an arithmetic sequence
+///   (multiplication tables, division, place value, addition patterns).
+/// - `Fractions`: each crossing fills one segment of a fraction bar.
+/// - `Decimals`: each crossing counts up in tenths.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MathConcept {
     Counting,
@@ -36,6 +44,9 @@ pub enum MathConcept {
     QuantComp,
     Patterns,
     Sorting,
+    SkipCount,
+    Fractions,
+    Decimals,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -55,6 +66,10 @@ pub struct MathLessonData {
     pub concept: MathConcept,
     pub goal_hops: u32,
     pub start_count: u32,
+    /// Sequence increment per crossing. `SkipCount` counts by this many units
+    /// (3, 6, 9, … for step 3); `Decimals` counts by this many tenths
+    /// (0.2, 0.4, … for step 2). 1 for every other concept.
+    pub step: u32,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -93,7 +108,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
             part_of_speech: "verb",
             definition: "To say the number names one by one while pointing to each object",
         }],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "PK-MATH-02",
@@ -108,7 +123,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
             part_of_speech: "verb",
             definition: "To say the number names one by one while pointing to each object",
         }],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 5 }),
+        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 5, step: 1 }),
     },
     LessonPlan {
         id: "PK-MATH-03",
@@ -123,7 +138,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
             part_of_speech: "noun",
             definition: "A number between 10 and 20 that ends in -teen, like eleven (ten-one)",
         }],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 10 }),
+        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 10, step: 1 }),
     },
     LessonPlan {
         id: "PK-MATH-04",
@@ -138,7 +153,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
             part_of_speech: "verb",
             definition: "To say the number names one by one while pointing to each object",
         }],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15, step: 1 }),
     },
     LessonPlan {
         id: "PK-MATH-05",
@@ -153,7 +168,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "square",   part_of_speech: "noun", definition: "A shape with four equal sides and four right angles" },
             VocabEntry { term: "triangle", part_of_speech: "noun", definition: "A shape with three straight sides and three corners" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "PK-MATH-06",
@@ -168,7 +183,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "oval",      part_of_speech: "noun", definition: "A round shape that is stretched out on one side, like an egg" },
             VocabEntry { term: "star",      part_of_speech: "noun", definition: "A five-pointed shape with sharp corners that reach outward" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "PK-MATH-07",
@@ -183,7 +198,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
             part_of_speech: "noun",
             definition: "The name we give to how things look — like red, blue, green, or yellow",
         }],
-        math: Some(MathLessonData { concept: MathConcept::Colors, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Colors, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "PK-MATH-08",
@@ -198,7 +213,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
             part_of_speech: "noun",
             definition: "Names for how things look — like orange, purple, brown, black, white, or gray",
         }],
-        math: Some(MathLessonData { concept: MathConcept::Colors, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Colors, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "PK-MATH-09",
@@ -212,7 +227,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "big",   part_of_speech: "adjective", definition: "Something that takes up a lot of space, like a big bus" },
             VocabEntry { term: "small", part_of_speech: "adjective", definition: "Something that takes up little space, like a small toy car" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::SizeComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SizeComp, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "PK-MATH-10",
@@ -227,7 +242,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "fewer", part_of_speech: "adjective", definition: "Having a smaller quantity of something, like fewer cookies" },
             VocabEntry { term: "equal", part_of_speech: "adjective", definition: "The same amount or number, like two groups that have the same count" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "PK-MATH-11",
@@ -242,7 +257,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
             part_of_speech: "noun",
             definition: "A sequence that repeats over and over again, like a song that keeps going",
         }],
-        math: Some(MathLessonData { concept: MathConcept::Patterns, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Patterns, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "PK-MATH-12",
@@ -256,7 +271,7 @@ pub const PK_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "sort",      part_of_speech: "verb", definition: "To separate things into groups based on something they have in common" },
             VocabEntry { term: "attribute", part_of_speech: "noun", definition: "A characteristic — like color, shape, size, or texture that helps us sort" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0, step: 1 }),
     },
 ];
 
@@ -664,5 +679,54 @@ mod tests {
         let k_ids: Vec<&str> = math_lessons_for_grade(Grade::Kindergarten).iter().map(|l| l.id).collect();
         assert_ne!(pk_ids, k_ids, "kindergarten still serves PK math lessons");
         assert!(k_ids.iter().all(|id| id.starts_with("K-MATH-")));
+    }
+
+    #[test]
+    fn every_math_lesson_has_valid_sequence_data() {
+        for grade in ALL_GRADES {
+            for lesson in math_lessons_for_grade(grade) {
+                let m = lesson.math.expect("math lesson missing math data");
+                assert!(m.goal_hops > 0, "{}: zero goal_hops", lesson.id);
+                assert!(m.step >= 1, "{}: step must be at least 1", lesson.id);
+                if m.concept == MathConcept::Decimals {
+                    assert!(m.step < 10, "{}: decimal step is whole tenths", lesson.id);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn upper_grades_use_upper_grade_concepts() {
+        // 2nd-5th arithmetic must not all collapse into plain Counting:
+        // the corpus has multiplication, fractions, and decimals lessons,
+        // and the generator must map them onto the dedicated modes.
+        let upper = [
+            Grade::SecondGrade,
+            Grade::ThirdGrade,
+            Grade::FourthGrade,
+            Grade::FifthGrade,
+        ];
+        let concepts: Vec<MathConcept> = upper
+            .iter()
+            .flat_map(|&g| math_lessons_for_grade(g).iter().filter_map(|l| l.math.map(|m| m.concept)))
+            .collect();
+        assert!(
+            concepts.contains(&MathConcept::SkipCount),
+            "no upper-grade SkipCount lessons"
+        );
+        assert!(
+            concepts.contains(&MathConcept::Fractions),
+            "no upper-grade Fractions lessons"
+        );
+        assert!(
+            concepts.contains(&MathConcept::Decimals),
+            "no upper-grade Decimals lessons"
+        );
+        let counting = concepts.iter().filter(|&&c| c == MathConcept::Counting).count();
+        assert!(
+            counting * 2 < concepts.len(),
+            "most upper-grade math lessons still fall back to Counting ({counting}/{})",
+            concepts.len()
+        );
     }
 }

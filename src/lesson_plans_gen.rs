@@ -24,7 +24,7 @@ pub const K_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "count", part_of_speech: "verb", definition: "Say numbers in order while pointing to or moving objects one at a time" },
             VocabEntry { term: "tens", part_of_speech: "noun", definition: "Groups of 10; 20 is two tens, 30 is three tens" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "K-MATH-02",
@@ -39,7 +39,7 @@ pub const K_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "zero", part_of_speech: "noun", definition: "The number that means none or empty" },
             VocabEntry { term: "quantity", part_of_speech: "noun", definition: "How many objects there are" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 5 }),
+        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 5, step: 1 }),
     },
     LessonPlan {
         id: "K-MATH-03",
@@ -47,14 +47,14 @@ pub const K_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::Kindergarten,
         subject: Subject::Mathematics,
         concept: "CCSS K.OA.A.1: Represent additio…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 2s! Each crossing adds 2.",
+        success: "You counted by 2s all the way to 10!",
         vocabulary: &[
             VocabEntry { term: "addition", part_of_speech: "noun", definition: "Putting two or more groups together" },
             VocabEntry { term: "plus", part_of_speech: "noun", definition: "A word that means put together; symbol is +" },
             VocabEntry { term: "equals", part_of_speech: "noun", definition: "Means the same as; symbol is =" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 10 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 2 }),
     },
     LessonPlan {
         id: "K-MATH-04",
@@ -69,7 +69,7 @@ pub const K_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "minus", part_of_speech: "noun", definition: "Taking away; symbol is -" },
             VocabEntry { term: "left", part_of_speech: "noun", definition: "What remains after taking away" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "K-MATH-05",
@@ -87,7 +87,7 @@ pub const K_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "rectangle", part_of_speech: "noun", definition: "A shape with 4 sides and 4 corners (longer than it is wide)" },
             VocabEntry { term: "oval", part_of_speech: "noun", definition: "A round, stretched circle shape" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "K-MATH-06",
@@ -103,7 +103,7 @@ pub const K_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "straight", part_of_speech: "noun", definition: "Not curved" },
             VocabEntry { term: "curved", part_of_speech: "noun", definition: "Rounded or bending shape" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "K-MATH-07",
@@ -119,7 +119,7 @@ pub const K_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "cylinder", part_of_speech: "noun", definition: "A solid shape with a round top and bottom and a curved side (like a can)" },
             VocabEntry { term: "cone", part_of_speech: "noun", definition: "A solid shape that comes to a point (like an ice cream cone)" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "K-MATH-08",
@@ -137,7 +137,7 @@ pub const K_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "taller", part_of_speech: "noun", definition: "Greater in height than something else" },
             VocabEntry { term: "measure", part_of_speech: "verb", definition: "To find out how long or tall something is" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::SizeComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SizeComp, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "K-MATH-09",
@@ -155,7 +155,7 @@ pub const K_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "outside", part_of_speech: "noun", definition: "Not inside; on the outer part" },
             VocabEntry { term: "behind", part_of_speech: "noun", definition: "At the back of something" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 10, step: 1 }),
     },
     LessonPlan {
         id: "K-MATH-10",
@@ -172,7 +172,7 @@ pub const K_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "data", part_of_speech: "noun", definition: "Information or facts that are collected" },
             VocabEntry { term: "tally", part_of_speech: "adverb", definition: "A mark used to keep count" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "K-MATH-11",
@@ -190,7 +190,7 @@ pub const K_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "afternoon", part_of_speech: "noun", definition: "The middle part of the day after lunch" },
             VocabEntry { term: "evening", part_of_speech: "noun", definition: "The late part of the day before bedtime" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Patterns, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Patterns, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "K-MATH-12",
@@ -198,8 +198,8 @@ pub const K_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::Kindergarten,
         subject: Subject::Mathematics,
         concept: "CCSS K.G.A.1: Identify coins by…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by tenths! Each crossing adds 0.2.",
+        success: "You counted by decimals up to 1.0!",
         vocabulary: &[
             VocabEntry { term: "coin", part_of_speech: "noun", definition: "A piece of money made of metal" },
             VocabEntry { term: "penny", part_of_speech: "noun", definition: "A coin worth 1 cent" },
@@ -208,7 +208,7 @@ pub const K_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "quarter", part_of_speech: "noun", definition: "A coin worth 25 cents" },
             VocabEntry { term: "worth", part_of_speech: "noun", definition: "The value of something" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::Decimals, goal_hops: 5, start_count: 0, step: 2 }),
     },
 ];
 
@@ -483,13 +483,13 @@ pub const G1_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FirstGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 1.OA.1: Use addition and su…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 2s! Each crossing adds 2.",
+        success: "You counted by 2s all the way to 10!",
         vocabulary: &[
             VocabEntry { term: "addition", part_of_speech: "noun", definition: "Putting two or more groups together" },
             VocabEntry { term: "sum", part_of_speech: "noun", definition: "The answer to an addition problem" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 2 }),
     },
     LessonPlan {
         id: "1MATH-02",
@@ -497,13 +497,13 @@ pub const G1_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FirstGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 1.OA.1: Use addition and su…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 2s! Each crossing adds 2.",
+        success: "You counted by 2s all the way to 10!",
         vocabulary: &[
             VocabEntry { term: "subtraction", part_of_speech: "noun", definition: "Taking away or finding the difference between two groups" },
             VocabEntry { term: "difference", part_of_speech: "noun", definition: "The answer to a subtraction problem" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 5 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 2 }),
     },
     LessonPlan {
         id: "1MATH-03",
@@ -511,13 +511,13 @@ pub const G1_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FirstGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 1.NBT.2: Understand that th…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 10s! Each crossing adds 10.",
+        success: "You counted by 10s all the way to 50!",
         vocabulary: &[
             VocabEntry { term: "ten", part_of_speech: "noun", definition: "A group of 10 ones put together" },
             VocabEntry { term: "one", part_of_speech: "noun", definition: "A single unit" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 10 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 10 }),
     },
     LessonPlan {
         id: "1MATH-04",
@@ -530,7 +530,7 @@ pub const G1_MATH_LESSONS: &[LessonPlan] = &[
         vocabulary: &[
             VocabEntry { term: "length", part_of_speech: "noun", definition: "How long something is from one end to the other" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::SizeComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SizeComp, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "1MATH-05",
@@ -541,7 +541,7 @@ pub const G1_MATH_LESSONS: &[LessonPlan] = &[
         instruction: "Count each crossing! Say the number out loud.",
         success: "Great counting! Lesson complete!",
         vocabulary: &[],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "1MATH-06",
@@ -554,7 +554,7 @@ pub const G1_MATH_LESSONS: &[LessonPlan] = &[
         vocabulary: &[
             VocabEntry { term: "face", part_of_speech: "noun", definition: "A flat side of a 3D shape" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "1MATH-07",
@@ -562,10 +562,10 @@ pub const G1_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FirstGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 1.OA.1: Use addition and su…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 2s! Each crossing adds 2.",
+        success: "You counted by 2s all the way to 10!",
         vocabulary: &[],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 2 }),
     },
     LessonPlan {
         id: "1MATH-08",
@@ -573,12 +573,12 @@ pub const G1_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FirstGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 1.NBT.C.4: Add within 100,…",
-        instruction: "Spot the repeating pattern in the lanes!",
-        success: "You spotted the patterns! Lesson complete!",
+        instruction: "Count by 2s! Each crossing adds 2.",
+        success: "You counted by 2s all the way to 10!",
         vocabulary: &[
             VocabEntry { term: "pattern", part_of_speech: "noun", definition: "A sequence that repeats in the same way" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Patterns, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 2 }),
     },
     LessonPlan {
         id: "1MATH-09",
@@ -586,8 +586,8 @@ pub const G1_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FirstGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 1.MD.C.5: Solve word proble…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by tenths! Each crossing adds 0.2.",
+        success: "You counted by decimals up to 1.0!",
         vocabulary: &[
             VocabEntry { term: "cent", part_of_speech: "noun", definition: "One hundredth of a dollar; the smallest unit of money" },
             VocabEntry { term: "penny", part_of_speech: "noun", definition: "A coin worth 1 cent" },
@@ -595,7 +595,7 @@ pub const G1_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "dime", part_of_speech: "noun", definition: "A coin worth 10 cents" },
             VocabEntry { term: "quarter", part_of_speech: "noun", definition: "A coin worth 25 cents" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::Decimals, goal_hops: 5, start_count: 0, step: 2 }),
     },
     LessonPlan {
         id: "1MATH-10",
@@ -608,7 +608,7 @@ pub const G1_MATH_LESSONS: &[LessonPlan] = &[
         vocabulary: &[
             VocabEntry { term: "graph", part_of_speech: "noun", definition: "A picture that shows information using bars, pictures, or lines" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "1MATH-11",
@@ -616,14 +616,14 @@ pub const G1_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FirstGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 1.G.A.3: Partition circles…",
-        instruction: "Which side has MORE? Which has FEWER?",
-        success: "Great comparing! Lesson complete!",
+        instruction: "Each crossing fills 1/5 of the fraction bar!",
+        success: "5/5 = one whole! Lesson complete!",
         vocabulary: &[
             VocabEntry { term: "fraction", part_of_speech: "noun", definition: "A part of a whole" },
             VocabEntry { term: "half", part_of_speech: "noun", definition: "One of two equal parts" },
             VocabEntry { term: "third", part_of_speech: "noun", definition: "One of three equal parts" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Fractions, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "1MATH-12",
@@ -634,7 +634,7 @@ pub const G1_MATH_LESSONS: &[LessonPlan] = &[
         instruction: "Group them! What do they have in common?",
         success: "Perfect sorting! Lesson complete!",
         vocabulary: &[],
-        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0, step: 1 }),
     },
 ];
 
@@ -853,14 +853,14 @@ pub const G2_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::SecondGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 2.OA.B.2: Fluently add and…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 2s! Each crossing adds 2.",
+        success: "You counted by 2s all the way to 10!",
         vocabulary: &[
             VocabEntry { term: "fluent", part_of_speech: "adjective", definition: "Quick and accurate, without needing objects or drawings" },
             VocabEntry { term: "strategy", part_of_speech: "noun", definition: "A method or plan for solving a problem" },
             VocabEntry { term: "doubles", part_of_speech: "noun", definition: "Adding a number to itself (e.g., 5 + 5 = 10)" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 2 }),
     },
     LessonPlan {
         id: "2MATH-02",
@@ -868,13 +868,13 @@ pub const G2_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::SecondGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 2.OA.B.2: Fluently add and…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 2s! Each crossing adds 2.",
+        success: "You counted by 2s all the way to 10!",
         vocabulary: &[
             VocabEntry { term: "fluent", part_of_speech: "adjective", definition: "Quick and accurate without manipulatives" },
             VocabEntry { term: "inverse", part_of_speech: "noun", definition: "The opposite operation (subtraction is the inverse of addition)" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 5 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 2 }),
     },
     LessonPlan {
         id: "2MATH-03",
@@ -882,12 +882,12 @@ pub const G2_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::SecondGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 2.NBT.A.1: Understand place…",
-        instruction: "Which side has MORE? Which has FEWER?",
-        success: "Great comparing! Lesson complete!",
+        instruction: "Count by 10s! Each crossing adds 10.",
+        success: "You counted by 10s all the way to 50!",
         vocabulary: &[
             VocabEntry { term: "decompose", part_of_speech: "verb", definition: "To break apart a number" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 10 }),
     },
     LessonPlan {
         id: "2MATH-04",
@@ -895,12 +895,12 @@ pub const G2_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::SecondGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 2.NBT.B.5: Fluently add and…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 10s! Each crossing adds 10.",
+        success: "You counted by 10s all the way to 50!",
         vocabulary: &[
             VocabEntry { term: "regroup", part_of_speech: "noun", definition: "Exchanging ones for tens or tens for ones" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 10 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 10 }),
     },
     LessonPlan {
         id: "2MATH-05",
@@ -908,14 +908,14 @@ pub const G2_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::SecondGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 2.OA.C.3: Work with equal g…",
-        instruction: "Which side has MORE? Which has FEWER?",
-        success: "Great comparing! Lesson complete!",
+        instruction: "Count by 3s! Each crossing adds 3.",
+        success: "You counted by 3s all the way to 15!",
         vocabulary: &[
             VocabEntry { term: "array", part_of_speech: "noun", definition: "Objects arranged in rows and columns" },
             VocabEntry { term: "row", part_of_speech: "noun", definition: "Objects arranged horizontally (side to side)" },
             VocabEntry { term: "column", part_of_speech: "noun", definition: "Objects arranged vertically (up and down)" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 3 }),
     },
     LessonPlan {
         id: "2MATH-06",
@@ -932,7 +932,7 @@ pub const G2_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "inch", part_of_speech: "noun", definition: "A standard unit of length" },
             VocabEntry { term: "centimeter", part_of_speech: "noun", definition: "A metric unit of length" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "2MATH-07",
@@ -948,7 +948,7 @@ pub const G2_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "heavier", part_of_speech: "noun", definition: "Weighs more" },
             VocabEntry { term: "lighter", part_of_speech: "noun", definition: "Weighs less" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::SizeComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SizeComp, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "2MATH-08",
@@ -961,7 +961,7 @@ pub const G2_MATH_LESSONS: &[LessonPlan] = &[
         vocabulary: &[
             VocabEntry { term: "hour", part_of_speech: "noun", definition: "60 minutes; the long hand points to 12" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "2MATH-09",
@@ -969,15 +969,15 @@ pub const G2_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::SecondGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 2.MD.C.8: Solve word proble…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by tenths! Each crossing adds 0.2.",
+        success: "You counted by decimals up to 1.0!",
         vocabulary: &[
             VocabEntry { term: "penny", part_of_speech: "noun", definition: "1 cent" },
             VocabEntry { term: "nickel", part_of_speech: "noun", definition: "5 cents" },
             VocabEntry { term: "dime", part_of_speech: "noun", definition: "10 cents" },
             VocabEntry { term: "quarter", part_of_speech: "noun", definition: "25 cents" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::Decimals, goal_hops: 5, start_count: 0, step: 2 }),
     },
     LessonPlan {
         id: "2MATH-10",
@@ -992,7 +992,7 @@ pub const G2_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "polygon", part_of_speech: "noun", definition: "Closed shape with straight sides" },
             VocabEntry { term: "vertices", part_of_speech: "noun", definition: "Corners" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "2MATH-11",
@@ -1006,7 +1006,7 @@ pub const G2_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "perimeter", part_of_speech: "noun", definition: "Distance around a shape" },
             VocabEntry { term: "area", part_of_speech: "noun", definition: "Space inside a shape" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::SizeComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SizeComp, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "2MATH-12",
@@ -1019,7 +1019,7 @@ pub const G2_MATH_LESSONS: &[LessonPlan] = &[
         vocabulary: &[
             VocabEntry { term: "operation", part_of_speech: "noun", definition: "Addition, subtraction, etc." },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 5, step: 1 }),
     },
 ];
 
@@ -1244,14 +1244,14 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::ThirdGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 3.OA.A.1: Interpret product…",
-        instruction: "Which side has MORE? Which has FEWER?",
-        success: "Great comparing! Lesson complete!",
+        instruction: "Count by 3s! Each crossing adds 3.",
+        success: "You counted by 3s all the way to 15!",
         vocabulary: &[
             VocabEntry { term: "array", part_of_speech: "noun", definition: "Objects arranged in rows and columns" },
             VocabEntry { term: "factor", part_of_speech: "noun", definition: "A number being multiplied" },
             VocabEntry { term: "product", part_of_speech: "noun", definition: "The answer to a multiplication problem" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 3 }),
     },
     LessonPlan {
         id: "3MATH-02",
@@ -1259,13 +1259,13 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::ThirdGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 3.OA.C.7: Fluently multiply…",
-        instruction: "Spot the repeating pattern in the lanes!",
-        success: "You spotted the patterns! Lesson complete!",
+        instruction: "Count by 3s! Each crossing adds 3.",
+        success: "You counted by 3s all the way to 15!",
         vocabulary: &[
             VocabEntry { term: "fluent", part_of_speech: "adjective", definition: "Quick and automatic without needing to count or use manipulatives" },
             VocabEntry { term: "strategy", part_of_speech: "noun", definition: "A method or approach to solve a problem" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Patterns, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 3 }),
     },
     LessonPlan {
         id: "3MATH-03",
@@ -1273,8 +1273,8 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::ThirdGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 3.OA.A.2: Interpret divisio…",
-        instruction: "Which side has MORE? Which has FEWER?",
-        success: "Great comparing! Lesson complete!",
+        instruction: "Count by 4s! Each crossing adds 4.",
+        success: "You counted by 4s all the way to 20!",
         vocabulary: &[
             VocabEntry { term: "division", part_of_speech: "noun", definition: "Separating a group into equal parts or sharing fairly" },
             VocabEntry { term: "quotient", part_of_speech: "noun", definition: "The answer to a division problem" },
@@ -1282,7 +1282,7 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "dividend", part_of_speech: "noun", definition: "The number being divided (total to share)" },
             VocabEntry { term: "inverse", part_of_speech: "noun", definition: "The opposite operation (division is inverse of multiplication)" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 4 }),
     },
     LessonPlan {
         id: "3MATH-04",
@@ -1290,14 +1290,14 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::ThirdGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 3.NBT.A.1: Understand the p…",
-        instruction: "Which side has MORE? Which has FEWER?",
-        success: "Great comparing! Lesson complete!",
+        instruction: "Count by 10s! Each crossing adds 10.",
+        success: "You counted by 10s all the way to 50!",
         vocabulary: &[
             VocabEntry { term: "hundreds", part_of_speech: "noun", definition: "The place three positions from the right (represents groups of 100)" },
             VocabEntry { term: "tens", part_of_speech: "noun", definition: "The place two positions from the right (represents groups of 10)" },
             VocabEntry { term: "ones", part_of_speech: "noun", definition: "The place on the far right (represents individual items)" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 10 }),
     },
     LessonPlan {
         id: "3MATH-05",
@@ -1305,8 +1305,8 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::ThirdGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 3.NBT.A.2: Fluently add and…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 10s! Each crossing adds 10.",
+        success: "You counted by 10s all the way to 50!",
         vocabulary: &[
             VocabEntry { term: "strategy", part_of_speech: "noun", definition: "A method to solve a problem (decomposing, using number lines, compensation)" },
             VocabEntry { term: "algorithm", part_of_speech: "noun", definition: "A step-by-step procedure for solving a problem (standard addition/subtraction method)" },
@@ -1314,7 +1314,7 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "regrouping", part_of_speech: "noun", definition: "Trading 10 ones for 1 ten, or 10 tens for 1 hundred (carrying/borrowing)" },
             VocabEntry { term: "compensation", part_of_speech: "noun", definition: "Adjusting numbers to make calculation easier, then adjusting the answer" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 10 }),
     },
     LessonPlan {
         id: "3MATH-06",
@@ -1322,8 +1322,8 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::ThirdGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 3.G.A.2: Partition shapes i…",
-        instruction: "Which side has MORE? Which has FEWER?",
-        success: "Great comparing! Lesson complete!",
+        instruction: "Each crossing fills 1/5 of the fraction bar!",
+        success: "5/5 = one whole! Lesson complete!",
         vocabulary: &[
             VocabEntry { term: "fraction", part_of_speech: "noun", definition: "A part of a whole, divided into equal parts" },
             VocabEntry { term: "whole", part_of_speech: "noun", definition: "The entire object or group" },
@@ -1331,7 +1331,7 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "third", part_of_speech: "noun", definition: "One of three equal parts (1/3)" },
             VocabEntry { term: "fourth", part_of_speech: "noun", definition: "One of four equal parts (1/4)" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Fractions, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "3MATH-07",
@@ -1349,7 +1349,7 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "centimeter", part_of_speech: "noun", definition: "A unit of length in the metric system" },
             VocabEntry { term: "meter", part_of_speech: "noun", definition: "A unit equal to 100 centimeters" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "3MATH-08",
@@ -1367,7 +1367,7 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "mass", part_of_speech: "noun", definition: "The amount of matter in an object" },
             VocabEntry { term: "ounce", part_of_speech: "noun", definition: "A unit of weight" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "3MATH-09",
@@ -1381,7 +1381,7 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "hour", part_of_speech: "noun", definition: "A unit of time; 60 minutes = 1 hour" },
             VocabEntry { term: "minute", part_of_speech: "noun", definition: "A unit of time; 60 seconds = 1 minute" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 5 }),
+        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "3MATH-10",
@@ -1398,7 +1398,7 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "square", part_of_speech: "noun", definition: "A rectangle with all sides equal" },
             VocabEntry { term: "side", part_of_speech: "noun", definition: "One of the edges of a shape" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "3MATH-11",
@@ -1406,15 +1406,15 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::ThirdGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 3.MD.C.5.A: Understand area…",
-        instruction: "Watch the shapes as you hop across!",
-        success: "Great shape spotting! Lesson complete!",
+        instruction: "Count by 3s! Each crossing adds 3.",
+        success: "You counted by 3s all the way to 15!",
         vocabulary: &[
             VocabEntry { term: "area", part_of_speech: "noun", definition: "The number of unit squares needed to cover a surface" },
             VocabEntry { term: "array", part_of_speech: "noun", definition: "Rows and columns of objects or squares arranged in a rectangular pattern" },
             VocabEntry { term: "length", part_of_speech: "noun", definition: "The long side of a rectangle" },
             VocabEntry { term: "width", part_of_speech: "noun", definition: "The short side of a rectangle" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 3 }),
     },
     LessonPlan {
         id: "3MATH-12",
@@ -1432,7 +1432,7 @@ pub const G3_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "scale", part_of_speech: "noun", definition: "The value represented by each bar or symbol" },
             VocabEntry { term: "axis", part_of_speech: "noun", definition: "The horizontal (x) and vertical (y) lines on a graph" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0, step: 1 }),
     },
 ];
 
@@ -1659,13 +1659,13 @@ pub const G4_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FourthGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 4.NBT.B.5: Multiply a whole…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 10s! Each crossing adds 10.",
+        success: "You counted by 10s all the way to 50!",
         vocabulary: &[
             VocabEntry { term: "algorithm", part_of_speech: "noun", definition: "A step-by-step procedure for solving a problem" },
             VocabEntry { term: "regrouping", part_of_speech: "noun", definition: "Carrying over from one place value to the next" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 10 }),
     },
     LessonPlan {
         id: "4MATH-02",
@@ -1673,15 +1673,15 @@ pub const G4_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FourthGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 4.NBT.B.6: Divide four-digi…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 4s! Each crossing adds 4.",
+        success: "You counted by 4s all the way to 20!",
         vocabulary: &[
             VocabEntry { term: "dividend", part_of_speech: "noun", definition: "The number being divided" },
             VocabEntry { term: "divisor", part_of_speech: "noun", definition: "The number you divide by" },
             VocabEntry { term: "quotient", part_of_speech: "noun", definition: "The answer to division" },
             VocabEntry { term: "remainder", part_of_speech: "noun", definition: "What is left over after division" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 5 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 4 }),
     },
     LessonPlan {
         id: "4MATH-03",
@@ -1689,13 +1689,13 @@ pub const G4_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FourthGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 4.NF.A.1: Explain fraction…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Each crossing fills 1/5 of the fraction bar!",
+        success: "5/5 = one whole! Lesson complete!",
         vocabulary: &[
             VocabEntry { term: "denominator", part_of_speech: "noun", definition: "The number of equal parts" },
             VocabEntry { term: "numerator", part_of_speech: "noun", definition: "The number of parts being considered" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 10 }),
+        math: Some(MathLessonData { concept: MathConcept::Fractions, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "4MATH-04",
@@ -1703,14 +1703,14 @@ pub const G4_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FourthGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 4.NF.C.6: Use decimal notat…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Each crossing fills 1/5 of the fraction bar!",
+        success: "5/5 = one whole! Lesson complete!",
         vocabulary: &[
             VocabEntry { term: "decimal", part_of_speech: "noun", definition: "A number written with a decimal point" },
             VocabEntry { term: "tenths", part_of_speech: "noun", definition: "One part of 10 equal parts" },
             VocabEntry { term: "hundredths", part_of_speech: "noun", definition: "One part of 100 equal parts" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::Fractions, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "4MATH-05",
@@ -1726,7 +1726,7 @@ pub const G4_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "meter", part_of_speech: "noun", definition: "A unit of length in metric system" },
             VocabEntry { term: "centimeter", part_of_speech: "noun", definition: "A unit equal to 1/100 of a meter" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::QuantComp, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "4MATH-06",
@@ -1740,7 +1740,7 @@ pub const G4_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "angle", part_of_speech: "noun", definition: "Two rays that share an endpoint" },
             VocabEntry { term: "vertex", part_of_speech: "noun", definition: "The point where two rays meet" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "4MATH-07",
@@ -1754,7 +1754,7 @@ pub const G4_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "area", part_of_speech: "noun", definition: "The amount of space inside a shape" },
             VocabEntry { term: "perimeter", part_of_speech: "noun", definition: "The distance around a shape" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "4MATH-08",
@@ -1769,7 +1769,7 @@ pub const G4_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "axis", part_of_speech: "noun", definition: "The line on a graph (x and y)" },
             VocabEntry { term: "data", part_of_speech: "noun", definition: "Information or facts collected" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "4MATH-09",
@@ -1777,13 +1777,13 @@ pub const G4_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FourthGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 4.OA.B.4: Find all factor p…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 3s! Each crossing adds 3.",
+        success: "You counted by 3s all the way to 15!",
         vocabulary: &[
             VocabEntry { term: "factor", part_of_speech: "noun", definition: "A number that divides evenly into another number" },
             VocabEntry { term: "multiple", part_of_speech: "noun", definition: "A number that results from multiplying" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 3 }),
     },
     LessonPlan {
         id: "4MATH-10",
@@ -1794,7 +1794,7 @@ pub const G4_MATH_LESSONS: &[LessonPlan] = &[
         instruction: "Count each crossing! Say the number out loud.",
         success: "Great counting! Lesson complete!",
         vocabulary: &[],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "4MATH-11",
@@ -1810,7 +1810,7 @@ pub const G4_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "edge", part_of_speech: "noun", definition: "A line where two faces meet" },
             VocabEntry { term: "vertex", part_of_speech: "noun", definition: "A point where edges meet" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "4MATH-12",
@@ -1818,10 +1818,10 @@ pub const G4_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FourthGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 4.NF.B.3: Understand additi…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Each crossing fills 1/5 of the fraction bar!",
+        success: "5/5 = one whole! Lesson complete!",
         vocabulary: &[],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::Fractions, goal_hops: 5, start_count: 0, step: 1 }),
     },
 ];
 
@@ -2044,15 +2044,15 @@ pub const G5_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FifthGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 5.NBT.B.5: Fluently multipl…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 3s! Each crossing adds 3.",
+        success: "You counted by 3s all the way to 15!",
         vocabulary: &[
             VocabEntry { term: "factors", part_of_speech: "noun", definition: "Numbers being multiplied" },
             VocabEntry { term: "product", part_of_speech: "noun", definition: "Result of multiplication" },
             VocabEntry { term: "algorithm", part_of_speech: "noun", definition: "Step-by-step procedure" },
             VocabEntry { term: "fluent", part_of_speech: "adjective", definition: "Quick and accurate" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 3 }),
     },
     LessonPlan {
         id: "5MATH-02",
@@ -2060,8 +2060,8 @@ pub const G5_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FifthGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 5.NBT.B.6: Find whole-numbe…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 4s! Each crossing adds 4.",
+        success: "You counted by 4s all the way to 20!",
         vocabulary: &[
             VocabEntry { term: "dividend", part_of_speech: "noun", definition: "Number being divided" },
             VocabEntry { term: "divisor", part_of_speech: "noun", definition: "Number we divide by" },
@@ -2069,7 +2069,7 @@ pub const G5_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "remainder", part_of_speech: "noun", definition: "Amount left after division" },
             VocabEntry { term: "interpret", part_of_speech: "noun", definition: "Explain what something means" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 5 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 4 }),
     },
     LessonPlan {
         id: "5MATH-03",
@@ -2077,12 +2077,12 @@ pub const G5_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FifthGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 5.NF.A.1: Add and subtract…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Each crossing fills 1/5 of the fraction bar!",
+        success: "5/5 = one whole! Lesson complete!",
         vocabulary: &[
             VocabEntry { term: "simplify", part_of_speech: "noun", definition: "Reduce fraction to lowest terms" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 10 }),
+        math: Some(MathLessonData { concept: MathConcept::Fractions, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "5MATH-04",
@@ -2090,15 +2090,15 @@ pub const G5_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FifthGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 5.NBT.A.1: Recognize that a…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by tenths! Each crossing adds 0.2.",
+        success: "You counted by decimals up to 1.0!",
         vocabulary: &[
             VocabEntry { term: "decimal", part_of_speech: "noun", definition: "Number with decimal point (0.5, 2.35)" },
             VocabEntry { term: "tenths", part_of_speech: "noun", definition: "First place after decimal point (0.1)" },
             VocabEntry { term: "hundredths", part_of_speech: "noun", definition: "Second place after decimal point (0.01)" },
             VocabEntry { term: "thousandths", part_of_speech: "noun", definition: "Third place after decimal point (0.001)" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::Decimals, goal_hops: 5, start_count: 0, step: 2 }),
     },
     LessonPlan {
         id: "5MATH-05",
@@ -2112,7 +2112,7 @@ pub const G5_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "convert", part_of_speech: "noun", definition: "Change from one unit to another" },
             VocabEntry { term: "equivalence", part_of_speech: "noun", definition: "Equal value in different units" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::SizeComp, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::SizeComp, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "5MATH-06",
@@ -2125,7 +2125,7 @@ pub const G5_MATH_LESSONS: &[LessonPlan] = &[
         vocabulary: &[
             VocabEntry { term: "volume", part_of_speech: "noun", definition: "Amount of space inside a 3D shape" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Shapes, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "5MATH-07",
@@ -2138,7 +2138,7 @@ pub const G5_MATH_LESSONS: &[LessonPlan] = &[
         vocabulary: &[
             VocabEntry { term: "origin", part_of_speech: "noun", definition: "Point (0, 0) where axes intersect" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "5MATH-08",
@@ -2154,7 +2154,7 @@ pub const G5_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "interval", part_of_speech: "noun", definition: "Space between numbers on scale" },
             VocabEntry { term: "mode", part_of_speech: "noun", definition: "Most frequent data value" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "5MATH-09",
@@ -2171,7 +2171,7 @@ pub const G5_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "expression", part_of_speech: "noun", definition: "Mathematical phrase using numbers and operations" },
             VocabEntry { term: "evaluate", part_of_speech: "noun", definition: "Find the value of expression" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Patterns, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Patterns, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "5MATH-10",
@@ -2179,12 +2179,12 @@ pub const G5_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FifthGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 5.OA.A.1: Use operations an…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 3s! Each crossing adds 3.",
+        success: "You counted by 3s all the way to 15!",
         vocabulary: &[
             VocabEntry { term: "operation", part_of_speech: "noun", definition: "Addition, subtraction, multiplication, division" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 3 }),
     },
     LessonPlan {
         id: "5MATH-11",
@@ -2198,7 +2198,7 @@ pub const G5_MATH_LESSONS: &[LessonPlan] = &[
             VocabEntry { term: "attribute", part_of_speech: "noun", definition: "Quality or characteristic of shape" },
             VocabEntry { term: "symmetry", part_of_speech: "noun", definition: "One half matches the other when folded" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0 }),
+        math: Some(MathLessonData { concept: MathConcept::Sorting, goal_hops: 5, start_count: 0, step: 1 }),
     },
     LessonPlan {
         id: "5MATH-12",
@@ -2206,14 +2206,14 @@ pub const G5_MATH_LESSONS: &[LessonPlan] = &[
         grade: Grade::FifthGrade,
         subject: Subject::Mathematics,
         concept: "CCSS 5.NBT.B.7: Apply operations…",
-        instruction: "Count each crossing! Say the number out loud.",
-        success: "Great counting! Lesson complete!",
+        instruction: "Count by 3s! Each crossing adds 3.",
+        success: "You counted by 3s all the way to 15!",
         vocabulary: &[
             VocabEntry { term: "strategy", part_of_speech: "noun", definition: "Plan for solving problem" },
             VocabEntry { term: "justify", part_of_speech: "noun", definition: "Explain why solution is correct" },
             VocabEntry { term: "context", part_of_speech: "noun", definition: "Real-world situation in problem" },
         ],
-        math: Some(MathLessonData { concept: MathConcept::Counting, goal_hops: 5, start_count: 15 }),
+        math: Some(MathLessonData { concept: MathConcept::SkipCount, goal_hops: 5, start_count: 0, step: 3 }),
     },
 ];
 

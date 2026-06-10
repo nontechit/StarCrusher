@@ -1,7 +1,7 @@
 ﻿{
     "rootWasm":  "star-crusher.wasm",
-    "gitSha":  "e91a41acaa4ee6cadc0cdfed084b1af91db018db",
+    "gitSha":  "13ac37dcf89a3fa4f7b68231422f8aedd1d656a1",
     "sourcePath":  "target/wasm32-unknown-unknown/release/star-crusher.wasm",
-    "hash":  "f3251d081908636e1f8a1ca942abbde90f3533dcddc93479a73944a1a8994527",
-    "builtAt":  "2026-06-09T22:16:57.4320311Z"
+    "hash":  "53e5d56ab4c9f195afb7400f8092a24ad3375729cde1d3cce6798943ecf5aa7c",
+    "builtAt":  "2026-06-10T01:39:48.9569105Z"
 }

@@ -28,6 +28,7 @@ const MAX_WORD_LEN = 12;
 const MIN_WORD_LEN = 3;
 const MAX_DEF_LEN = 170;
 const MAX_VOCAB_PER_LESSON = 6;
+const GOAL_HOPS = 5; // crossings per Frog Lane lesson
 
 const GRADES = [
   { dir: "Kindergarten", rust: "Grade::Kindergarten", prefix: "K", mathGlob: /^K-MATH-\d+\.json$/i, elaGlob: /^K-ELA-\d+\.json$/i },
@@ -116,17 +117,44 @@ function rustStr(s) {
   return `"${String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
-// ── Math concept mapping (Frog Lane has 7 rendering modes) ──────────────────
+// ── Math concept mapping (Frog Lane rendering modes) ─────────────────────────
+//
+// Returns { concept, step }. The upper-grade families (Fractions, Decimals,
+// SkipCount) are checked first so 2nd-5th arithmetic plays like the skill it
+// teaches instead of falling back to plain Counting. `step` is the sequence
+// increment per crossing (units for SkipCount, tenths for Decimals).
 
 function mathConcept(lesson) {
   const hay = `${lesson.title} ${(lesson.objectives || []).join(" ")}`.toLowerCase();
-  if (/\bcolor/.test(hay)) return "Colors";
-  if (/pattern|sequence|skip.?count/.test(hay)) return "Patterns";
-  if (/sort|classif|categor|\bdata\b|graph|tally/.test(hay)) return "Sorting";
-  if (/more|fewer|equal|greater|less than|compare numbers|estimat/.test(hay)) return "QuantComp";
-  if (/measure|length|weight|height|size|longer|shorter|heavier|bigger|smaller/.test(hay)) return "SizeComp";
-  if (/shape|geometr|polygon|angle|symmetr|area|perimeter|volume|triangle|quadrilateral/.test(hay)) return "Shapes";
-  return "Counting"; // counting, place value, arithmetic drills, fractions...
+  if (/fraction/.test(hay)) return { concept: "Fractions", step: 1 };
+  if (/decimal|percent|money|dollar|\bcents\b/.test(hay)) return { concept: "Decimals", step: 2 };
+  if (/multipl|times table|divis|divide|skip.?count|place value/.test(hay)) {
+    return { concept: "SkipCount", step: skipStep(hay) };
+  }
+  if (/\bcolor/.test(hay)) return { concept: "Colors", step: 1 };
+  if (/pattern|sequence/.test(hay)) return { concept: "Patterns", step: 1 };
+  if (/sort|classif|categor|\bdata\b|graph|tally/.test(hay)) return { concept: "Sorting", step: 1 };
+  if (/more|fewer|equal|greater|less than|compare numbers|estimat/.test(hay)) return { concept: "QuantComp", step: 1 };
+  if (/measure|length|weight|height|size|longer|shorter|heavier|bigger|smaller/.test(hay)) return { concept: "SizeComp", step: 1 };
+  if (/shape|geometr|polygon|angle|symmetr|area|perimeter|volume|triangle|quadrilateral/.test(hay)) return { concept: "Shapes", step: 1 };
+  if (/\b(add|addition|subtract|subtraction|sums?\b|difference)/.test(hay)) {
+    return { concept: "SkipCount", step: 2 };
+  }
+  return { concept: "Counting", step: 1 };
+}
+
+// Pick the skip-count increment: an explicit "by 5s" / "x3" / "2s" mention in
+// the lesson wins; otherwise a sensible default per skill family.
+function skipStep(hay) {
+  const m = hay.match(/by (\d{1,2})s?\b/) || hay.match(/\bx(\d{1,2})\b/) || hay.match(/\b(\d{1,2})s\b/);
+  if (m) {
+    const n = parseInt(m[1], 10);
+    if (n >= 2 && n <= 12) return n;
+  }
+  if (/place value|hundred|thousand/.test(hay)) return 10;
+  if (/divis|divide/.test(hay)) return 4;
+  if (/multipl|times/.test(hay)) return 3;
+  return 5;
 }
 
 // ── Part-of-speech heuristic for lesson-file vocab ───────────────────────────
@@ -213,6 +241,35 @@ const SUCCESS = {
   Sorting: "Perfect sorting! Lesson complete!",
 };
 
+// Instruction/success per lesson — the sequence modes bake the step and
+// target right into the text ("Count by 3s ... to 15!").
+function frogStrings(math) {
+  switch (math.concept) {
+    case "SkipCount": {
+      const target = math.step * GOAL_HOPS;
+      return {
+        instruction: `Count by ${math.step}s! Each crossing adds ${math.step}.`,
+        success: `You counted by ${math.step}s all the way to ${target}!`,
+      };
+    }
+    case "Fractions":
+      return {
+        instruction: `Each crossing fills 1/${GOAL_HOPS} of the fraction bar!`,
+        success: `${GOAL_HOPS}/${GOAL_HOPS} = one whole! Lesson complete!`,
+      };
+    case "Decimals": {
+      const tenths = math.step * GOAL_HOPS;
+      const target = `${Math.floor(tenths / 10)}.${tenths % 10}`;
+      return {
+        instruction: `Count by tenths! Each crossing adds 0.${math.step}.`,
+        success: `You counted by decimals up to ${target}!`,
+      };
+    }
+    default:
+      return { instruction: INSTRUCTION[math.concept], success: SUCCESS[math.concept] };
+  }
+}
+
 // ── Emission ─────────────────────────────────────────────────────────────────
 
 function conceptLabel(lesson) {
@@ -238,15 +295,16 @@ function emitLesson(lesson, gradeRust, subjectRust, vocab, math) {
   out += `        subject: ${subjectRust},\n`;
   out += `        concept: ${rustStr(conceptLabel(lesson))},\n`;
   if (math) {
-    out += `        instruction: ${rustStr(INSTRUCTION[math.concept])},\n`;
-    out += `        success: ${rustStr(SUCCESS[math.concept])},\n`;
+    const strings = frogStrings(math);
+    out += `        instruction: ${rustStr(strings.instruction)},\n`;
+    out += `        success: ${rustStr(strings.success)},\n`;
   } else {
     out += `        instruction: ${rustStr("Spell the word from the lesson.")},\n`;
     out += `        success: ${rustStr("Great spelling!")},\n`;
   }
   out += emitVocab(vocab, "        ");
   if (math) {
-    out += `        math: Some(MathLessonData { concept: MathConcept::${math.concept}, goal_hops: 5, start_count: ${math.startCount} }),\n`;
+    out += `        math: Some(MathLessonData { concept: MathConcept::${math.concept}, goal_hops: ${GOAL_HOPS}, start_count: ${math.startCount}, step: ${math.step} }),\n`;
   } else {
     out += "        math: None,\n";
   }
@@ -264,12 +322,12 @@ function generateGrade(g) {
   for (const file of mathFiles) {
     const lesson = readJson(file);
     if (!lesson || !lesson.id || !lesson.title) continue;
-    const concept = mathConcept(lesson);
+    const { concept, step } = mathConcept(lesson);
     // Counting-style lessons walk successive ranges, like the PK set does.
     const startCount = concept === "Counting" ? Math.min(countingSeen, 3) * 5 : 0;
     if (concept === "Counting") countingSeen++;
     const vocab = playable(lessonVocab(lesson));
-    mathOut += emitLesson(lesson, g.rust, "Subject::Mathematics", vocab, { concept, startCount });
+    mathOut += emitLesson(lesson, g.rust, "Subject::Mathematics", vocab, { concept, startCount, step });
     mathCount++;
   }
 
